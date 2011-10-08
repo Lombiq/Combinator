@@ -7,10 +7,10 @@ using Orchard.UI.Resources;
 using Autofac.Features.Metadata;
 using Orchard;
 using System.Net;
-using Orchard.FileSystems.Media;
-using System.Text;
-using System.IO;
 using Orchard.Logging;
+using Piedone.Combinator.Extensions;
+using Piedone.Combinator.Services;
+using Piedone.Combinator.Helpers;
 
 namespace Piedone.Combinator
 {
@@ -22,69 +22,84 @@ namespace Piedone.Combinator
     public class CombinedResourceManager : ResourceManager
     {
         private Dictionary<int, IList<ResourceRequiredContext>> _combinedResources = new Dictionary<int, IList<ResourceRequiredContext>>();
-        private readonly IStorageProvider _storageProvider;
         private readonly IOrchardServices _orchardServices;
+        private readonly ICacheFileService _cacheFileService;
 
         public ILogger Logger { get; set; }
 
         public CombinedResourceManager(
             IEnumerable<Meta<IResourceManifestProvider>> resourceProviders,
-            IStorageProvider storageProvider,
-            IOrchardServices orchardServices)
+            IOrchardServices orchardServices,
+            ICacheFileService cacheFileService)
             : base(resourceProviders)
         {
             _orchardServices = orchardServices;
-            _storageProvider = storageProvider;
+            _cacheFileService = cacheFileService;
 
             Logger = NullLogger.Instance;
         }
 
-        public override IList<ResourceRequiredContext> BuildRequiredResources(string resourceType)
+        public override IList<ResourceRequiredContext> BuildRequiredResources(string stringResourceType)
         {
             var rootPath = "Piedone.Combinator/";
 
             // It's necessary to make a copy since making a change to the local variable also changes the private one. This is most likely some bug
             // with a reference that shouldn't be given away.
-            var resources = new List<ResourceRequiredContext>(CleanCombinedResources(base.BuildRequiredResources(resourceType)));
+            var resources = new List<ResourceRequiredContext>(base.BuildRequiredResources(stringResourceType));
+            resources.DeleteCombinedResources();
             if (resources.Count == 0) return resources;
 
-            var key = MakeResourceListKey(resources);
+            // Ugly hack to prevent combination of admin resources till the issue is solved
+            // HttpContext-ből!!!!!
+
+            var hashCode = resources.GetResourceListHashCode();
+
+            var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
 
             try
             {
-                if (resourceType == "stylesheet")
+                if (resourceType == ResourceType.Style)
                 {
-                    if (!_combinedResources.ContainsKey(key))
+                    if (!_combinedResources.ContainsKey(hashCode))
                     {
-                        _combinedResources[key] = Combine(resources, resourceType, rootPath + "Styles/" + key + ".css");
+                        if (!_cacheFileService.Exists(hashCode))
+                        {
+                            _combinedResources[hashCode] = Combine(resources, hashCode, resourceType);
+                        }
+                        else
+                        {
+                            _combinedResources[hashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(hashCode), resourceType);
+                        }
                     }
 
-                    return _combinedResources[key];
+                    return _combinedResources[hashCode];
                 }
-                else if (resourceType == "script")
+                else if (resourceType == ResourceType.JavaScript)
                 {
                     var combinedScripts = new List<ResourceRequiredContext>(2);
 
                     Action<ResourceLocation> combineScriptsAtLocation =
                         (location) =>
                         {
-                            var resourceKey = key + (int)location;
-                            var dk = _combinedResources.ContainsKey(resourceKey);
-                            if (!_combinedResources.ContainsKey(resourceKey))
+                            var locationHashCode = hashCode + (int)location;
+                            if (!_combinedResources.ContainsKey(locationHashCode))
                             {
-                                var scripts = (from r in resources
-                                               where r.Settings.Location == location
-                                               select r).ToList();
-
-
-                                if (scripts.Count != 0)
+                                if (!_cacheFileService.Exists(locationHashCode))
                                 {
-                                    _combinedResources[resourceKey] = Combine(scripts, "script", rootPath + "Scripts/" + resourceKey + ".js");
-                                    SetLocation(_combinedResources[resourceKey], location);
-                                    combinedScripts = combinedScripts.Union(_combinedResources[resourceKey]).ToList();
+                                    var scripts = (from r in resources
+                                                   where r.Settings.Location == location
+                                                   select r).ToList();
+
+                                    //if (scripts.Count != 0)
+                                    _combinedResources[locationHashCode] = Combine(scripts, locationHashCode, resourceType);
                                 }
+                                else
+                                {
+                                    _combinedResources[locationHashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(locationHashCode), resourceType);
+                                }
+                                _combinedResources[locationHashCode].SetLocation(location);
                             }
-                            else combinedScripts = combinedScripts.Union(_combinedResources[resourceKey]).ToList();
+                            combinedScripts = combinedScripts.Union(_combinedResources[locationHashCode]).ToList();
                         };
 
                     combineScriptsAtLocation(ResourceLocation.Head);
@@ -93,13 +108,13 @@ namespace Piedone.Combinator
                     return combinedScripts;
                 }
 
-                return base.BuildRequiredResources(resourceType);
+                return base.BuildRequiredResources(stringResourceType);
             }
             catch (Exception e)
             {
                 // There was some problem with reading a file
                 Logger.Error(e, "Error when combining " + resourceType + " files");
-                return base.BuildRequiredResources(resourceType);
+                return base.BuildRequiredResources(stringResourceType);
             }
         }
 
@@ -107,79 +122,78 @@ namespace Piedone.Combinator
         /// Combines the content of resources
         /// </summary>
         /// <param name="resources">Resources to combine</param>
-        /// <param name="resourceType">Type of the resources (e.g. script, stylesheet...)</param>
-        /// <param name="savePath">Relative path in the Media folder to save the combined file</param>
+        /// <param name="hashCode">Just so it shouldn't be recalculated</param>
+        /// <param name="type">Type of the resources</param>
         /// <returns>Most of the times the single combined content, but can return more if some of them couldn't be
         /// combined (e.g. was not found or is not a local resource)</returns>
-        private IList<ResourceRequiredContext> Combine(IList<ResourceRequiredContext> resources, string resourceType, string savePath)
+        private IList<ResourceRequiredContext> Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType type)
         {
             var baseUri = new Uri(_orchardServices.WorkContext.CurrentSite.BaseUrl, UriKind.Absolute);
             var wc = new WebClient();
             var combinedContent = "";
-            var partCount = 1;
 
-            Action<string, int> save =
+            #region Functions
+            Action<string, int> saveCombination =
                 (content, insertIndex) =>
                 {
                     if (combinedContent.Length == 0) return;
 
-                    var path = savePath.Insert(savePath.LastIndexOf('.'), "-" + partCount); // Inserts part count
-
-                    // EZ EGYÉBKÉNT NEM KELL!!!!!!!!!
-                    // Mert mindig felülírja...
-                    try
-                    {
-                        _storageProvider.DeleteFile(path);
-                    }
-                    catch (Exception)
-                    {
-                        // This is the first time the module is run and the file wasn't yet created. Since there is no way to check its existence,
-                        // this is the only way to "overwrite" it.
-                    }
-
-                    _storageProvider.SaveStream(
-                        path,
-                        new MemoryStream(
-                            new System.Text.UTF8Encoding().GetBytes(
-                                content
-                                )
-                            )
+                    var combined = MakeResourceFromPublicUrl(
+                            _cacheFileService.Save(hashCode, type, content),
+                            type
                         );
 
-                    var combined = new ResourceRequiredContext();
-                    var url = _storageProvider.GetPublicUrl(path);
-                    combined.Settings = Include(resourceType, url, url);
-                    combined.Resource = FindResource(combined.Settings);
-
-                    if(insertIndex == -1) resources.Add(combined);
+                    if (insertIndex == -1) resources.Add(combined);
                     else resources.Insert(insertIndex, combined);
 
-                    partCount++;
                     combinedContent = "";
                 };
 
+            Action<string, int> downloadContent =
+                (path, resourceIndex) =>
+                {
+                    combinedContent += wc.DownloadString(path); // It seems that it's not possible to read the local files
+                    resources.RemoveAt(resourceIndex);
+                };
+            #endregion
+
             var fullPath = "";
+            var combineCDN = false;
             for (int i = 0; i < resources.Count; i++)
             {
                 try
                 {
-                    fullPath = GetResourceFullPath(resources[i].Resource);
-                    // Ensuring the resource is a local one and that it hasn't some conditions
-                    if (!Uri.IsWellFormedUriString(fullPath, UriKind.Absolute) && String.IsNullOrEmpty(resources[i].Settings.Condition))
+                    // Ensuring the resource hasn't got some conditions
+                    if (String.IsNullOrEmpty(resources[i].Settings.Condition))
                     {
-                        if (fullPath.StartsWith(baseUri.AbsolutePath)) fullPath = fullPath.Replace(baseUri.AbsolutePath, ""); // Strip e.g. /OrchardLocal
-                        else fullPath = fullPath.Replace("~", ""); // Strip the tilde from ~/Modules/...
-                        fullPath = baseUri.AbsoluteUri + fullPath;
+                        fullPath = resources[i].Resource.GetFullPath();
+                        // Ensuring the resource is a local one
+                        if (!Uri.IsWellFormedUriString(fullPath, UriKind.Absolute))
+                        {
+                            if (fullPath.StartsWith(baseUri.AbsolutePath)) fullPath = fullPath.Replace(baseUri.AbsolutePath, ""); // Strip e.g. /OrchardLocal
+                            else fullPath = fullPath.Replace("~", ""); // Strip the tilde from ~/Modules/...
+                            fullPath = baseUri.AbsoluteUri + fullPath;
 
-                        combinedContent += wc.DownloadString(fullPath); // It seems that it's not possible to read the local files
-                        resources.RemoveAt(i);
-                        i--;
+                            downloadContent(fullPath, i);
+                            i--;
+                        }
+                        else if (combineCDN)
+                        {
+                            downloadContent(fullPath, i);
+                            i--;
+                        }
+                        else
+                        {
+                            // This is to ensure that if there's a remote resource inside a list of local resources, their order stays
+                            // the same (so the product is: localResourcesCombined1, remoteResource, localResourceCombined2...)
+                            saveCombination(combinedContent, i);
+                        }
                     }
                     else
                     {
-                        // This is to ensure that if there's a remote resource inside a list of local resources, their order stays
-                        // the same (so the product is: localResourcesCombined1, remoteResource, localResourceCombined2...)
-                        save(combinedContent, i);
+                        // This is to ensure that if there's a conditional resource inside a list of resources, their order stays
+                        // the same (so the product is: resourcesCombined1, conditionalResource, resourcesCombined2...)
+                        saveCombination(combinedContent, i);
                     }
                 }
                 catch (Exception e)
@@ -189,46 +203,34 @@ namespace Piedone.Combinator
                     throw new ApplicationException(message, e);
                     //save(combinedContent, i);
                 }
-
             }
 
 
-            save(combinedContent, -1);
+            saveCombination(combinedContent, -1);
 
             return resources;
         }
 
-        private int MakeResourceListKey(IList<ResourceRequiredContext> resources)
+        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrls(IList<string> urls, ResourceType type)
         {
-            var key = "";
+            var resources = new List<ResourceRequiredContext>(urls.Count);
 
-            resources.ToList().ForEach(resource => key += GetResourceFullPath(resource.Resource) + "__");
-
-            return key.GetHashCode();
-        }
-
-        private string GetResourceFullPath(ResourceDefinition resource)
-        {
-            return resource.BasePath + resource.Url;
-        }
-
-        private IList<ResourceRequiredContext> SetLocation(IList<ResourceRequiredContext> resources, ResourceLocation location)
-        {
-            resources.ToList().ForEach(resource => resource.Settings.Location = location);
-            return resources;
-        }
-
-        private IList<ResourceRequiredContext> CleanCombinedResources(IList<ResourceRequiredContext> resources)
-        {
-            for (int i = 0; i < resources.Count; i++)
+            foreach (var url in urls)
             {
-                if (resources[i].Resource.Url.Contains("/Media/Default/Piedone.Combinator"))
-                {
-                    resources.RemoveAt(i);
-                    i--;
-                }
+                resources.Add(MakeResourceFromPublicUrl(url, type));
             }
+
             return resources;
+        }
+
+        private ResourceRequiredContext MakeResourceFromPublicUrl(string url, ResourceType type)
+        {
+            var resource = new ResourceRequiredContext();
+
+            resource.Settings = Include(ResourceTypeHelper.EnumToStringType(type), url, url);
+            resource.Resource = FindResource(resource.Settings);
+
+            return resource;
         }
     }
 }

@@ -9,4 +9,5 @@ Features:
     Piedone.Combinator:
 		Name: CSS and JS Combinator
         Description: Combines external stylesheets and javascript files
+		Category: Optimization
 		Dependencies: Orchard.Media

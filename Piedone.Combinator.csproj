@@ -64,9 +64,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Web.config" />
-    <Content Include="Views\Web.config" />
-    <Content Include="Scripts\Web.config" />
-    <Content Include="Styles\Web.config" />
     <Content Include="Properties\AssemblyInfo.cs" />
     <Content Include="Module.txt" />
   </ItemGroup>
@@ -80,12 +77,20 @@
       <HintPath>..\..\bin\Orchard.Framework.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="Controllers\" />
-    <Folder Include="Models\" />
+    <Compile Include="Controllers\TestController.cs" />
+    <Compile Include="Helpers\ResourceTypeHelper.cs" />
+    <Compile Include="Migrations.cs" />
+    <Compile Include="CombinedResourceManager.cs" />
+    <Compile Include="Extensions\ResourceDefinitionExtension.cs" />
+    <Compile Include="Extensions\ResourceListExtension.cs" />
+    <Compile Include="Models\CombinedFileRecord.cs" />
+    <Compile Include="Services\CacheFileService.cs" />
+    <Compile Include="Services\ICacheFileService.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CombinedResourceManager.cs" />
+    <Content Include="Views\Web.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />

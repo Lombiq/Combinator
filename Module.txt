@@ -2,12 +2,12 @@ Name: Piedone.Combinator
 AntiForgery: enabled
 Author: Piedone
 Website: http://orchardproject.net/gallery/
-Version: 1.0
-OrchardVersion: 1.2
+Version: 0.8
+OrchardVersion: 1.3
 Description: Combines external stylesheets and javascript files
 Features:
     Piedone.Combinator:
-		Name: CSS and JS Combinator
+		Name: CSS/JS Combinator
         Description: Combines external stylesheets and javascript files
 		Category: Optimization
 		Dependencies: Orchard.Media

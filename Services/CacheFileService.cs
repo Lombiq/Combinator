@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using Piedone.Combinator.Models;
-using Orchard.Data;
-using Orchard.FileSystems.Media;
+﻿using System.Collections.Generic;
+using System;
 using System.IO;
+using System.Linq;
+using Orchard.Data;
 using Orchard.Environment.Extensions;
-using Piedone.Combinator.Helpers;
+using Orchard.FileSystems.Media;
 using Orchard.Services;
+using Piedone.Combinator.Helpers;
+using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator.Services
 {
@@ -99,32 +98,51 @@ namespace Piedone.Combinator.Services
             return _fileRepository.Count(file => file.HashCode == hashCode) != 0;
         }
 
-        public void Delete(int hashCode, ResourceType type)
+        public int GetCount()
         {
-            var files = GetRecords(hashCode);
-            foreach (var file in files)
-            {
-                _fileRepository.Delete(file);
-                _storageProvider.DeleteFile(MakePath(file));
-            }
+            return _fileRepository.Table.Count();
         }
 
-        public void Truncate()
+        public void Delete(int hashCode, ResourceType type)
         {
-            // Not efficient, but is there any other way?
-            var records = _fileRepository.Table.ToArray();
-            foreach (var record in records)
-            {
-                _fileRepository.Delete(record);
-            }
+            DeleteFiles(GetRecords(hashCode));
+        }
 
-            _storageProvider.DeleteFolder(_scriptsPath);
-            _storageProvider.DeleteFolder(_stylesPath);
+        public void Empty()
+        {
+            // Not efficient, but is there any other way with IRepository?
+            var records = _fileRepository.Table.ToList();
+            DeleteFiles(records);
+
+            if (records.Count() != 0)
+            {
+                try
+                {
+                    // These will throw an exception if a folder doesn't exist. Since currently there is no method
+                    // in IStorageProvider to check the existence of a file/folder (see: http://orchard.codeplex.com/discussions/275146)
+                    // this is the only way to deal with it.
+                    _storageProvider.DeleteFolder(_scriptsPath);
+                    _storageProvider.DeleteFolder(_stylesPath);
+                }
+                catch (Exception)
+                {
+                }
+                _storageProvider.DeleteFolder(_rootPath);
+            }
         }
 
         private List<CombinedFileRecord> GetRecords(int hashCode)
         {
             return _fileRepository.Fetch(file => file.HashCode == hashCode).ToList();
+        }
+
+        private void DeleteFiles(List<CombinedFileRecord> files)
+        {
+            foreach (var file in files)
+            {
+                _fileRepository.Delete(file);
+                _storageProvider.DeleteFile(MakePath(file));
+            }
         }
 
         private string MakePath(CombinedFileRecord file)

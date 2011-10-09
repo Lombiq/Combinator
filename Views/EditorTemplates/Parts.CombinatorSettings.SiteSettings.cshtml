@@ -1,0 +1,14 @@
+﻿@model Piedone.Combinator.Models.CombinatorSettingsPart
+<fieldset>
+    <legend>@T("CSS/JS Combinator Settings")</legend>
+    <span class="hint">@T("There are currently {0} combined resource files cached.", Model.CacheFileCount)</span>
+    <ol>
+        <li>
+            @Html.EditorFor(m => m.CombineCDNResources)
+            <label for="@Html.FieldIdFor(m => m.CombineCDNResources)" class="forcheckbox">@T("Combine CDN Resources")</label>
+            @Html.ValidationMessageFor(m => m.CombineCDNResources)
+            <span class="hint">@T("If checked, remote resources from CDNs will be also combined. Most of the time this defeats the purpose of CDNs but if the site fetches resources from many sources, for your targeted visitors it may be faster to serve them all combined from your site. Always measure the difference!")</span>
+        </li>
+    </ol>
+    <button type="submit" name="submit.EmptyCache" value="EmptyCache" onclick="document.location.href = '@Url.Action("EmptyCache", new { Controller = "CombinatorAdmin", Area = "Piedone.Combinator", ReturnUrl = Context.Request.QueryString["ReturnUrl"] ?? Context.Request.RawUrl })'; return false;">@T("Empty cache")</button>
+</fieldset>

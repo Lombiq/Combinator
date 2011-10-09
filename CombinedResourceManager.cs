@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using Orchard.Environment.Extensions;
-using Orchard.UI.Resources;
+using System.Net;
 using Autofac.Features.Metadata;
 using Orchard;
-using System.Net;
+using Orchard.Environment.Extensions;
 using Orchard.Logging;
+using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
-using Piedone.Combinator.Services;
 using Piedone.Combinator.Helpers;
+using Piedone.Combinator.Services;
+using Piedone.Combinator.Models;
+using Orchard.ContentManagement; // For generic ContentManager methods
 
 namespace Piedone.Combinator
 {
@@ -41,8 +42,6 @@ namespace Piedone.Combinator
 
         public override IList<ResourceRequiredContext> BuildRequiredResources(string stringResourceType)
         {
-            var rootPath = "Piedone.Combinator/";
-
             // It's necessary to make a copy since making a change to the local variable also changes the private one. This is most likely some bug
             // with a reference that shouldn't be given away.
             var resources = new List<ResourceRequiredContext>(base.BuildRequiredResources(stringResourceType));
@@ -50,11 +49,12 @@ namespace Piedone.Combinator
             if (resources.Count == 0) return resources;
 
             // Ugly hack to prevent combination of admin resources till the issue is solved
-            // HttpContext-ből!!!!!
+            var rawUrl = _orchardServices.WorkContext.HttpContext.Request.RawUrl;
+            if (rawUrl.Contains("/Admin") || rawUrl.Contains("/Packaging/Gallery")) return resources;
 
             var hashCode = resources.GetResourceListHashCode();
-
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
+            var settings = _orchardServices.WorkContext.CurrentSite.As<CombinatorSettingsPart>();
 
             try
             {
@@ -64,11 +64,11 @@ namespace Piedone.Combinator
                     {
                         if (!_cacheFileService.Exists(hashCode))
                         {
-                            _combinedResources[hashCode] = Combine(resources, hashCode, resourceType);
+                            _combinedResources[hashCode] = Combine(resources, hashCode, resourceType, settings.CombineCDNResources);
                         }
                         else
                         {
-                            _combinedResources[hashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(hashCode), resourceType);
+                            _combinedResources[hashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(hashCode), resources, resourceType, settings.CombineCDNResources);
                         }
                     }
 
@@ -84,18 +84,18 @@ namespace Piedone.Combinator
                             var locationHashCode = hashCode + (int)location;
                             if (!_combinedResources.ContainsKey(locationHashCode))
                             {
+                                var scripts = (from r in resources
+                                               where r.Settings.Location == location
+                                               select r).ToList();
+
                                 if (!_cacheFileService.Exists(locationHashCode))
                                 {
-                                    var scripts = (from r in resources
-                                                   where r.Settings.Location == location
-                                                   select r).ToList();
-
                                     //if (scripts.Count != 0)
-                                    _combinedResources[locationHashCode] = Combine(scripts, locationHashCode, resourceType);
+                                    _combinedResources[locationHashCode] = Combine(scripts, locationHashCode, resourceType, settings.CombineCDNResources);
                                 }
                                 else
                                 {
-                                    _combinedResources[locationHashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(locationHashCode), resourceType);
+                                    _combinedResources[locationHashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(locationHashCode), scripts, resourceType, settings.CombineCDNResources);
                                 }
                                 _combinedResources[locationHashCode].SetLocation(location);
                             }
@@ -126,10 +126,10 @@ namespace Piedone.Combinator
         /// <param name="type">Type of the resources</param>
         /// <returns>Most of the times the single combined content, but can return more if some of them couldn't be
         /// combined (e.g. was not found or is not a local resource)</returns>
-        private IList<ResourceRequiredContext> Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType type)
+        private IList<ResourceRequiredContext> Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType type, bool combineCDNResources)
         {
             var baseUri = new Uri(_orchardServices.WorkContext.CurrentSite.BaseUrl, UriKind.Absolute);
-            var wc = new WebClient();
+            var webClient = new WebClient();
             var combinedContent = "";
 
             #region Functions
@@ -150,15 +150,15 @@ namespace Piedone.Combinator
                 };
 
             Action<string, int> downloadContent =
-                (path, resourceIndex) =>
+                (url, resourceIndex) =>
                 {
-                    combinedContent += wc.DownloadString(path); // It seems that it's not possible to read the local files
+                    // As WebClient sometimes handles endoding strange, lets hope that CDNs server script as UTF-8 (Orchard does)
+                    combinedContent += new System.Text.UTF8Encoding().GetString(webClient.DownloadData(url)); // It seems that it's not possible to read local files directly
                     resources.RemoveAt(resourceIndex);
                 };
             #endregion
 
             var fullPath = "";
-            var combineCDN = false;
             for (int i = 0; i < resources.Count; i++)
             {
                 try
@@ -168,7 +168,7 @@ namespace Piedone.Combinator
                     {
                         fullPath = resources[i].Resource.GetFullPath();
                         // Ensuring the resource is a local one
-                        if (!Uri.IsWellFormedUriString(fullPath, UriKind.Absolute))
+                        if (!resources[i].Resource.IsCDNResource())
                         {
                             if (fullPath.StartsWith(baseUri.AbsolutePath)) fullPath = fullPath.Replace(baseUri.AbsolutePath, ""); // Strip e.g. /OrchardLocal
                             else fullPath = fullPath.Replace("~", ""); // Strip the tilde from ~/Modules/...
@@ -177,7 +177,7 @@ namespace Piedone.Combinator
                             downloadContent(fullPath, i);
                             i--;
                         }
-                        else if (combineCDN)
+                        else if (combineCDNResources)
                         {
                             downloadContent(fullPath, i);
                             i--;
@@ -211,16 +211,41 @@ namespace Piedone.Combinator
             return resources;
         }
 
-        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrls(IList<string> urls, ResourceType type)
+        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrls(IList<string> urls, IList<ResourceRequiredContext> resources, ResourceType type, bool combineCDNResources)
         {
-            var resources = new List<ResourceRequiredContext>(urls.Count);
+            List<ResourceRequiredContext> combinedResources;
 
-            foreach (var url in urls)
+
+            if (!combineCDNResources)
             {
-                resources.Add(MakeResourceFromPublicUrl(url, type));
+                combinedResources = new List<ResourceRequiredContext>(resources);
+                var urlIndex = 0;
+                for (int i = 0; i < combinedResources.Count; i++)
+                {
+                    if (!combinedResources[i].Resource.IsCDNResource())
+                    {
+                        // Overwriting the first local resource with the combined resource
+                        combinedResources[i] = MakeResourceFromPublicUrl(urls[urlIndex++], type);
+                        // Deleting the other ones to the next remote resource
+                        i++;
+                        while (i < combinedResources.Count && !combinedResources[i].Resource.IsCDNResource())
+                        {
+                            combinedResources.RemoveAt(i);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                combinedResources = new List<ResourceRequiredContext>(urls.Count);
+
+                foreach (var url in urls)
+                {
+                    combinedResources.Add(MakeResourceFromPublicUrl(url, type));
+                }
             }
 
-            return resources;
+            return combinedResources;
         }
 
         private ResourceRequiredContext MakeResourceFromPublicUrl(string url, ResourceType type)

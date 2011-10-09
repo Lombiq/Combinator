@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using Orchard.Environment.Extensions;
 using Orchard.UI.Resources;
 
@@ -19,6 +16,11 @@ namespace Piedone.Combinator.Extensions
         public static string GetFullPath(this ResourceDefinition resource)
         {
             return !String.IsNullOrEmpty(resource.Url) ? resource.BasePath + resource.Url : resource.UrlCdn;
+        }
+
+        public static bool IsCDNResource(this ResourceDefinition resource)
+        {
+            return Uri.IsWellFormedUriString(resource.GetFullPath(), UriKind.Absolute);
         }
     }
 }

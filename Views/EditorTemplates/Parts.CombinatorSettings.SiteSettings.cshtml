@@ -1,4 +1,27 @@
 ﻿@model Piedone.Combinator.Models.CombinatorSettingsPart
+
+@{
+    Script.Require("jQuery").AtHead();
+}
+
+<script type="text/javascript">
+    (function ($) {
+    // Doing this with JS is not a nice solution but it seems there is no other way to make a POST to the action
+        $.extend({
+            combinator: {
+                emptyCache: function () {
+                    $("#button\\.EmptyCache").attr("disabled", "disabled");
+                    var url = '@Url.Action("EmptyCache", new { Controller = "CombinatorAdmin", Area = "Piedone.Combinator"})';
+                    var postData = { __RequestVerificationToken: "@Html.AntiForgeryTokenValueOrchard()" };
+                    $.post(url, postData, function(response) {
+                        location.reload();
+                    });
+                }
+            }
+        });
+    })(jQuery);
+</script>
+           
 <fieldset>
     <legend>@T("CSS/JS Combinator Settings")</legend>
     <span class="hint">@T("There are currently {0} combined resource files cached.", Model.CacheFileCount)</span>
@@ -10,5 +33,5 @@
             <span class="hint">@T("If checked, remote resources from CDNs will be also combined. Most of the time this defeats the purpose of CDNs but if the site fetches resources from many sources, for your targeted visitors it may be faster to serve them all combined from your site. Always measure the difference!")</span>
         </li>
     </ol>
-    <button type="submit" name="submit.EmptyCache" value="EmptyCache" onclick="document.location.href = '@Url.Action("EmptyCache", new { Controller = "CombinatorAdmin", Area = "Piedone.Combinator", ReturnUrl = Context.Request.QueryString["ReturnUrl"] ?? Context.Request.RawUrl })'; return false;">@T("Empty cache")</button>
+    <button type="button" id="button.EmptyCache" name="button.EmptyCache" value="EmptyCache" onclick="$.combinator.emptyCache(); return false;">@T("Empty cache")</button>
 </fieldset>

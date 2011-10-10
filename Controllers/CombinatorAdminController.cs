@@ -22,15 +22,17 @@ namespace Piedone.Combinator.Controllers
             _cacheFileService = cacheFileService;
         }
 
-        //[HttpPost]
-        public ActionResult EmptyCache(string returnUrl = "")
+        [HttpPost]
+        //public ActionResult EmptyCache(string returnUrl = "") Without AJAX
+        public void EmptyCache()
         {
             if (_orchardServices.Authorizer.Authorize(StandardPermissions.SiteOwner))
             {
                 _cacheFileService.Empty();
             }
 
-            return this.RedirectLocal(returnUrl); // this necessary, as this is from an extension (Orchard.Mvc.Extensions.ControllerExtensions)
+            // Since we are calling this via AJAX, this is not necessary. But the AJAX implementation is not the best.
+            //return this.RedirectLocal(returnUrl); // this necessary, as this is from an extension (Orchard.Mvc.Extensions.ControllerExtensions)
         }
     }
 }

@@ -1,7 +1,7 @@
 Name: Piedone.Combinator
 AntiForgery: enabled
 Author: Piedone
-Website: http://orchardproject.net/gallery/
+Website: http://combinator.codeplex.com
 Version: 0.5
 OrchardVersion: 1.3
 Description: Combines external stylesheets and javascript files

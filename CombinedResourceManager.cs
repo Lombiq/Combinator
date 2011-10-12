@@ -12,6 +12,7 @@ using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Services;
 using Piedone.Combinator.Models;
 using Orchard.ContentManagement; // For generic ContentManager methods
+using System.Text;
 
 namespace Piedone.Combinator
 {
@@ -130,7 +131,7 @@ namespace Piedone.Combinator
         {
             var baseUri = new Uri(_orchardServices.WorkContext.CurrentSite.BaseUrl, UriKind.Absolute);
             var webClient = new WebClient();
-            var combinedContent = "";
+            var combinedContent = new StringBuilder(10000);
 
             #region Functions
             Action<string, int> saveCombination =
@@ -146,14 +147,14 @@ namespace Piedone.Combinator
                     if (insertIndex == -1) resources.Add(combined);
                     else resources.Insert(insertIndex, combined);
 
-                    combinedContent = "";
+                    combinedContent.Clear();
                 };
 
             Action<string, int> downloadContent =
                 (url, resourceIndex) =>
                 {
                     // As WebClient sometimes handles endoding strange, lets hope that CDNs server script as UTF-8 (Orchard does)
-                    combinedContent += new System.Text.UTF8Encoding().GetString(webClient.DownloadData(url)); // It seems that it's not possible to read local files directly
+                    combinedContent.Append(new System.Text.UTF8Encoding().GetString(webClient.DownloadData(url))); // It seems that it's not possible to read local files directly
                     resources.RemoveAt(resourceIndex);
                 };
             #endregion
@@ -186,14 +187,14 @@ namespace Piedone.Combinator
                         {
                             // This is to ensure that if there's a remote resource inside a list of local resources, their order stays
                             // the same (so the product is: localResourcesCombined1, remoteResource, localResourceCombined2...)
-                            saveCombination(combinedContent, i);
+                            saveCombination(combinedContent.ToString(), i);
                         }
                     }
                     else
                     {
                         // This is to ensure that if there's a conditional resource inside a list of resources, their order stays
                         // the same (so the product is: resourcesCombined1, conditionalResource, resourcesCombined2...)
-                        saveCombination(combinedContent, i);
+                        saveCombination(combinedContent.ToString(), i);
                     }
                 }
                 catch (Exception e)
@@ -206,7 +207,7 @@ namespace Piedone.Combinator
             }
 
 
-            saveCombination(combinedContent, -1);
+            saveCombination(combinedContent.ToString(), -1);
 
             return resources;
         }

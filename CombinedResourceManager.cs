@@ -13,6 +13,7 @@ using Piedone.Combinator.Services;
 using Piedone.Combinator.Models;
 using Orchard.ContentManagement; // For generic ContentManager methods
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Piedone.Combinator
 {
@@ -150,11 +151,24 @@ namespace Piedone.Combinator
                     combinedContent.Clear();
                 };
 
+            var byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
+            var encoding = new System.Text.UTF8Encoding(false);
             Action<string, int> downloadContent =
                 (url, resourceIndex) =>
                 {
-                    // As WebClient sometimes handles endoding strange, lets hope that CDNs server script as UTF-8 (Orchard does)
-                    combinedContent.Append(new System.Text.UTF8Encoding().GetString(webClient.DownloadData(url))); // It seems that it's not possible to read local files directly
+                    //var content = webClient.DownloadString(url);
+                    var content = encoding.GetString(webClient.DownloadData(url));
+                    if (content.StartsWith(byteOrderMarkUtf8)) // Stripping "?"s from the beginning of css commments "/*"
+                    {
+                        content = content.Remove(0, byteOrderMarkUtf8.Length);
+                    }
+
+                    // Jumping up a directory
+                    var uriSegments = new Uri(url).Segments; // Path class is not good for this
+                    var parentDir = String.Join("", uriSegments.Take(uriSegments.Length - 2).ToArray());
+                    content = Regex.Replace(content, Regex.Escape("../images/"), parentDir + "Images/", RegexOptions.IgnoreCase);
+
+                    combinedContent.Append(content); // It seems that it's not possible to read local files directly
                     resources.RemoveAt(resourceIndex);
                 };
             #endregion

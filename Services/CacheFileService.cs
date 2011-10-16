@@ -8,6 +8,8 @@ using Orchard.FileSystems.Media;
 using Orchard.Services;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
+using System.Threading;
+using System.Text;
 
 namespace Piedone.Combinator.Services
 {
@@ -56,7 +58,7 @@ namespace Piedone.Combinator.Services
             _storageProvider.SaveStream(
                         path,
                         new MemoryStream(
-                            new System.Text.UTF8Encoding().GetBytes(
+                            Encoding.UTF8.GetBytes(
                                 content
                                 )
                             )
@@ -122,7 +124,9 @@ namespace Piedone.Combinator.Services
                     // in IStorageProvider to check the existence of a file/folder (see: http://orchard.codeplex.com/discussions/275146)
                     // this is the only way to deal with it.
                     _storageProvider.DeleteFolder(_scriptsPath);
+                    Thread.Sleep(500); // This is to ensure we don't get an "access denied" when deleting the root folder
                     _storageProvider.DeleteFolder(_stylesPath);
+                    Thread.Sleep(500);
                 }
                 catch (Exception)
                 {

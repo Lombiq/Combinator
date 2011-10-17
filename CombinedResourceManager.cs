@@ -185,7 +185,13 @@ namespace Piedone.Combinator
                         // Ensuring the resource is a local one
                         if (!resources[i].Resource.IsCDNResource())
                         {
-                            if (fullPath.StartsWith(baseUri.AbsolutePath)) fullPath = fullPath.Replace(baseUri.AbsolutePath, ""); // Strip e.g. /OrchardLocal
+                            if (fullPath.StartsWith(baseUri.AbsolutePath))
+                            {
+                                // Strip e.g. /OrchardLocal or even the first slash
+                                // Finds the first occurence and replaces it with empty string
+                                int Place = fullPath.IndexOf(baseUri.AbsolutePath);
+                                fullPath = fullPath.Remove(Place, baseUri.AbsolutePath.Length).Insert(Place, "");
+                            }
                             else fullPath = fullPath.Replace("~", ""); // Strip the tilde from ~/Modules/...
                             fullPath = baseUri.AbsoluteUri + fullPath;
 

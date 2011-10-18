@@ -27,6 +27,7 @@ namespace Piedone.Combinator
         private Dictionary<int, IList<ResourceRequiredContext>> _combinedResources = new Dictionary<int, IList<ResourceRequiredContext>>();
         private readonly IOrchardServices _orchardServices;
         private readonly ICacheFileService _cacheFileService;
+        private IList<ResourceRequiredContext> _stylesheetResources = new List<ResourceRequiredContext>();
 
         public ILogger Logger { get; set; }
 
@@ -42,6 +43,24 @@ namespace Piedone.Combinator
             Logger = NullLogger.Instance;
         }
 
+        /// <summary>
+        /// Necessary as stylesheets can be overridden from themes
+        /// 
+        /// So the actual stylesheet resources can only be set from a response filter by getting it
+        /// from the output.
+        /// </summary>
+        /// <param name="urls"></param>
+        public void CombineStylesheets(List<string> urls)
+        {
+            _stylesheetResources = MakeResourcesFromPublicUrls(urls, ResourceType.Style);
+            //var hashCode = resources.GetResourceListHashCode();
+            //if (!_cacheFileService.Exists(hashCode))
+            //{
+            //    var settings = _orchardServices.WorkContext.CurrentSite.As<CombinatorSettingsPart>();
+            //    _combinedResources[hashCode] = Combine(resources, hashCode, ResourceType.Style, false);
+            //}
+        }
+
         public override IList<ResourceRequiredContext> BuildRequiredResources(string stringResourceType)
         {
             // It's necessary to make a copy since making a change to the local variable also changes the private one. This is most likely some bug
@@ -55,8 +74,8 @@ namespace Piedone.Combinator
             if (rawUrl.Contains("/Admin") || rawUrl.Contains("/Packaging/Gallery")) return resources;
 
             var hashCode = resources.GetResourceListHashCode();
-            var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
             var settings = _orchardServices.WorkContext.CurrentSite.As<CombinatorSettingsPart>();
+            var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
 
             try
             {
@@ -66,7 +85,8 @@ namespace Piedone.Combinator
                     {
                         if (!_cacheFileService.Exists(hashCode))
                         {
-                            _combinedResources[hashCode] = Combine(resources, hashCode, resourceType, settings.CombineCDNResources);
+                            // Now we don't combine here, but in CombineStylesheets(), invoked from StylesheetFilter.Write()
+                            // _combinedResources[hashCode] = Combine(resources, hashCode, resourceType, settings.CombineCDNResources);
                         }
                         else
                         {
@@ -234,35 +254,40 @@ namespace Piedone.Combinator
 
         private IList<ResourceRequiredContext> MakeResourcesFromPublicUrls(IList<string> urls, IList<ResourceRequiredContext> resources, ResourceType type, bool combineCDNResources)
         {
+            if (combineCDNResources) return MakeResourcesFromPublicUrlsWithCDNCombination(urls, resources, type);
+            return MakeResourcesFromPublicUrls(urls, type);
+        }
+
+        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrls(IList<string> urls, ResourceType type)
+        {
+            var resources = new List<ResourceRequiredContext>(urls.Count);
+
+            foreach (var url in urls)
+            {
+                resources.Add(MakeResourceFromPublicUrl(url, type));
+            }
+
+            return resources;
+        }
+
+        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrlsWithCDNCombination(IList<string> urls, IList<ResourceRequiredContext> resources, ResourceType type)
+        {
             List<ResourceRequiredContext> combinedResources;
 
-
-            if (!combineCDNResources)
+            combinedResources = new List<ResourceRequiredContext>(resources);
+            var urlIndex = 0;
+            for (int i = 0; i < combinedResources.Count; i++)
             {
-                combinedResources = new List<ResourceRequiredContext>(resources);
-                var urlIndex = 0;
-                for (int i = 0; i < combinedResources.Count; i++)
+                if (!combinedResources[i].Resource.IsCDNResource())
                 {
-                    if (!combinedResources[i].Resource.IsCDNResource())
+                    // Overwriting the first local resource with the combined resource
+                    combinedResources[i] = MakeResourceFromPublicUrl(urls[urlIndex++], type);
+                    // Deleting the other ones to the next remote resource
+                    i++;
+                    while (i < combinedResources.Count && !combinedResources[i].Resource.IsCDNResource())
                     {
-                        // Overwriting the first local resource with the combined resource
-                        combinedResources[i] = MakeResourceFromPublicUrl(urls[urlIndex++], type);
-                        // Deleting the other ones to the next remote resource
-                        i++;
-                        while (i < combinedResources.Count && !combinedResources[i].Resource.IsCDNResource())
-                        {
-                            combinedResources.RemoveAt(i);
-                        }
+                        combinedResources.RemoveAt(i);
                     }
-                }
-            }
-            else
-            {
-                combinedResources = new List<ResourceRequiredContext>(urls.Count);
-
-                foreach (var url in urls)
-                {
-                    combinedResources.Add(MakeResourceFromPublicUrl(url, type));
                 }
             }
 

@@ -80,6 +80,7 @@
   <ItemGroup>
     <Compile Include="Controllers\CombinatorAdminController.cs" />
     <Compile Include="Drivers\CombinatorSettingsPartDriver.cs" />
+    <Compile Include="Filters\OriginalResourceFilter.cs" />
     <Compile Include="Handlers\CombinatorSettingsPartHandler.cs" />
     <Compile Include="Helpers\ResourceTypeHelper.cs" />
     <Compile Include="Migrations.cs" />

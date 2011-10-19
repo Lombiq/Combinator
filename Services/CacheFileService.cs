@@ -10,13 +10,14 @@ using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using System.Threading;
 using System.Text;
+using Orchard.FileSystems.VirtualPath;
 
 namespace Piedone.Combinator.Services
 {
     [OrchardFeature("Piedone.Combinator")]
     public class CacheFileService : ICacheFileService
     {
-        private readonly IStorageProvider _storageProvider;
+        private readonly IVirtualPathProvider _virtualPathProvider;
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly IClock _clock;
 
@@ -25,22 +26,15 @@ namespace Piedone.Combinator.Services
         private const string _scriptsPath = _rootPath + "Scripts/";
 
         public CacheFileService(
-            IStorageProvider storageProvider,
+            IVirtualPathProvider storageProvider,
             IRepository<CombinedFileRecord> fileRepository,
             IClock clock)
         {
             _fileRepository = fileRepository;
-            _storageProvider = storageProvider;
+            _virtualPathProvider = storageProvider;
             _clock = clock;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="hashCode"></param>
-        /// <param name="content"></param>
-        /// <param name="type"></param>
-        /// <returns>The public URL of the file</returns>
         public string Save(int hashCode, ResourceType type, string content)
         {
             var scliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
@@ -55,18 +49,17 @@ namespace Piedone.Combinator.Services
 
             var path = MakePath(fileRecord);
 
-            _storageProvider.SaveStream(
-                        path,
-                        new MemoryStream(
-                            Encoding.UTF8.GetBytes(
-                                content
-                                )
-                            )
-                        );
+            if (!_virtualPathProvider.FileExists(path))
+            {
+                using (StreamWriter sw = _virtualPathProvider.CreateText(path))
+                {
+                    sw.Write(content);
+                }
+            }
 
             _fileRepository.Create(fileRecord);
 
-            return _storageProvider.GetPublicUrl(path);
+            return MakePublicUrl(fileRecord);
         }
 
         public List<string> GetPublicUrls(int hashCode)
@@ -78,7 +71,7 @@ namespace Piedone.Combinator.Services
 
             foreach (var file in files)
             {
-                urls.Add(_storageProvider.GetPublicUrl(MakePath(file)));
+                urls.Add(MakePublicUrl(file));
             }
 
             return urls;
@@ -118,20 +111,7 @@ namespace Piedone.Combinator.Services
 
             if (records.Count() != 0)
             {
-                try
-                {
-                    // These will throw an exception if a folder doesn't exist. Since currently there is no method
-                    // in IStorageProvider to check the existence of a file/folder (see: http://orchard.codeplex.com/discussions/275146)
-                    // this is the only way to deal with it.
-                    _storageProvider.DeleteFolder(_scriptsPath);
-                    Thread.Sleep(500); // This is to ensure we don't get an "access denied" when deleting the root folder
-                    _storageProvider.DeleteFolder(_stylesPath);
-                    Thread.Sleep(500);
-                }
-                catch (Exception)
-                {
-                }
-                _storageProvider.DeleteFolder(_rootPath);
+                Directory.Delete(_virtualPathProvider.MapPath(_rootPath), true);
             }
         }
 
@@ -145,7 +125,7 @@ namespace Piedone.Combinator.Services
             foreach (var file in files)
             {
                 _fileRepository.Delete(file);
-                _storageProvider.DeleteFile(MakePath(file));
+                File.Delete(_virtualPathProvider.MapPath(MakePath(file)));
             }
         }
 
@@ -166,6 +146,11 @@ namespace Piedone.Combinator.Services
             }
 
             return folderPath + file.HashCode + "-" + file.Slice + "." + extension;
+        }
+
+        private string MakePublicUrl(CombinedFileRecord file)
+        {
+            return "~/Modules/" + MakePath(file);
         }
     }
 }

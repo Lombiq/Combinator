@@ -14,6 +14,7 @@ using Piedone.Combinator.Models;
 using Orchard.ContentManagement; // For generic ContentManager methods
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
 
 namespace Piedone.Combinator
 {
@@ -43,13 +44,7 @@ namespace Piedone.Combinator
             Logger = NullLogger.Instance;
         }
 
-        /// <summary>
-        /// Necessary as stylesheets can be overridden from themes
-        /// 
-        /// So the actual stylesheet resources can only be set from a response filter by getting it
-        /// from the output.
-        /// </summary>
-        /// <param name="urls"></param>
+        // Possible future code, see http://orchard.codeplex.com/discussions/276210
         public void CombineStylesheets(List<string> urls)
         {
             _stylesheetResources = MakeResourcesFromPublicUrls(urls, ResourceType.Style);
@@ -73,6 +68,16 @@ namespace Piedone.Combinator
             var rawUrl = _orchardServices.WorkContext.HttpContext.Request.RawUrl;
             if (rawUrl.Contains("/Admin") || rawUrl.Contains("/Packaging/Gallery")) return resources;
 
+            #region Soon-to-be legacy code
+            // See http://orchard.codeplex.com/discussions/276210
+            var distinctResources = new Dictionary<string, ResourceRequiredContext>(resources.Count); // Overshooting the size
+            foreach (var resource in resources)
+            {
+                distinctResources[VirtualPathUtility.GetFileName(resource.Resource.GetFullPath())] = resource;
+            }
+            resources = (from r in distinctResources select r.Value).ToList();
+            #endregion
+
             var hashCode = resources.GetResourceListHashCode();
             var settings = _orchardServices.WorkContext.CurrentSite.As<CombinatorSettingsPart>();
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
@@ -85,8 +90,7 @@ namespace Piedone.Combinator
                     {
                         if (!_cacheFileService.Exists(hashCode))
                         {
-                            // Now we don't combine here, but in CombineStylesheets(), invoked from StylesheetFilter.Write()
-                            // _combinedResources[hashCode] = Combine(resources, hashCode, resourceType, settings.CombineCDNResources);
+                            _combinedResources[hashCode] = Combine(resources, hashCode, resourceType, settings.CombineCDNResources);
                         }
                         else
                         {
@@ -212,7 +216,7 @@ namespace Piedone.Combinator
                                 int Place = fullPath.IndexOf(baseUri.AbsolutePath);
                                 fullPath = fullPath.Remove(Place, baseUri.AbsolutePath.Length).Insert(Place, "");
                             }
-                            else fullPath = fullPath.Replace("~", ""); // Strip the tilde from ~/Modules/...
+                            else fullPath = fullPath.Replace("~/", ""); // Strip the tilde/ from ~/Modules/...
                             fullPath = baseUri.AbsoluteUri + fullPath;
 
                             downloadContent(fullPath, i);

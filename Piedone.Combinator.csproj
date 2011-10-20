@@ -80,12 +80,12 @@
   <ItemGroup>
     <Compile Include="Controllers\CombinatorAdminController.cs" />
     <Compile Include="Drivers\CombinatorSettingsPartDriver.cs" />
+    <Compile Include="Extensions\ResourceDefinitionExtensions.cs" />
+    <Compile Include="Extensions\ResourceListExtensions.cs" />
     <Compile Include="Handlers\CombinatorSettingsPartHandler.cs" />
     <Compile Include="Helpers\ResourceTypeHelper.cs" />
     <Compile Include="Migrations.cs" />
     <Compile Include="CombinedResourceManager.cs" />
-    <Compile Include="Extensions\ResourceDefinitionExtension.cs" />
-    <Compile Include="Extensions\ResourceListExtension.cs" />
     <Compile Include="Models\CombinatorSettingsPartRecord.cs" />
     <Compile Include="Models\CombinedFileRecord.cs" />
     <Compile Include="Models\CombinatorSettingsPart.cs" />

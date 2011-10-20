@@ -2,6 +2,7 @@
 using System.Linq;
 using Orchard.Environment.Extensions;
 using Orchard.UI.Resources;
+using Piedone.Combinator.Services;
 
 namespace Piedone.Combinator.Extensions
 {
@@ -27,7 +28,7 @@ namespace Piedone.Combinator.Extensions
         {
             for (int i = 0; i < resources.Count; i++)
             {
-                if (resources[i].Resource.GetFullPath().Contains("/Media/Default/Piedone.Combinator"))
+                if (resources[i].Resource.GetFullPath().Contains(CacheFileService.cacheFolderName))
                 {
                     resources.RemoveAt(i);
                     i--;

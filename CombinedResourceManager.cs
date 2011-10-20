@@ -94,7 +94,7 @@ namespace Piedone.Combinator
                         }
                         else
                         {
-                            _combinedResources[hashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(hashCode), resources, resourceType, settings.CombineCDNResources);
+                            _combinedResources[hashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetUrls(hashCode), resources, resourceType, settings.CombineCDNResources);
                         }
                     }
 
@@ -121,7 +121,7 @@ namespace Piedone.Combinator
                                 }
                                 else
                                 {
-                                    _combinedResources[locationHashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(locationHashCode), scripts, resourceType, settings.CombineCDNResources);
+                                    _combinedResources[locationHashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetUrls(locationHashCode), scripts, resourceType, settings.CombineCDNResources);
                                 }
                                 _combinedResources[locationHashCode].SetLocation(location);
                             }

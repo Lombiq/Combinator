@@ -21,9 +21,12 @@ namespace Piedone.Combinator.Services
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly IClock _clock;
 
-        private const string _rootPath = "Piedone.Combinator/";
-        private const string _stylesPath = _rootPath + "Styles/";
-        private const string _scriptsPath = _rootPath + "Scripts/";
+        private bool _cacheFoldersExist = false;
+
+        public const string cacheFolderName = "CombinedCache";
+        private const string _rootPath = "~/Modules/Piedone.Combinator/";
+        private const string _stylesPath = _rootPath + "Styles/" + cacheFolderName + "/";
+        private const string _scriptsPath = _rootPath + "Scripts/" + cacheFolderName + "/";
 
         public CacheFileService(
             IVirtualPathProvider storageProvider,
@@ -47,22 +50,28 @@ namespace Piedone.Combinator.Services
                 LastUpdatedUtc = _clock.UtcNow
             };
 
+
+            if (!_cacheFoldersExist)
+            {
+                _virtualPathProvider.CreateDirectory(_scriptsPath);
+                _virtualPathProvider.CreateDirectory(_stylesPath);
+
+                _cacheFoldersExist = true;
+            }
+
             var path = MakePath(fileRecord);
 
-            if (!_virtualPathProvider.FileExists(path))
+            using (StreamWriter sw = _virtualPathProvider.CreateText(path))
             {
-                using (StreamWriter sw = _virtualPathProvider.CreateText(path))
-                {
-                    sw.Write(content);
-                }
+                sw.Write(content);
             }
 
             _fileRepository.Create(fileRecord);
 
-            return MakePublicUrl(fileRecord);
+            return MakePath(fileRecord);
         }
 
-        public List<string> GetPublicUrls(int hashCode)
+        public List<string> GetUrls(int hashCode)
         {
             var files = GetRecords(hashCode);
             var fileCount = files.Count;
@@ -71,7 +80,7 @@ namespace Piedone.Combinator.Services
 
             foreach (var file in files)
             {
-                urls.Add(MakePublicUrl(file));
+                urls.Add(MakePath(file));
             }
 
             return urls;
@@ -106,12 +115,16 @@ namespace Piedone.Combinator.Services
         public void Empty()
         {
             // Not efficient, but is there any other way with IRepository?
-            var records = _fileRepository.Table.ToList();
-            DeleteFiles(records);
-
-            if (records.Count() != 0)
+            var files = _fileRepository.Table.ToList();
+            foreach (var file in files)
             {
-                Directory.Delete(_virtualPathProvider.MapPath(_rootPath), true);
+                _fileRepository.Delete(file);
+            }
+
+            if (files.Count() != 0)
+            {
+                if (_virtualPathProvider.DirectoryExists(_scriptsPath)) Directory.Delete(_virtualPathProvider.MapPath(_scriptsPath), true);
+                if (_virtualPathProvider.DirectoryExists(_stylesPath)) Directory.Delete(_virtualPathProvider.MapPath(_stylesPath), true);
             }
         }
 
@@ -146,11 +159,6 @@ namespace Piedone.Combinator.Services
             }
 
             return folderPath + file.HashCode + "-" + file.Slice + "." + extension;
-        }
-
-        private string MakePublicUrl(CombinedFileRecord file)
-        {
-            return "~/Modules/" + MakePath(file);
         }
     }
 }

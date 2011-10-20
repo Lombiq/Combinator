@@ -73,7 +73,15 @@ namespace Piedone.Combinator
             var distinctResources = new Dictionary<string, ResourceRequiredContext>(resources.Count); // Overshooting the size
             foreach (var resource in resources)
             {
-                distinctResources[VirtualPathUtility.GetFileName(resource.Resource.GetFullPath())] = resource;
+                var fullPath = resource.Resource.GetFullPath();
+                if (!resource.Resource.IsCDNResource())
+                {
+                    distinctResources[VirtualPathUtility.GetFileName(fullPath)] = resource;
+                }
+                else
+                {
+                    distinctResources[fullPath] = resource;
+                }
             }
             resources = (from r in distinctResources select r.Value).ToList();
             #endregion

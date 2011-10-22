@@ -26,20 +26,24 @@ namespace Piedone.Combinator
     public class CombinedResourceManager : ResourceManager
     {
         private Dictionary<int, IList<ResourceRequiredContext>> _combinedResources = new Dictionary<int, IList<ResourceRequiredContext>>();
+        private IList<ResourceRequiredContext> _stylesheetResources = new List<ResourceRequiredContext>();
+
         private readonly IOrchardServices _orchardServices;
         private readonly ICacheFileService _cacheFileService;
-        private IList<ResourceRequiredContext> _stylesheetResources = new List<ResourceRequiredContext>();
+        private readonly IResourceFileService _resourceFileService;
 
         public ILogger Logger { get; set; }
 
         public CombinedResourceManager(
             IEnumerable<Meta<IResourceManifestProvider>> resourceProviders,
             IOrchardServices orchardServices,
-            ICacheFileService cacheFileService)
+            ICacheFileService cacheFileService,
+            IResourceFileService resourceFileService)
             : base(resourceProviders)
         {
             _orchardServices = orchardServices;
             _cacheFileService = cacheFileService;
+            _resourceFileService = resourceFileService;
 
             Logger = NullLogger.Instance;
         }
@@ -47,7 +51,7 @@ namespace Piedone.Combinator
         // Possible future code, see http://orchard.codeplex.com/discussions/276210
         public void CombineStylesheets(List<string> urls)
         {
-            _stylesheetResources = MakeResourcesFromPublicUrls(urls, ResourceType.Style);
+            _stylesheetResources = MakeResourcesFromPublicUrlsWithCDNCombination(urls, ResourceType.Style);
             //var hashCode = resources.GetResourceListHashCode();
             //if (!_cacheFileService.Exists(hashCode))
             //{
@@ -163,8 +167,7 @@ namespace Piedone.Combinator
         private IList<ResourceRequiredContext> Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType type, bool combineCDNResources)
         {
             var baseUri = new Uri(_orchardServices.WorkContext.CurrentSite.BaseUrl, UriKind.Absolute);
-            var webClient = new WebClient();
-            var combinedContent = new StringBuilder(10000);
+            var combinedContent = new StringBuilder(resources.Count * 1000);
 
             #region Functions
             Action<string, int> saveCombination =
@@ -182,27 +185,6 @@ namespace Piedone.Combinator
 
                     combinedContent.Clear();
                 };
-
-            var byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
-            var encoding = new System.Text.UTF8Encoding(false);
-            Action<string, int> downloadContent =
-                (url, resourceIndex) =>
-                {
-                    //var content = webClient.DownloadString(url);
-                    var content = encoding.GetString(webClient.DownloadData(url));
-                    if (content.StartsWith(byteOrderMarkUtf8)) // Stripping "?"s from the beginning of css commments "/*"
-                    {
-                        content = content.Remove(0, byteOrderMarkUtf8.Length);
-                    }
-
-                    // Jumping up a directory
-                    var uriSegments = new Uri(url).Segments; // Path class is not good for this
-                    var parentDir = String.Join("", uriSegments.Take(uriSegments.Length - 2).ToArray());
-                    content = Regex.Replace(content, Regex.Escape("../images/"), parentDir + "Images/", RegexOptions.IgnoreCase);
-
-                    combinedContent.Append(content); // It seems that it's not possible to read local files directly
-                    resources.RemoveAt(resourceIndex);
-                };
             #endregion
 
             var fullPath = "";
@@ -219,20 +201,25 @@ namespace Piedone.Combinator
                         {
                             if (fullPath.StartsWith(baseUri.AbsolutePath))
                             {
-                                // Strip e.g. /OrchardLocal or even the first slash
-                                // Finds the first occurence and replaces it with empty string
-                                int Place = fullPath.IndexOf(baseUri.AbsolutePath);
-                                fullPath = fullPath.Remove(Place, baseUri.AbsolutePath.Length).Insert(Place, "");
-                            }
-                            else fullPath = fullPath.Replace("~/", ""); // Strip the tilde/ from ~/Modules/...
-                            fullPath = baseUri.AbsoluteUri + fullPath;
+                                // Strips e.g. /OrchardLocal
+                                if (baseUri.AbsolutePath != "/")
+                                {
+                                    int Place = fullPath.IndexOf(baseUri.AbsolutePath);
+                                    // Finds the first occurence and replaces it with empty string
+                                    fullPath = fullPath.Remove(Place, baseUri.AbsolutePath.Length).Insert(Place, ""); 
+                                }
 
-                            downloadContent(fullPath, i);
+                                fullPath = "~" + fullPath;
+                            }
+
+                            combinedContent.Append(_resourceFileService.GetLocalResourceContent(fullPath));
+                            resources.RemoveAt(i);
                             i--;
                         }
                         else if (combineCDNResources)
                         {
-                            downloadContent(fullPath, i);
+                            _resourceFileService.GetRemoteResourceContent(fullPath);
+                            resources.RemoveAt(i);
                             i--;
                         }
                         else
@@ -266,11 +253,11 @@ namespace Piedone.Combinator
 
         private IList<ResourceRequiredContext> MakeResourcesFromPublicUrls(IList<string> urls, IList<ResourceRequiredContext> resources, ResourceType type, bool combineCDNResources)
         {
-            if (combineCDNResources) return MakeResourcesFromPublicUrlsWithCDNCombination(urls, resources, type);
-            return MakeResourcesFromPublicUrls(urls, type);
+            if (!combineCDNResources) return MakeResourcesFromPublicUrls(urls, resources, type);
+            return MakeResourcesFromPublicUrlsWithCDNCombination(urls, type);
         }
 
-        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrls(IList<string> urls, ResourceType type)
+        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrlsWithCDNCombination(IList<string> urls, ResourceType type)
         {
             var resources = new List<ResourceRequiredContext>(urls.Count);
 
@@ -282,7 +269,7 @@ namespace Piedone.Combinator
             return resources;
         }
 
-        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrlsWithCDNCombination(IList<string> urls, IList<ResourceRequiredContext> resources, ResourceType type)
+        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrls(IList<string> urls, IList<ResourceRequiredContext> resources, ResourceType type)
         {
             List<ResourceRequiredContext> combinedResources;
 

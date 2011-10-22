@@ -29,12 +29,12 @@ namespace Piedone.Combinator.Services
         private const string _scriptsPath = _rootPath + "Scripts/" + cacheFolderName + "/";
 
         public CacheFileService(
-            IVirtualPathProvider storageProvider,
+            IVirtualPathProvider virtualPathProvider,
             IRepository<CombinedFileRecord> fileRepository,
             IClock clock)
         {
             _fileRepository = fileRepository;
-            _virtualPathProvider = storageProvider;
+            _virtualPathProvider = virtualPathProvider;
             _clock = clock;
         }
 

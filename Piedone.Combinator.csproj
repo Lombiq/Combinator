@@ -91,6 +91,8 @@
     <Compile Include="Models\CombinatorSettingsPart.cs" />
     <Compile Include="Services\CacheFileService.cs" />
     <Compile Include="Services\ICacheFileService.cs" />
+    <Compile Include="Services\IResourceFileService.cs" />
+    <Compile Include="Services\ResourceFileService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Web.config" />

@@ -1,7 +1,7 @@
 ﻿using Orchard.ContentManagement.Handlers;
+using Orchard.Data;
 using Orchard.Environment.Extensions;
 using Piedone.Combinator.Models;
-using Orchard.Data;
 
 namespace Piedone.Combinator
 {

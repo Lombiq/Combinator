@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
+using System.Text;
+using System.Web;
 using Autofac.Features.Metadata;
 using Orchard;
+using Orchard.ContentManagement; // For generic ContentManager methods
 using Orchard.Environment.Extensions;
 using Orchard.Logging;
 using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
-using Piedone.Combinator.Services;
 using Piedone.Combinator.Models;
-using Orchard.ContentManagement; // For generic ContentManager methods
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Web;
+using Piedone.Combinator.Services;
 
 namespace Piedone.Combinator
 {

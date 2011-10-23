@@ -1,16 +1,12 @@
 ﻿using System.Collections.Generic;
-using System;
 using System.IO;
 using System.Linq;
 using Orchard.Data;
 using Orchard.Environment.Extensions;
-using Orchard.FileSystems.Media;
+using Orchard.FileSystems.VirtualPath;
 using Orchard.Services;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
-using System.Threading;
-using System.Text;
-using Orchard.FileSystems.VirtualPath;
 
 namespace Piedone.Combinator.Services
 {

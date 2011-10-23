@@ -1,10 +1,8 @@
-﻿using System;
-using System.Web.Mvc;
-using Piedone.Combinator.Services;
-using Orchard.Mvc.Extensions;
+﻿using System.Web.Mvc;
 using Orchard;
 using Orchard.Environment.Extensions;
 using Orchard.Security;
+using Piedone.Combinator.Services;
 
 namespace Piedone.Combinator.Controllers
 {

@@ -1,5 +1,4 @@
-﻿using System;
-using Orchard;
+﻿using Orchard;
 
 namespace Piedone.Combinator.Services
 {

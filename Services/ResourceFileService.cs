@@ -74,11 +74,7 @@ namespace Piedone.Combinator.Services
                 content = content.Remove(0, _byteOrderMarkUtf8.Length);
             }
 
-
-
             return content;
-
-            //resources.RemoveAt(resourceIndex);
         }
     }
 }

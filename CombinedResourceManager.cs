@@ -13,6 +13,8 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using System.Text.RegularExpressions;
+using System.IO;
 
 namespace Piedone.Combinator
 {
@@ -197,6 +199,11 @@ namespace Piedone.Combinator
                         // Ensuring the resource is a local one
                         if (!resources[i].Resource.IsCDNResource())
                         {
+                            // Modify relative paths to have correct values
+                            var uriSegments = fullPath.Replace("~", "").Split('/'); // Path class is not good for this
+                            var parentDir = String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
+                            var imageFolderUrl = parentDir + "Images/";
+
                             if (fullPath.StartsWith(baseUri.AbsolutePath))
                             {
                                 // Strips e.g. /OrchardLocal
@@ -206,11 +213,15 @@ namespace Piedone.Combinator
                                     // Finds the first occurence and replaces it with empty string
                                     fullPath = fullPath.Remove(Place, baseUri.AbsolutePath.Length).Insert(Place, ""); 
                                 }
-
+                                
                                 fullPath = "~" + fullPath;
                             }
 
-                            combinedContent.Append(_resourceFileService.GetLocalResourceContent(fullPath));
+                            var content = _resourceFileService.GetLocalResourceContent(fullPath);
+
+                            content = Regex.Replace(content, Regex.Escape("../images/"), imageFolderUrl, RegexOptions.IgnoreCase);
+                            
+                            combinedContent.Append(content);
                             resources.RemoveAt(i);
                             i--;
                         }

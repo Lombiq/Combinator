@@ -74,10 +74,7 @@ namespace Piedone.Combinator.Services
                 content = content.Remove(0, _byteOrderMarkUtf8.Length);
             }
 
-            // Jumping up a directory
-            var uriSegments = new Uri(url).Segments; // Path class is not good for this
-            var parentDir = String.Join("", uriSegments.Take(uriSegments.Length - 2).ToArray());
-            content = Regex.Replace(content, Regex.Escape("../images/"), parentDir + "Images/", RegexOptions.IgnoreCase);
+
 
             return content;
 

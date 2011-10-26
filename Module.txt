@@ -10,4 +10,4 @@ Features:
 		Name: CSS/JS Combinator
         Description: Combines external stylesheets and javascript files
 		Category: Optimization
-		Dependencies: Orchard.Media, Orchard.jQuery
+		Dependencies: Orchard.jQuery

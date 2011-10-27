@@ -69,8 +69,8 @@ namespace Piedone.Combinator
             if (resources.Count == 0) return resources;
 
             // Ugly hack to prevent combination of admin resources till the issue is solved
-            var rawUrl = _orchardServices.WorkContext.HttpContext.Request.RawUrl;
-            if (rawUrl.Contains("/Admin") || rawUrl.Contains("/Packaging/Gallery") || rawUrl.Contains("/Packaging/PackagingServices")) return resources;
+            var rawUrl = _orchardServices.WorkContext.HttpContext.Request.RawUrl.ToLowerInvariant();
+            if (rawUrl.Contains("/admin") || rawUrl.Contains("/packaging/gallery") || rawUrl.Contains("/packaging/packagingservices")) return resources;
 
             #region Soon-to-be legacy code
             // See http://orchard.codeplex.com/discussions/276210

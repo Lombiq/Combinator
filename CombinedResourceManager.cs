@@ -70,7 +70,7 @@ namespace Piedone.Combinator
 
             // Ugly hack to prevent combination of admin resources till the issue is solved
             var rawUrl = _orchardServices.WorkContext.HttpContext.Request.RawUrl.ToLowerInvariant();
-            if (rawUrl.Contains("/admin") || rawUrl.Contains("/packaging/gallery") || rawUrl.Contains("/packaging/packagingservices")) return resources;
+            if (Regex.IsMatch(rawUrl, "/admin(/.*?|$)") || rawUrl.Contains("/packaging/gallery") || rawUrl.Contains("/packaging/packagingservices")) return resources;
 
             #region Soon-to-be legacy code
             // See http://orchard.codeplex.com/discussions/276210
@@ -218,7 +218,7 @@ namespace Piedone.Combinator
 
                             var content = _resourceFileService.GetLocalResourceContent(fullPath);
 
-                            content = Regex.Replace(content, Regex.Escape("../"), parentDirUrl, RegexOptions.IgnoreCase);
+                            content = Regex.Replace(content, "\\.\\./", parentDirUrl, RegexOptions.IgnoreCase);
                             
                             combinedContent.Append(content);
                             resources.RemoveAt(i);

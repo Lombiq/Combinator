@@ -201,8 +201,7 @@ namespace Piedone.Combinator
                         {
                             // Modify relative paths to have correct values
                             var uriSegments = fullPath.Replace("~", "").Split('/'); // Path class is not good for this
-                            var parentDir = String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
-                            var imageFolderUrl = parentDir + "Images/";
+                            var parentDirUrl = String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
 
                             if (fullPath.StartsWith(baseUri.AbsolutePath))
                             {
@@ -219,7 +218,7 @@ namespace Piedone.Combinator
 
                             var content = _resourceFileService.GetLocalResourceContent(fullPath);
 
-                            content = Regex.Replace(content, Regex.Escape("../images/"), imageFolderUrl, RegexOptions.IgnoreCase);
+                            content = Regex.Replace(content, Regex.Escape("../"), parentDirUrl, RegexOptions.IgnoreCase);
                             
                             combinedContent.Append(content);
                             resources.RemoveAt(i);

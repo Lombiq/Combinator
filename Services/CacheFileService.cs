@@ -85,16 +85,6 @@ namespace Piedone.Combinator.Services
         public bool Exists(int hashCode)
         {
             // Maybe also chek if the file exists?
-            // This is ugly as hell, but currently there is no other way of checking with IStorageProvider if a file exists.
-            //var exists = true;
-            //try
-            //{
-            //    _storageProvider.GetPublicUrl(path);
-            //}
-            //catch (Exception)
-            //{
-            //    exists = false;
-            //}
             return _fileRepository.Count(file => file.HashCode == hashCode) != 0;
         }
 
@@ -110,7 +100,7 @@ namespace Piedone.Combinator.Services
 
         public void Empty()
         {
-            // Not efficient, but is there any other way with IRepository?
+            // Not efficient (a truncate would be better), but is there any other way with IRepository?
             var files = _fileRepository.Table.ToList();
             foreach (var file in files)
             {

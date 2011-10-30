@@ -7,6 +7,7 @@ using Orchard.FileSystems.VirtualPath;
 using Orchard.Services;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
+using Orchard.Caching;
 
 namespace Piedone.Combinator.Services
 {
@@ -17,21 +18,34 @@ namespace Piedone.Combinator.Services
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly IClock _clock;
 
-        private bool _cacheFoldersExist = false;
+        #region In-memory caching fields
+        private readonly ICacheManager _cacheManager;
+        private readonly ISignals _signals;
+        private const string CachePrefix = "Piedone.Combinator.";
+        private const string CacheChangedSignal = "Associativy.Combinator.CacheChanged";
+        #endregion
 
+        #region Static file caching fields
+        private bool _cacheFoldersExist = false;
         public const string cacheFolderName = "CombinedCache";
         private const string _rootPath = "~/Modules/Piedone.Combinator/";
         private const string _stylesPath = _rootPath + "Styles/" + cacheFolderName + "/";
         private const string _scriptsPath = _rootPath + "Scripts/" + cacheFolderName + "/";
+        #endregion
 
         public CacheFileService(
             IVirtualPathProvider virtualPathProvider,
             IRepository<CombinedFileRecord> fileRepository,
-            IClock clock)
+            IClock clock,
+            ICacheManager cacheManager,
+            ISignals signals)
         {
             _fileRepository = fileRepository;
             _virtualPathProvider = virtualPathProvider;
             _clock = clock;
+
+            _cacheManager = cacheManager;
+            _signals = signals;
         }
 
         public string Save(int hashCode, ResourceType type, string content)
@@ -64,28 +78,40 @@ namespace Piedone.Combinator.Services
 
             _fileRepository.Create(fileRecord);
 
+            TriggerCacheChangedSignal();
+
             return MakePath(fileRecord);
         }
 
         public List<string> GetUrls(int hashCode)
         {
-            var files = GetRecords(hashCode);
-            var fileCount = files.Count;
-
-            var urls = new List<string>(fileCount);
-
-            foreach (var file in files)
+            return _cacheManager.Get(MakeCacheKey("GetUrls." + hashCode.ToString()), ctx =>
             {
-                urls.Add(MakePath(file));
-            }
+                MonitorCacheChangedSignal(ctx);
 
-            return urls;
+                var files = GetRecords(hashCode);
+                var fileCount = files.Count;
+
+                var urls = new List<string>(fileCount);
+
+                foreach (var file in files)
+                {
+                    urls.Add(MakePath(file));
+                }
+
+                return urls;
+            });
+
         }
 
         public bool Exists(int hashCode)
         {
-            // Maybe also chek if the file exists?
-            return _fileRepository.Count(file => file.HashCode == hashCode) != 0;
+            return _cacheManager.Get(MakeCacheKey("Exists." + hashCode.ToString()), ctx =>
+            {
+                MonitorCacheChangedSignal(ctx);
+                // Maybe also chek if the file exists?
+                return _fileRepository.Count(file => file.HashCode == hashCode) != 0;
+            });
         }
 
         public int GetCount()
@@ -96,6 +122,8 @@ namespace Piedone.Combinator.Services
         public void Delete(int hashCode, ResourceType type)
         {
             DeleteFiles(GetRecords(hashCode));
+
+            TriggerCacheChangedSignal();
         }
 
         public void Empty()
@@ -112,6 +140,8 @@ namespace Piedone.Combinator.Services
                 if (_virtualPathProvider.DirectoryExists(_scriptsPath)) Directory.Delete(_virtualPathProvider.MapPath(_scriptsPath), true);
                 if (_virtualPathProvider.DirectoryExists(_stylesPath)) Directory.Delete(_virtualPathProvider.MapPath(_stylesPath), true);
             }
+
+            TriggerCacheChangedSignal();
         }
 
         private List<CombinedFileRecord> GetRecords(int hashCode)
@@ -126,6 +156,8 @@ namespace Piedone.Combinator.Services
                 _fileRepository.Delete(file);
                 File.Delete(_virtualPathProvider.MapPath(MakePath(file)));
             }
+
+            TriggerCacheChangedSignal();
         }
 
         private string MakePath(CombinedFileRecord file)
@@ -146,5 +178,22 @@ namespace Piedone.Combinator.Services
 
             return folderPath + file.HashCode + "-" + file.Slice + "." + extension;
         }
+
+        #region In-memory caching methods
+        private void MonitorCacheChangedSignal(AcquireContext<string> ctx)
+        {
+            ctx.Monitor(_signals.When(CacheChangedSignal));
+        }
+
+        private void TriggerCacheChangedSignal()
+        {
+            _signals.Trigger(CacheChangedSignal);
+        }
+
+        private string MakeCacheKey(string name)
+        {
+            return CachePrefix + name;
+        }
+        #endregion
     }
 }

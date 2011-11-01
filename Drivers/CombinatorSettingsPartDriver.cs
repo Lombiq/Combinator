@@ -13,6 +13,11 @@ namespace Piedone.Combinator.Drivers
         private readonly IOrchardServices _orchardServices;
         private readonly ICacheFileService _cacheFileService;
 
+        protected override string Prefix
+        {
+            get { return "Combinator"; }
+        }
+
         public CombinatorSettingsPartDriver(
             IOrchardServices orchardServices,
             ICacheFileService cacheFileService)

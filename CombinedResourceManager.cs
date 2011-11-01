@@ -126,7 +126,6 @@ namespace Piedone.Combinator
 
                                 if (!_cacheFileService.Exists(locationHashCode))
                                 {
-                                    //if (scripts.Count != 0)
                                     _combinedResources[locationHashCode] = Combine(scripts, locationHashCode, resourceType, settings.CombineCDNResources);
                                 }
                                 else
@@ -148,7 +147,6 @@ namespace Piedone.Combinator
             }
             catch (Exception e)
             {
-                // There was some problem with reading a file
                 Logger.Error(e, "Error when combining " + resourceType + " files");
                 return base.BuildRequiredResources(stringResourceType);
             }
@@ -160,11 +158,11 @@ namespace Piedone.Combinator
         /// <param name="resources">Resources to combine</param>
         /// <param name="hashCode">Just so it shouldn't be recalculated</param>
         /// <param name="type">Type of the resources</param>
+        /// <param name="combineCDNResources">Whether CDN resources should be combined or not</param>
         /// <returns>Most of the times the single combined content, but can return more if some of them couldn't be
         /// combined (e.g. was not found or is not a local resource)</returns>
         private IList<ResourceRequiredContext> Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType type, bool combineCDNResources)
         {
-            var baseUri = new Uri(_orchardServices.WorkContext.CurrentSite.BaseUrl, UriKind.Absolute);
             var combinedContent = new StringBuilder(resources.Count * 1000);
 
             #region Functions
@@ -185,6 +183,7 @@ namespace Piedone.Combinator
                 };
             #endregion
 
+            var applicationPath = _orchardServices.WorkContext.HttpContext.Request.ApplicationPath;
             var fullPath = "";
             for (int i = 0; i < resources.Count; i++)
             {
@@ -197,18 +196,14 @@ namespace Piedone.Combinator
                         // Ensuring the resource is a local one
                         if (!resources[i].Resource.IsCDNResource())
                         {
-                            // Modify relative paths to have correct values
-                            var uriSegments = fullPath.Replace("~", "").Split('/'); // Path class is not good for this
-                            var parentDirUrl = String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
-
-                            if (fullPath.StartsWith(baseUri.AbsolutePath))
+                            if (fullPath.StartsWith(applicationPath))
                             {
                                 // Strips e.g. /OrchardLocal
-                                if (baseUri.AbsolutePath != "/")
+                                if (applicationPath != "/")
                                 {
-                                    int Place = fullPath.IndexOf(baseUri.AbsolutePath);
+                                    int Place = fullPath.IndexOf(applicationPath);
                                     // Finds the first occurence and replaces it with empty string
-                                    fullPath = fullPath.Remove(Place, baseUri.AbsolutePath.Length).Insert(Place, ""); 
+                                    fullPath = fullPath.Remove(Place, applicationPath.Length).Insert(Place, ""); 
                                 }
                                 
                                 fullPath = "~" + fullPath;
@@ -216,7 +211,18 @@ namespace Piedone.Combinator
 
                             var content = _resourceFileService.GetLocalResourceContent(fullPath);
 
+                            // Modify relative paths to have correct values
+                            var uriSegments = fullPath.Replace("~", "").Split('/'); // Path class is not good for this
+                            var parentDirUrl = String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
                             content = Regex.Replace(content, "\\.\\./", parentDirUrl, RegexOptions.IgnoreCase);
+
+
+                            if (type == ResourceType.Style)
+                            {
+                                content = "background-image:url(\"my-logo.png\");" + content;
+                                var stylesheetDirUrl = String.Join("/", uriSegments.Take(uriSegments.Length - 1).ToArray()) + "/";
+                                content = Regex.Replace(content, "(url\\(['|\"]?)", "$1" + stylesheetDirUrl, RegexOptions.IgnoreCase);
+                            }
                             
                             combinedContent.Append(content);
                             resources.RemoveAt(i);

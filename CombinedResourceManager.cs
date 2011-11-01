@@ -34,6 +34,8 @@ namespace Piedone.Combinator
 
         public ILogger Logger { get; set; }
 
+        public static bool IsDisabled { get; set; }
+
         public CombinedResourceManager(
             IEnumerable<Meta<IResourceManifestProvider>> resourceProviders,
             IOrchardServices orchardServices,
@@ -66,11 +68,7 @@ namespace Piedone.Combinator
             // with a reference that shouldn't be given away.
             var resources = new List<ResourceRequiredContext>(base.BuildRequiredResources(stringResourceType));
             resources.DeleteCombinedResources();
-            if (resources.Count == 0) return resources;
-
-            // Ugly hack to prevent combination of admin resources till the issue is solved
-            var rawUrl = _orchardServices.WorkContext.HttpContext.Request.RawUrl.ToLowerInvariant();
-            if (Regex.IsMatch(rawUrl, "/admin(/.*?|$)") || rawUrl.Contains("/packaging/gallery") || rawUrl.Contains("/packaging/packagingservices")) return resources;
+            if (resources.Count == 0 || IsDisabled) return resources;
 
             #region Soon-to-be legacy code
             // See http://orchard.codeplex.com/discussions/276210

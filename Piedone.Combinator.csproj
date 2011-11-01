@@ -82,6 +82,7 @@
     <Compile Include="Drivers\CombinatorSettingsPartDriver.cs" />
     <Compile Include="Extensions\ResourceDefinitionExtensions.cs" />
     <Compile Include="Extensions\ResourceListExtensions.cs" />
+    <Compile Include="Filters\AdminFilter.cs" />
     <Compile Include="Handlers\CombinatorSettingsPartHandler.cs" />
     <Compile Include="Helpers\ResourceTypeHelper.cs" />
     <Compile Include="Migrations.cs" />

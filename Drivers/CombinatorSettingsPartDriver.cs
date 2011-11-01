@@ -24,13 +24,16 @@ namespace Piedone.Combinator.Drivers
         // GET
         protected override DriverResult Editor(CombinatorSettingsPart part, dynamic shapeHelper)
         {
-            part.CacheFileCount = _cacheFileService.GetCount();
-
             return ContentShape("Parts_CombinatorSettings_SiteSettings",
-                    () => shapeHelper.EditorTemplate(
-                        TemplateName: "Parts.CombinatorSettings.SiteSettings",
-                        Model: part,
-                        Prefix: Prefix));
+                    () =>
+                    {
+                        part.CacheFileCount = _cacheFileService.GetCount();
+
+                        return shapeHelper.EditorTemplate(
+                            TemplateName: "Parts.CombinatorSettings.SiteSettings",
+                            Model: part,
+                            Prefix: Prefix);
+                    });
         }
 
         // POST

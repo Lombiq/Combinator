@@ -219,9 +219,21 @@ namespace Piedone.Combinator
 
                             if (type == ResourceType.Style)
                             {
-                                content = "background-image:url(\"my-logo.png\");" + content;
                                 var stylesheetDirUrl = String.Join("/", uriSegments.Take(uriSegments.Length - 1).ToArray()) + "/";
-                                content = Regex.Replace(content, "(url\\(['|\"]?)", "$1" + stylesheetDirUrl, RegexOptions.IgnoreCase);
+                                //content = Regex.Replace(content, "(url\\(['|\"]?)", "$1" + stylesheetDirUrl, RegexOptions.IgnoreCase);
+                                content = Regex.Replace(
+                                    content,
+                                    "url\\(['|\"]?(.+?)['|\"]?\\)",
+                                    match =>
+                                    {
+                                        var z = match.Groups[1].Value;
+                                        if (!Uri.IsWellFormedUriString(match.Groups[1].Value, UriKind.Absolute)) // Ensuring it's a local url
+                                        {
+                                            return "url(\"" + stylesheetDirUrl + match.Groups[1].Value + "\")";
+                                        }
+                                        return match.Groups[0].Value;
+                                    },
+                                    RegexOptions.IgnoreCase);
                             }
                             
                             combinedContent.Append(content);

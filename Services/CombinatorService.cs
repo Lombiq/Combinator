@@ -174,23 +174,11 @@ namespace Piedone.Combinator.Services
                             var parentDirUrl = String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
                             content = Regex.Replace(content, "\\.\\./", parentDirUrl, RegexOptions.IgnoreCase);
 
-
+                            // Modify relative paths that point to the same dir as the stylesheet's to have correct values
                             if (resourceType == ResourceType.Style)
                             {
                                 var stylesheetDirUrl = String.Join("/", uriSegments.Take(uriSegments.Length - 1).ToArray()) + "/";
-                                //content = Regex.Replace(content, "(url\\(['|\"]?)", "$1" + stylesheetDirUrl, RegexOptions.IgnoreCase);
-                                content = Regex.Replace(
-                                    content,
-                                    "url\\(['|\"]?(.+?)['|\"]?\\)",
-                                    match =>
-                                    {
-                                        if (!Uri.IsWellFormedUriString(match.Groups[1].Value, UriKind.Absolute)) // Ensuring it's a local url
-                                        {
-                                            return "url(\"" + stylesheetDirUrl + match.Groups[1].Value + "\")";
-                                        }
-                                        return match.Groups[0].Value;
-                                    },
-                                    RegexOptions.IgnoreCase);
+                                content = Regex.Replace(content, "url\\(['|\"]?([^/]+?)['|\"]?\\)", "url(\"" + stylesheetDirUrl + "$1\")", RegexOptions.IgnoreCase);
                             }
 
                             if (minifyResources && (String.IsNullOrEmpty(minificationExcludeRegex) || !Regex.IsMatch(fullPath, minificationExcludeRegex)))

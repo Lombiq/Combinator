@@ -5,6 +5,7 @@ using System.Web.Mvc;
 using Orchard.Environment.Extensions;
 using Orchard.Mvc.Filters;
 using Orchard.UI.Admin;
+using Orchard.UI.Resources;
 
 namespace Piedone.Combinator.Filters
 {
@@ -17,9 +18,17 @@ namespace Piedone.Combinator.Filters
     [OrchardFeature("Piedone.Combinator")]
     public class AdminFilter : FilterProvider, IAuthorizationFilter
     {
+        private readonly IResourceManager _resourceManager;
+
+        public AdminFilter(IResourceManager resourceManager)
+        {
+            _resourceManager = resourceManager;
+        }
+
         public void OnAuthorization(AuthorizationContext filterContext)
         {
-            CombinedResourceManager.IsDisabled = IsAdmin(filterContext);
+            var combinedResourceManager = _resourceManager as CombinedResourceManager;
+            combinedResourceManager.IsDisabled = IsAdmin(filterContext);
         }
 
         private static bool IsAdmin(AuthorizationContext filterContext)

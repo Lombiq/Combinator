@@ -27,7 +27,7 @@ namespace Piedone.Combinator
 
         public ILogger Logger { get; set; }
 
-        public static bool IsDisabled { get; set; }
+        public bool IsDisabled { get; set; }
 
         public CombinedResourceManager(
             IEnumerable<Meta<IResourceManifestProvider>> resourceProviders,

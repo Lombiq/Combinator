@@ -12,6 +12,7 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using Orchard.FileSystems.VirtualPath;
 
 namespace Piedone.Combinator
 {
@@ -24,6 +25,7 @@ namespace Piedone.Combinator
     {
         private readonly IOrchardServices _orchardServices;
         private readonly ICombinatorService _combinatorService;
+        private readonly IVirtualPathProvider _virtualPathProvider; // Only needed as long as the problem of overridden stylesheets is not settled
 
         public ILogger Logger { get; set; }
 
@@ -32,12 +34,14 @@ namespace Piedone.Combinator
         public CombinedResourceManager(
             IEnumerable<Meta<IResourceManifestProvider>> resourceProviders,
             IOrchardServices orchardServices,
-            ICombinatorService combinatorService)
+            ICombinatorService combinatorService,
+            IVirtualPathProvider virtualPathProvider)
             : base(resourceProviders)
         {
             _orchardServices = orchardServices;
             combinatorService.ResourceManager = this;
             _combinatorService = combinatorService;
+            _virtualPathProvider = virtualPathProvider;
 
             Logger = NullLogger.Instance;
         }
@@ -56,7 +60,7 @@ namespace Piedone.Combinator
             foreach (var resource in resources)
             {
                 var fullPath = resource.Resource.GetFullPath();
-                if (!resource.Resource.IsCDNResource())
+                if (!resource.Resource.IsCDNResource() && _virtualPathProvider.FileExists(fullPath))
                 {
                     distinctResources[VirtualPathUtility.GetFileName(fullPath)] = resource;
                 }

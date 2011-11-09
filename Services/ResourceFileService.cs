@@ -6,7 +6,7 @@ using Orchard.FileSystems.VirtualPath;
 
 namespace Piedone.Combinator.Services
 {
-    public class ResourceFileService : Piedone.Combinator.Services.IResourceFileService
+    public class ResourceFileService : IResourceFileService
     {
         private readonly IVirtualPathProvider _virtualPathProvider;
 

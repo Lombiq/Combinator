@@ -103,6 +103,7 @@ namespace Piedone.Combinator.Services
 
             combineScriptsAtLocation(ResourceLocation.Head);
             combineScriptsAtLocation(ResourceLocation.Foot);
+            combineScriptsAtLocation(ResourceLocation.Unspecified);
 
             return combinedScripts;
         }

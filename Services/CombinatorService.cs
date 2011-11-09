@@ -9,9 +9,12 @@ using Orchard.UI.Resources;
 // For generic ContentManager methods
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
+using Yahoo.Yui.Compressor;
+using Orchard.Environment.Extensions;
 
 namespace Piedone.Combinator.Services
 {
+    [OrchardFeature("Piedone.Combinator")]
     public class CombinatorService : ICombinatorService
     {
         /// <summary>
@@ -43,7 +46,11 @@ namespace Piedone.Combinator.Services
             Logger = NullLogger.Instance;
         }
 
-        public IList<ResourceRequiredContext> CombineStylesheets(IList<ResourceRequiredContext> resources, bool combineCDNResources = false)
+        public IList<ResourceRequiredContext> CombineStylesheets(
+            IList<ResourceRequiredContext> resources, 
+            bool combineCDNResources = false, 
+            bool minifyResources = true, 
+            string minificationExcludeRegex = "")
         {
             var hashCode = resources.GetResourceListHashCode();
 
@@ -51,7 +58,7 @@ namespace Piedone.Combinator.Services
             {
                 if (!_cacheFileService.Exists(hashCode))
                 {
-                    _combinedResources[hashCode] = Combine(resources, hashCode, ResourceType.Style, combineCDNResources);
+                    _combinedResources[hashCode] = Combine(resources, hashCode, ResourceType.Style, combineCDNResources, minifyResources, minificationExcludeRegex);
                 }
                 else
                 {
@@ -62,7 +69,11 @@ namespace Piedone.Combinator.Services
             return _combinedResources[hashCode];
         }
 
-        public IList<ResourceRequiredContext> CombineScripts(IList<ResourceRequiredContext> resources, bool combineCDNResources = false)
+        public IList<ResourceRequiredContext> CombineScripts(
+            IList<ResourceRequiredContext> resources, 
+            bool combineCDNResources = false, 
+            bool minifyResources = true,
+            string minificationExcludeRegex = "")
         {
             var hashCode = resources.GetResourceListHashCode();
             var combinedScripts = new List<ResourceRequiredContext>(2);
@@ -79,7 +90,7 @@ namespace Piedone.Combinator.Services
 
                         if (!_cacheFileService.Exists(locationHashCode))
                         {
-                            _combinedResources[locationHashCode] = Combine(scripts, locationHashCode, ResourceType.JavaScript, combineCDNResources);
+                            _combinedResources[locationHashCode] = Combine(scripts, locationHashCode, ResourceType.JavaScript, combineCDNResources, minifyResources, minificationExcludeRegex);
                         }
                         else
                         {
@@ -103,10 +114,12 @@ namespace Piedone.Combinator.Services
         /// <param name="hashCode">Just so it shouldn't be recalculated</param>
         /// <param name="resourceType">Type of the resources</param>
         /// <param name="combineCDNResources">Whether CDN resources should be combined or not</param>
+        /// <param name="minifyResources">If true, resources will be minified</param>
+        /// <param name="minificationExcludeRegex">The regex to use when excluding resources from minification</param>
         /// <returns>Most of the times the single combined content, but can return more if some of them couldn't be
         /// combined (e.g. was not found or is not a local resource)</returns>
         /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (i.e. it was missing or could not be opened)</exception>
-        private IList<ResourceRequiredContext> Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType resourceType, bool combineCDNResources)
+        private IList<ResourceRequiredContext> Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType resourceType, bool combineCDNResources, bool minifyResources, string minificationExcludeRegex)
         {
             var combinedContent = new StringBuilder(resources.Count * 1000);
 
@@ -171,7 +184,6 @@ namespace Piedone.Combinator.Services
                                     "url\\(['|\"]?(.+?)['|\"]?\\)",
                                     match =>
                                     {
-                                        var z = match.Groups[1].Value;
                                         if (!Uri.IsWellFormedUriString(match.Groups[1].Value, UriKind.Absolute)) // Ensuring it's a local url
                                         {
                                             return "url(\"" + stylesheetDirUrl + match.Groups[1].Value + "\")";
@@ -179,6 +191,18 @@ namespace Piedone.Combinator.Services
                                         return match.Groups[0].Value;
                                     },
                                     RegexOptions.IgnoreCase);
+                            }
+
+                            if (minifyResources && (String.IsNullOrEmpty(minificationExcludeRegex) || !Regex.IsMatch(fullPath, minificationExcludeRegex)))
+                            {
+                                if (resourceType == ResourceType.Style)
+                                {
+                                    content = CssCompressor.Compress(content);
+                                }
+                                else if (resourceType == ResourceType.JavaScript)
+                                {
+                                    content = JavaScriptCompressor.Compress(content);
+                                }
                             }
 
                             combinedContent.Append(content);

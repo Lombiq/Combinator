@@ -1,6 +1,7 @@
 using System;
 using Orchard.Data.Migration;
 using Orchard.Environment.Extensions;
+using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator.Migrations
 {
@@ -9,7 +10,7 @@ namespace Piedone.Combinator.Migrations
     {
         public int Create()
         {
-            SchemaBuilder.CreateTable("CombinedFileRecord", table => table
+            SchemaBuilder.CreateTable(typeof(CombinedFileRecord).Name, table => table
                 .Column<int>("Id", column => column.PrimaryKey().Identity())
                 .Column<int>("HashCode", column => column.NotNull())
                 .Column<int>("Slice")
@@ -20,13 +21,26 @@ namespace Piedone.Combinator.Migrations
                     .CreateIndex("File", new string[] { "HashCode" })
                 );
 
-            SchemaBuilder.CreateTable("CombinatorSettingsPartRecord", table => table
+            SchemaBuilder.CreateTable(typeof(CombinatorSettingsPartRecord).Name, table => table
                 .ContentPartRecord()
                 .Column<bool>("CombineCDNResources")
             );
 
 
             return 1;
+        }
+
+        public int UpdateFrom1()
+        {
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name, table => table
+                .AddColumn<bool>("MinifyResources")
+                );
+
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name, table => table
+                .AddColumn<string>("MinificationExcludeRegex")
+                );
+
+            return 2;
         }
     }
 }

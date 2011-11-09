@@ -7,10 +7,14 @@ namespace Piedone.Combinator.Models
     public class CombinatorSettingsPartRecord : ContentPartRecord
     {
         public virtual bool CombineCDNResources { get; set; }
+        public virtual bool MinifyResources { get; set; }
+        public virtual string MinificationExcludeRegex { get; set; }
 
         public CombinatorSettingsPartRecord()
         {
             CombineCDNResources = false;
+            MinifyResources = true;
+            MinificationExcludeRegex = "";
         }
     }
 }

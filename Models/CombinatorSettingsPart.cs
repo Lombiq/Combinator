@@ -12,6 +12,18 @@ namespace Piedone.Combinator.Models
             set { Record.CombineCDNResources = value; }
         }
 
+        public bool MinifyResources
+        {
+            get { return Record.MinifyResources; }
+            set { Record.MinifyResources = value; }
+        }
+
+        public string MinificationExcludeRegex
+        {
+            get { return Record.MinificationExcludeRegex; }
+            set { Record.MinificationExcludeRegex = value; }
+        }
+
         public int CacheFileCount { get; set; }
     }
 }

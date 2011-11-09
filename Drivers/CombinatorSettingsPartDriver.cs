@@ -44,12 +44,16 @@ namespace Piedone.Combinator.Drivers
         // POST
         protected override DriverResult Editor(CombinatorSettingsPart part, IUpdateModel updater, dynamic shapeHelper)
         {
-            var combineCDNResources = _orchardServices.WorkContext.CurrentSite.As<CombinatorSettingsPart>().CombineCDNResources;
+            var combineCDNResourcesFormer = part.CombineCDNResources;
+            var minifyResourcesFormer = part.MinifyResources;
+            var minificationExcludeRegexFormer = part.MinificationExcludeRegex;
 
             updater.TryUpdateModel(part, Prefix, null, null);
 
             // Not truncating the cache would cause inconsistencies
-            if (part.CombineCDNResources != combineCDNResources)
+            if (part.CombineCDNResources != combineCDNResourcesFormer 
+                || part.MinifyResources != minifyResourcesFormer
+                || part.MinificationExcludeRegex != minificationExcludeRegexFormer)
             {
                 _cacheFileService.Empty();
             }

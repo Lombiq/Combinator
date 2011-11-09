@@ -75,11 +75,11 @@ namespace Piedone.Combinator
             {
                 if (resourceType == ResourceType.Style)
                 {
-                    return _combinatorService.CombineStylesheets(resources, settings.CombineCDNResources);
+                    return _combinatorService.CombineStylesheets(resources, settings.CombineCDNResources, settings.MinifyResources, settings.MinificationExcludeRegex);
                 }
                 else if (resourceType == ResourceType.JavaScript)
                 {
-                    return _combinatorService.CombineScripts(resources, settings.CombineCDNResources);
+                    return _combinatorService.CombineScripts(resources, settings.CombineCDNResources, settings.MinifyResources, settings.MinificationExcludeRegex);
                 }
 
                 return base.BuildRequiredResources(stringResourceType);

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
-using System.Text.RegularExpressions;
 using Orchard.FileSystems.VirtualPath;
 
 namespace Piedone.Combinator.Services

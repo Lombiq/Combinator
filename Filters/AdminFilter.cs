@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using Orchard.Mvc.Filters;
 using System.Web.Mvc;
-using Orchard.UI.Admin;
 using Orchard.Environment.Extensions;
+using Orchard.Mvc.Filters;
+using Orchard.UI.Admin;
 
 namespace Piedone.Combinator.Filters
 {

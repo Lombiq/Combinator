@@ -2,11 +2,13 @@
 using Orchard;
 using Orchard.Environment.Extensions;
 using Orchard.Security;
+using Orchard.UI.Admin;
 using Piedone.Combinator.Services;
 
 namespace Piedone.Combinator.Controllers
 {
     [OrchardFeature("Piedone.Combinator")]
+    [Admin]
     public class CombinatorAdminController : Controller
     {
         private readonly IOrchardServices _orchardServices;

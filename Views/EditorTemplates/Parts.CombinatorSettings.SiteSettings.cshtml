@@ -38,8 +38,8 @@
             @Html.ValidationMessageFor(m => m.MinifyResources)
         </li>
         <li>
-            @Html.LabelFor(m => m.MinificationExcludeRegex, T("Excluded from minification"))
-            @Html.TextBoxFor(m => m.MinificationExcludeRegex, new { @class = "text singleline" })
+            @Html.LabelFor(m => m.MinificationExcludeRegex, T("Exclude from minification"))
+            @Html.TextBoxFor(m => m.MinificationExcludeRegex, new { @class = "textMedium" })
             @Html.ValidationMessageFor(m => m.MinificationExcludeRegex)
             <span class="hint">@T("Please provide a valid regular expression. Note that the full relative paths of all resources will be checked against this regex. The match is case-sensitive. Regex.IsMatch() is used internally, so look at it for how to use.")</span>
         </li>

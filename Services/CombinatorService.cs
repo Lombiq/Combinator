@@ -81,8 +81,7 @@ namespace Piedone.Combinator.Services
             Action<ResourceLocation> combineScriptsAtLocation =
                 (location) =>
                 {
-                    // +1 to ensure that resources with unspecified location (int value = 0) won't overwrite styles with the same hash
-                    var locationHashCode = hashCode + (int)location + 1;
+                    var locationHashCode = hashCode + (int)location;
                     if (!_combinedResources.ContainsKey(locationHashCode))
                     {
                         var scripts = (from r in resources

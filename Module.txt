@@ -1,4 +1,4 @@
-Name: Piedone.Combinator
+Name: Combinator
 AntiForgery: enabled
 Author: Piedone
 Website: http://combinator.codeplex.com

@@ -44,32 +44,29 @@ namespace Piedone.Combinator
 
         public override IList<ResourceRequiredContext> BuildRequiredResources(string stringResourceType)
         {
-            // It's necessary to make a copy since making a change to the local variable also changes the private one. This is most likely some bug
+            var originalResources = base.BuildRequiredResources(stringResourceType);
+            if (originalResources.Count == 0 || IsDisabled) return originalResources;
+
+
+            // Check if the resources fetched were already written to the output or not. If yes, we'll find them here.
+            // This is mandatory since resources can be overridden and this is the way to find out which ones were.
+            // See also the loop below.
+            if (WrittenResources.Count == 0) return originalResources;
+
+            // It's necessary to make a copy since making a change to the local variable also changes the private one. This is most likely some issue
             // with a reference that shouldn't be given away.
-            var resources = new List<ResourceRequiredContext>(base.BuildRequiredResources(stringResourceType));
-
-            if (resources.Count == 0 || IsDisabled) return resources;
-
-            #region Soon-to-be legacy code
-            // See http://orchard.codeplex.com/discussions/276210
-            var distinctResources = new Dictionary<string, ResourceRequiredContext>(resources.Count); // Overshooting the size
+            var resources = new List<ResourceRequiredContext>(originalResources);
+            ResourceDefinition writtenResource;
             foreach (var resource in resources)
             {
-                var fullPath = resource.Resource.GetFullPath();
-                if (!resource.Resource.IsCDNResource())
-                {
-                    distinctResources[VirtualPathUtility.GetFileName(fullPath)] = resource;
-                }
-                else
-                {
-                    distinctResources[fullPath] = resource;
-                }
+                WrittenResources.TryGetValue(new Tuple<string, string>(stringResourceType, resource.Resource.Name), out writtenResource);
+                if (writtenResource == null) return originalResources; // A resource was not yet written...
+                resource.Resource.SetUrl(writtenResource.Url);
             }
-            resources = (from r in distinctResources select r.Value).ToList();
-            #endregion
 
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
             var settings = _orchardServices.WorkContext.CurrentSite.As<CombinatorSettingsPart>();
+
 
             try
             {

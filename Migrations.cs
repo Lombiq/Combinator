@@ -24,10 +24,12 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.CreateTable(typeof(CombinatorSettingsPartRecord).Name, table => table
                 .ContentPartRecord()
                 .Column<bool>("CombineCDNResources")
+                .Column<bool>("MinifyResources")
+                .Column<string>("MinificationExcludeRegex")
             );
 
 
-            return 1;
+            return 2;
         }
 
         public int UpdateFrom1()

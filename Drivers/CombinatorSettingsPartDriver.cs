@@ -38,7 +38,8 @@ namespace Piedone.Combinator.Drivers
                             TemplateName: "Parts.CombinatorSettings.SiteSettings",
                             Model: part,
                             Prefix: Prefix);
-                    });
+                            
+                    }).OnGroup("Combinator");
         }
 
         // POST

@@ -172,13 +172,14 @@ namespace Piedone.Combinator.Services
 
                             // Modify relative paths to have correct values
                             var uriSegments = fullPath.Replace("~", "").Split('/'); // Path class is not good for this
-                            var parentDirUrl = applicationPath + String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
+                            var parentDirUrl = (applicationPath != "/") ? applicationPath : "";
+                            parentDirUrl += String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
                             content = Regex.Replace(content, "\\.\\./", parentDirUrl, RegexOptions.IgnoreCase);
 
                             // Modify relative paths that point to the same dir as the stylesheet's to have correct values
                             if (resourceType == ResourceType.Style)
                             {
-                                var stylesheetDirUrl = applicationPath + String.Join("/", uriSegments.Take(uriSegments.Length - 1).ToArray()) + "/";
+                                var stylesheetDirUrl = parentDirUrl + uriSegments[uriSegments.Count() - 1];
                                 content = Regex.Replace(content, "url\\(['|\"]?([^/]+?)['|\"]?\\)", "url(\"" + stylesheetDirUrl + "$1\")", RegexOptions.IgnoreCase);
                             }
 

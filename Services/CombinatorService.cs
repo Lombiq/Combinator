@@ -47,9 +47,9 @@ namespace Piedone.Combinator.Services
         }
 
         public IList<ResourceRequiredContext> CombineStylesheets(
-            IList<ResourceRequiredContext> resources, 
-            bool combineCDNResources = false, 
-            bool minifyResources = true, 
+            IList<ResourceRequiredContext> resources,
+            bool combineCDNResources = false,
+            bool minifyResources = true,
             string minificationExcludeRegex = "")
         {
             var hashCode = resources.GetResourceListHashCode();
@@ -70,8 +70,8 @@ namespace Piedone.Combinator.Services
         }
 
         public IList<ResourceRequiredContext> CombineScripts(
-            IList<ResourceRequiredContext> resources, 
-            bool combineCDNResources = false, 
+            IList<ResourceRequiredContext> resources,
+            bool combineCDNResources = false,
             bool minifyResources = true,
             string minificationExcludeRegex = "")
         {
@@ -140,6 +140,31 @@ namespace Piedone.Combinator.Services
 
                     combinedContent.Clear();
                 };
+
+            Func<string, string, string> minify =
+                (path, content) =>
+                {
+                    if (minifyResources && (String.IsNullOrEmpty(minificationExcludeRegex) || !Regex.IsMatch(path, minificationExcludeRegex)))
+                    {
+                        if (resourceType == ResourceType.Style)
+                        {
+                            content = CssCompressor.Compress(content);
+                        }
+                        else if (resourceType == ResourceType.JavaScript)
+                        {
+                            content = JavaScriptCompressor.Compress(content);
+                        }
+                    }
+
+                    return content;
+                };
+
+            Action<string, int> append =
+                (content, index) =>
+                {
+                    combinedContent.Append(content);
+                    resources.RemoveAt(index);
+                };
             #endregion
 
             var applicationPath = _orchardServices.WorkContext.HttpContext.Request.ApplicationPath;
@@ -183,27 +208,16 @@ namespace Piedone.Combinator.Services
                                 content = Regex.Replace(content, "url\\(['|\"]?([^/]+?)['|\"]?\\)", "url(\"" + stylesheetDirUrl + "$1\")", RegexOptions.IgnoreCase);
                             }
 
-                            if (minifyResources && (String.IsNullOrEmpty(minificationExcludeRegex) || !Regex.IsMatch(fullPath, minificationExcludeRegex)))
-                            {
-                                if (resourceType == ResourceType.Style)
-                                {
-                                    content = CssCompressor.Compress(content);
-                                }
-                                else if (resourceType == ResourceType.JavaScript)
-                                {
-                                    content = JavaScriptCompressor.Compress(content);
-                                }
-                            }
+                            content = minify(fullPath, content);
 
-                            combinedContent.Append(content);
-                            resources.RemoveAt(i);
+                            append(content, i);
+
                             i--;
                         }
                         else if (combineCDNResources)
                         {
-                            // Don't minify remote resources for now
-                            combinedContent.Append(_resourceFileService.GetRemoteResourceContent(fullPath));
-                            resources.RemoveAt(i);
+                            var content = minify(fullPath, _resourceFileService.GetRemoteResourceContent(fullPath));
+                            append(content, i);
                             i--;
                         }
                         else

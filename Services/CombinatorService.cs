@@ -201,7 +201,8 @@ namespace Piedone.Combinator.Services
                         }
                         else if (combineCDNResources)
                         {
-                            _resourceFileService.GetRemoteResourceContent(fullPath);
+                            // Don't minify remote resources for now
+                            combinedContent.Append(_resourceFileService.GetRemoteResourceContent(fullPath));
                             resources.RemoveAt(i);
                             i--;
                         }

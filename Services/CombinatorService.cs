@@ -31,7 +31,6 @@ namespace Piedone.Combinator.Services
 
         public ILogger Logger { get; set; }
 
-        public static bool IsDisabled { get; set; }
         public IResourceManager ResourceManager { get; set; }
 
         public CombinatorService(

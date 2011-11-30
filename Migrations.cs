@@ -10,22 +10,24 @@ namespace Piedone.Combinator.Migrations
     {
         public int Create()
         {
-            SchemaBuilder.CreateTable(typeof(CombinedFileRecord).Name, table => table
-                .Column<int>("Id", column => column.PrimaryKey().Identity())
-                .Column<int>("HashCode", column => column.NotNull())
-                .Column<int>("Slice")
-                .Column<string>("Type")
-                .Column<DateTime>("LastUpdatedUtc")
+            SchemaBuilder.CreateTable(typeof(CombinedFileRecord).Name, 
+                table => table
+                    .Column<int>("Id", column => column.PrimaryKey().Identity())
+                    .Column<int>("HashCode", column => column.NotNull())
+                    .Column<int>("Slice")
+                    .Column<string>("Type")
+                    .Column<DateTime>("LastUpdatedUtc")
             ).AlterTable("CombinedFileRecord",
                 table => table
                     .CreateIndex("File", new string[] { "HashCode" })
-                );
+            );
 
-            SchemaBuilder.CreateTable(typeof(CombinatorSettingsPartRecord).Name, table => table
-                .ContentPartRecord()
-                .Column<bool>("CombineCDNResources")
-                .Column<bool>("MinifyResources")
-                .Column<string>("MinificationExcludeRegex")
+            SchemaBuilder.CreateTable(typeof(CombinatorSettingsPartRecord).Name, 
+                table => table
+                    .ContentPartRecord()
+                    .Column<bool>("CombineCDNResources")
+                    .Column<bool>("MinifyResources")
+                    .Column<string>("MinificationExcludeRegex")
             );
 
 
@@ -34,13 +36,15 @@ namespace Piedone.Combinator.Migrations
 
         public int UpdateFrom1()
         {
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name, table => table
-                .AddColumn<bool>("MinifyResources")
-                );
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name, 
+                table => table
+                    .AddColumn<bool>("MinifyResources")
+            );
 
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name, table => table
-                .AddColumn<string>("MinificationExcludeRegex")
-                );
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name, 
+                table => table
+                    .AddColumn<string>("MinificationExcludeRegex")
+            );
 
             return 2;
         }

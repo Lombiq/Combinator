@@ -1,9 +1,9 @@
-﻿using Orchard.ContentManagement.Handlers;
+﻿using Orchard.ContentManagement;
+using Orchard.ContentManagement.Handlers;
 using Orchard.Data;
 using Orchard.Environment.Extensions;
-using Piedone.Combinator.Models;
 using Orchard.Localization;
-using Orchard.ContentManagement;
+using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator
 {

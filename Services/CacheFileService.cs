@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using Orchard.Caching;
 using Orchard.Data;
 using Orchard.Environment.Extensions;
-using Orchard.FileSystems.VirtualPath;
+using Orchard.FileSystems.Media;
 using Orchard.Services;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
@@ -14,7 +16,7 @@ namespace Piedone.Combinator.Services
     [OrchardFeature("Piedone.Combinator")]
     public class CacheFileService : ICacheFileService
     {
-        private readonly IVirtualPathProvider _virtualPathProvider;
+        private readonly IStorageProvider _storageProvider;
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly IClock _clock;
 
@@ -26,22 +28,20 @@ namespace Piedone.Combinator.Services
         #endregion
 
         #region Static file caching fields
-        private bool _cacheFoldersExist = false;
-        public const string cacheFolderName = "CombinedCache";
-        private const string _rootPath = "~/Modules/Piedone.Combinator/";
-        private const string _stylesPath = _rootPath + "Styles/" + cacheFolderName + "/";
-        private const string _scriptsPath = _rootPath + "Scripts/" + cacheFolderName + "/";
+        private const string _rootPath = "Combinator/";
+        private const string _stylesPath = _rootPath + "Styles/";
+        private const string _scriptsPath = _rootPath + "Scripts/";
         #endregion
 
         public CacheFileService(
-            IVirtualPathProvider virtualPathProvider,
+            IStorageProvider storageProvider,
             IRepository<CombinedFileRecord> fileRepository,
             IClock clock,
             ICacheManager cacheManager,
             ISignals signals)
         {
             _fileRepository = fileRepository;
-            _virtualPathProvider = virtualPathProvider;
+            _storageProvider = storageProvider;
             _clock = clock;
 
             _cacheManager = cacheManager;
@@ -60,32 +60,24 @@ namespace Piedone.Combinator.Services
                 LastUpdatedUtc = _clock.UtcNow
             };
 
-
-            if (!_cacheFoldersExist)
-            {
-                _virtualPathProvider.CreateDirectory(_scriptsPath);
-                _virtualPathProvider.CreateDirectory(_stylesPath);
-
-                _cacheFoldersExist = true;
-            }
-
             var path = MakePath(fileRecord);
 
-            using (StreamWriter sw = _virtualPathProvider.CreateText(path))
+            using (var stream = _storageProvider.CreateFile(path).OpenWrite())
             {
-                sw.Write(content);
+                var bytes = Encoding.UTF8.GetBytes(content);
+                stream.Write(bytes, 0, bytes.Length);
             }
-
+            
             _fileRepository.Create(fileRecord);
 
             TriggerCacheChangedSignal();
 
-            return MakePath(fileRecord);
+            return _storageProvider.GetPublicUrl(path);
         }
 
-        public List<string> GetUrls(int hashCode)
+        public List<string> GetPublicUrls(int hashCode)
         {
-            return _cacheManager.Get(MakeCacheKey("GetUrls." + hashCode.ToString()), ctx =>
+            return _cacheManager.Get(MakeCacheKey("GetPublicUrls." + hashCode.ToString()), ctx =>
             {
                 MonitorCacheChangedSignal(ctx);
 
@@ -96,7 +88,7 @@ namespace Piedone.Combinator.Services
 
                 foreach (var file in files)
                 {
-                    urls.Add(MakePath(file));
+                    urls.Add(_storageProvider.GetPublicUrl(MakePath(file)));
                 }
 
                 return urls;
@@ -128,17 +120,25 @@ namespace Piedone.Combinator.Services
 
         public void Empty()
         {
-            // Not efficient (a truncate would be better), but is there any other way with IRepository?
             var files = _fileRepository.Table.ToList();
-            foreach (var file in files)
-            {
-                _fileRepository.Delete(file);
-            }
+            DeleteFiles(files);
 
             if (files.Count() != 0)
             {
-                if (_virtualPathProvider.DirectoryExists(_scriptsPath)) Directory.Delete(_virtualPathProvider.MapPath(_scriptsPath), true);
-                if (_virtualPathProvider.DirectoryExists(_stylesPath)) Directory.Delete(_virtualPathProvider.MapPath(_stylesPath), true);
+                try
+                {
+                    // These will throw an exception if a folder doesn't exist. Since currently there is no method
+                    // in IStorageProvider to check the existence of a file/folder (see: http://orchard.codeplex.com/discussions/275146)
+                    // this is the only way to deal with it.
+                    _storageProvider.DeleteFolder(_scriptsPath);
+                    Thread.Sleep(300); // This is to ensure we don't get an "access denied" when deleting the root folder
+                    _storageProvider.DeleteFolder(_stylesPath);
+                    Thread.Sleep(300);
+                }
+                catch (Exception)
+                {
+                }
+                _storageProvider.DeleteFolder(_rootPath);
             }
 
             TriggerCacheChangedSignal();
@@ -154,7 +154,15 @@ namespace Piedone.Combinator.Services
             foreach (var file in files)
             {
                 _fileRepository.Delete(file);
-                File.Delete(_virtualPathProvider.MapPath(MakePath(file)));
+                // Try-catch for the case that someone deleted the file.
+                // Currently there is no way to check the existance of a file.
+                try
+                {
+                    _storageProvider.DeleteFile(MakePath(file));
+                }
+                catch (Exception)
+                {
+                }
             }
 
             TriggerCacheChangedSignal();

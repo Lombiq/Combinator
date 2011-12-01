@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Orchard;
+using Orchard.Environment.Extensions;
 using Orchard.Logging;
 using Orchard.UI.Resources;
 // For generic ContentManager methods
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Yahoo.Yui.Compressor;
-using Orchard.Environment.Extensions;
 
 namespace Piedone.Combinator.Services
 {
@@ -61,7 +61,7 @@ namespace Piedone.Combinator.Services
                 }
                 else
                 {
-                    _combinedResources[hashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetUrls(hashCode), resources, ResourceType.Style, combineCDNResources);
+                    _combinedResources[hashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(hashCode), resources, ResourceType.Style, combineCDNResources);
                 }
             }
 
@@ -93,7 +93,7 @@ namespace Piedone.Combinator.Services
                         }
                         else
                         {
-                            _combinedResources[locationHashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetUrls(locationHashCode), scripts, ResourceType.JavaScript, combineCDNResources);
+                            _combinedResources[locationHashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(locationHashCode), scripts, ResourceType.JavaScript, combineCDNResources);
                         }
                         _combinedResources[locationHashCode].SetLocation(location);
                     }

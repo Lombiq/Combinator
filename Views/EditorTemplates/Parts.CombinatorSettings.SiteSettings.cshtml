@@ -41,7 +41,7 @@
             @Html.LabelFor(m => m.MinificationExcludeRegex, T("Exclude from minification"))
             @Html.TextBoxFor(m => m.MinificationExcludeRegex, new { @class = "textMedium" })
             @Html.ValidationMessageFor(m => m.MinificationExcludeRegex)
-            <span class="hint">@T("Please provide a valid regular expression. Note that the full paths (relative in case of local resources and absolute with CDN resource) of all resources will be checked against this regex. The match is case-sensitive. Regex.IsMatch() is used internally, so look at it for how to use.")</span>
+            <span class="hint">@T("Please provide a valid regular expression. Note that the full paths (relative in case of local resources and absolute with CDN resource) of all resources will be checked against this regex. The match is case-sensitive. Regex.IsMatch() is used internally, so look at it for how to use. Example (without quotes): \".*?\\.min*|jQuery\" will exclude all resources whose name contains \".min\" or \"jQuery\".")</span>
         </li>
     </ol>
     <button type="button" id="button.EmptyCache" name="button.EmptyCache" value="EmptyCache" onclick="$.combinator.emptyCache(); return false;">@T("Empty cache")</button>

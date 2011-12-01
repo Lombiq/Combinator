@@ -51,10 +51,10 @@ namespace Piedone.Combinator.Drivers
 
             updater.TryUpdateModel(part, Prefix, null, null);
 
-            // Not truncating the cache would cause inconsistencies
+            // Not emptying the cache would cause inconsistencies
             if (part.CombineCDNResources != combineCDNResourcesFormer 
                 || part.MinifyResources != minifyResourcesFormer
-                || part.MinificationExcludeRegex != minificationExcludeRegexFormer)
+                || (part.MinifyResources && part.MinificationExcludeRegex != minificationExcludeRegexFormer))
             {
                 _cacheFileService.Empty();
             }

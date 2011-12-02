@@ -198,13 +198,27 @@ namespace Piedone.Combinator.Services
                             var uriSegments = fullPath.Replace("~", "").Split('/'); // Path class is not good for this
                             var parentDirUrl = (applicationPath != "/") ? applicationPath : "";
                             parentDirUrl += String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
-                            content = Regex.Replace(content, "\\.\\./", parentDirUrl, RegexOptions.IgnoreCase);
+                            content = content.Replace("../", parentDirUrl);
 
                             // Modify relative paths that point to the same dir as the stylesheet's to have correct values
                             if (resourceType == ResourceType.Style)
                             {
-                                var stylesheetDirUrl = parentDirUrl + uriSegments[uriSegments.Count() - 1];
-                                content = Regex.Replace(content, "url\\(['|\"]?([^/]+?)['|\"]?\\)", "url(\"" + stylesheetDirUrl + "$1\")", RegexOptions.IgnoreCase);
+                                var stylesheetDirUrl = parentDirUrl + uriSegments[uriSegments.Length - 2] + "/";
+                                content = Regex.Replace(
+                                                        content, 
+                                                        "url\\(['|\"]?(.+?)['|\"]?\\)", 
+                                                        (match) => 
+                                                        {
+                                                            var url = match.Groups[1].ToString();
+
+                                                            if (!Uri.IsWellFormedUriString(url, UriKind.Absolute) && !url.StartsWith("../") && !url.StartsWith("/"))
+                                                            {
+                                                                url = stylesheetDirUrl + url;
+                                                            }
+
+                                                            return "url(\"" + url + "\")";
+                                                        }, 
+                                                        RegexOptions.IgnoreCase);
                             }
 
                             content = minify(fullPath, content);

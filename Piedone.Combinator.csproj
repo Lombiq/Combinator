@@ -77,6 +77,7 @@
   <ItemGroup>
     <Compile Include="Controllers\CombinatorAdminController.cs" />
     <Compile Include="Drivers\CombinatorSettingsPartDriver.cs" />
+    <Compile Include="Extensions\RequireSettingsExtensions.cs" />
     <Compile Include="Extensions\ResourceDefinitionExtensions.cs" />
     <Compile Include="Extensions\ResourceListExtensions.cs" />
     <Compile Include="Filters\AdminFilter.cs" />

@@ -13,9 +13,6 @@ namespace Piedone.Combinator.Extensions
         /// concatenated from the resoure's paths, therefore they can well be virtual relative paths (starting with a tilde)
         /// or relative public urls.
         /// </summary>
-        /// <remarks>
-        /// This should really be an extension property. Waiting for C# 5.0...
-        /// </remarks>
         public static string GetFullPath(this ResourceDefinition resource)
         {
             if (String.IsNullOrEmpty(resource.Url)) return resource.UrlCdn;

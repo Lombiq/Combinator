@@ -54,12 +54,10 @@ namespace Piedone.Combinator.Services
             {
                 if (!_cacheFileService.Exists(hashCode))
                 {
-                    _combinedResources[hashCode] = Combine(resources, hashCode, ResourceType.Style, combineCDNResources, minifyResources, minificationExcludeRegex);
+                    Combine(resources, hashCode, ResourceType.Style, combineCDNResources, minifyResources, minificationExcludeRegex);
                 }
-                else
-                {
-                    _combinedResources[hashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(hashCode), resources, ResourceType.Style, combineCDNResources);
-                }
+
+                _combinedResources[hashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(hashCode), resources, ResourceType.Style, combineCDNResources);
             }
 
             return _combinedResources[hashCode];
@@ -86,12 +84,11 @@ namespace Piedone.Combinator.Services
 
                         if (!_cacheFileService.Exists(locationHashCode))
                         {
-                            _combinedResources[locationHashCode] = Combine(scripts, locationHashCode, ResourceType.JavaScript, combineCDNResources, minifyResources, minificationExcludeRegex);
+                            Combine(scripts, locationHashCode, ResourceType.JavaScript, combineCDNResources, minifyResources, minificationExcludeRegex);
                         }
-                        else
-                        {
-                            _combinedResources[locationHashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(locationHashCode), scripts, ResourceType.JavaScript, combineCDNResources);
-                        }
+
+                        _combinedResources[locationHashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(locationHashCode), scripts, ResourceType.JavaScript, combineCDNResources);
+
                         _combinedResources[locationHashCode].SetLocation(location);
                     }
                     combinedScripts = combinedScripts.Union(_combinedResources[locationHashCode]).ToList();
@@ -153,8 +150,8 @@ namespace Piedone.Combinator.Services
                 {
                     fullPath = resource.Resource.GetFullPath();
 
-                    // Only unconditional resources are combined
-                    if (String.IsNullOrEmpty(resource.Settings.Condition))
+                    // Only unconditional resources are combined or minified
+                    if (!resource.Settings.IsConditional())
                     {
                         // Ensuring the resource is a local one
                         if (!resource.Resource.IsCDNResource())
@@ -183,22 +180,8 @@ namespace Piedone.Combinator.Services
 
                             combinedContent.Append(content);
                         }
-                        else
-                        {
-                            // This is to ensure that if there's a remote resource inside a list of local resources, their order stays
-                            // the same (so the product is: localResourcesCombined1, remoteResource, localResourceCombined2...)
-                            saveCombination();
-                            combinedResources.Add(resource);
-                        } 
                     }
-                    else
-                    {
-                        // This is to ensure that if there's a conditional resource inside a list of resources, it stays alone
-                        saveCombination();
-                        
-                        // We currently don't minify conditional resources
-                        combinedResources.Add(resource);
-                    }
+                    else saveCombination();
                 }
             }
             catch (Exception e)
@@ -261,39 +244,47 @@ namespace Piedone.Combinator.Services
         {
             if (ResourceManager == null) throw new ApplicationException("The ResourceManager instance should be set after instantiating.");
 
-            if (!combineCDNResources) return MakeResourcesFromPublicUrls(urls, resources, resourceType);
-            return MakeResourcesFromPublicUrlsWithCDNCombination(urls, resourceType);
-        }
-
-        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrlsWithCDNCombination(IList<string> urls, ResourceType resourceType)
-        {
-            var resources = new List<ResourceRequiredContext>(urls.Count);
-
-            foreach (var url in urls)
-            {
-                resources.Add(MakeResourceFromPublicUrl(url, resourceType));
-            }
-
-            return resources;
-        }
-
-        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrls(IList<string> urls, IList<ResourceRequiredContext> resources, ResourceType resourceType)
-        {
-            List<ResourceRequiredContext> combinedResources;
-
-            combinedResources = new List<ResourceRequiredContext>(resources);
+            // The below algorithm merges saved (combined and/or minified) resources with unsaved ones (CDN resources if
+            // CDN combination is disabled and conditional resources).
+            var combinedResources = new List<ResourceRequiredContext>(resources);
             var urlIndex = 0;
             for (int i = 0; i < combinedResources.Count; i++)
             {
-                if (!combinedResources[i].Resource.IsCDNResource())
+                if (!combineCDNResources)
                 {
-                    // Overwriting the first local resource with the combined resource
-                    combinedResources[i] = MakeResourceFromPublicUrl(urls[urlIndex++], resourceType);
-                    // Deleting the other ones to the next remote resource
-                    i++;
-                    while (i < combinedResources.Count && !combinedResources[i].Resource.IsCDNResource())
+                    // Here combined resources are merged with CDN resources
+                    if (!combinedResources[i].Resource.IsCDNResource() && !combinedResources[i].Settings.IsConditional())
                     {
-                        combinedResources.RemoveAt(i);
+                        // Overwriting the first local resource with the combined resource
+                        combinedResources[i] = MakeResourceFromPublicUrl(urls[urlIndex++], resourceType);
+                        // Deleting the other ones to the next remote or conditional resource while we have still space 
+                        // for the combined resources
+                        i++;
+                        while (
+                            i < combinedResources.Count
+                            && combinedResources.Count > urls.Count
+                            && !combinedResources[i].Resource.IsCDNResource()
+                            && !combinedResources[i].Settings.IsConditional())
+                        {
+                            combinedResources.RemoveAt(i);
+                        }
+                    }
+                }
+                else
+                {
+                    if (!combinedResources[i].Settings.IsConditional())
+                    {
+                        combinedResources[i] = MakeResourceFromPublicUrl(urls[urlIndex++], resourceType);
+                        // Deleting the other ones to the next conditional resource while we have still space 
+                        // for the combined resources
+                        i++;
+                        while (
+                            i < combinedResources.Count
+                            && combinedResources.Count > urls.Count
+                            && !combinedResources[i].Settings.IsConditional())
+                        {
+                            combinedResources.RemoveAt(i);
+                        }
                     }
                 }
             }

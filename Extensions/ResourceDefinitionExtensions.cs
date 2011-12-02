@@ -1,6 +1,7 @@
 ﻿using System;
 using Orchard.Environment.Extensions;
 using Orchard.UI.Resources;
+using System.IO;
 
 namespace Piedone.Combinator.Extensions
 {
@@ -15,7 +16,11 @@ namespace Piedone.Combinator.Extensions
         /// </remarks>
         public static string GetFullPath(this ResourceDefinition resource)
         {
-            return !String.IsNullOrEmpty(resource.Url) ? resource.BasePath + resource.Url : resource.UrlCdn;
+            if (String.IsNullOrEmpty(resource.Url)) return resource.UrlCdn;
+
+            if (resource.Url.Contains("~")) return resource.Url;
+
+            return Path.Combine(resource.BasePath + resource.Url);
         }
 
         public static bool IsCDNResource(this ResourceDefinition resource)

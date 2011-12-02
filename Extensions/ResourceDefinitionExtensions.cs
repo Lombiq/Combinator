@@ -9,7 +9,9 @@ namespace Piedone.Combinator.Extensions
     internal static class ResourceDefinitionExtensions
     {
         /// <summary>
-        /// Gets the ultimate full path of a resource, even if it uses CDN
+        /// Gets the ultimate full path of a resource, even if it uses CDN. Note that the paths are not uniform, they're
+        /// concatenated from the resoure's paths, therefore they can well be virtual relative paths (starting with a tilde)
+        /// or relative public urls.
         /// </summary>
         /// <remarks>
         /// This should really be an extension property. Waiting for C# 5.0...

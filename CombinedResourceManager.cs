@@ -79,7 +79,6 @@ namespace Piedone.Combinator
                     resource.Resource.SetUrl(binding, null);
                 }
             }
-            int z = 1;
 
             try
             {

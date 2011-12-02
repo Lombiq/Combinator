@@ -4,23 +4,26 @@
     Script.Require("jQuery").AtHead();
 }
 
-<script type="text/javascript">
-    (function ($) {
-    // Doing this with JS is not a nice solution but it seems there is no other way to make a POST to the action
-        $.extend({
-            combinator: {
-                emptyCache: function () {
-                    $("#button\\.EmptyCache").attr("disabled", "disabled");
-                    var url = '@Url.Action("EmptyCache", new { Controller = "CombinatorAdmin", Area = "Piedone.Combinator"})';
-                    var postData = { __RequestVerificationToken: "@Html.AntiForgeryTokenValueOrchard()" };
-                    $.post(url, postData, function(response) {
-                        location.reload();
-                    });
+@using (Script.Head())
+{
+    <script type="text/javascript">
+        (function ($) {
+        // Doing this with JS is not a nice solution but it seems there is no other way to make a POST to the action
+            $.extend({
+                combinator: {
+                    emptyCache: function () {
+                        $("#button\\.EmptyCache").attr("disabled", "disabled");
+                        var url = '@Url.Action("EmptyCache", new { Controller = "CombinatorAdmin", Area = "Piedone.Combinator" })';
+                        var postData = { __RequestVerificationToken: "@Html.AntiForgeryTokenValueOrchard()" };
+                        $.post(url, postData, function(response) {
+                            location.reload();
+                        });
+                    }
                 }
-            }
-        });
-    })(jQuery);
-</script>
+            });
+        })(jQuery);
+    </script>
+}
            
 <fieldset>
     <legend>@T("CSS/JS Combinator Settings")</legend>

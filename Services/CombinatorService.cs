@@ -25,7 +25,6 @@ namespace Piedone.Combinator.Services
         /// </remarks>
         private Dictionary<int, IList<ResourceRequiredContext>> _combinedResources = new Dictionary<int, IList<ResourceRequiredContext>>();
 
-        private readonly IOrchardServices _orchardServices;
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceFileService _resourceFileService;
 
@@ -34,11 +33,9 @@ namespace Piedone.Combinator.Services
         public IResourceManager ResourceManager { get; set; }
 
         public CombinatorService(
-            IOrchardServices orchardServices,
             ICacheFileService cacheFileService,
             IResourceFileService resourceFileService)
         {
-            _orchardServices = orchardServices;
             _cacheFileService = cacheFileService;
             _resourceFileService = resourceFileService;
 
@@ -100,6 +97,8 @@ namespace Piedone.Combinator.Services
                     combinedScripts = combinedScripts.Union(_combinedResources[locationHashCode]).ToList();
                 };
 
+            // Scripts at different locations are processed separately
+            // Currently this will add two files at the foot if scripts with unspecified location are also included
             combineScriptsAtLocation(ResourceLocation.Head);
             combineScriptsAtLocation(ResourceLocation.Foot);
             combineScriptsAtLocation(ResourceLocation.Unspecified);
@@ -122,142 +121,140 @@ namespace Piedone.Combinator.Services
         private IList<ResourceRequiredContext> Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType resourceType, bool combineCDNResources, bool minifyResources, string minificationExcludeRegex)
         {
             var combinedContent = new StringBuilder(resources.Count * 1000);
+            var combinedResources = new List<ResourceRequiredContext>();
 
             #region Functions
-            Action<string, int> saveCombination =
-                (content, insertIndex) =>
+            Action saveCombination =
+                () =>
                 {
                     if (combinedContent.Length == 0) return;
 
-                    var combined = MakeResourceFromPublicUrl(
-                            _cacheFileService.Save(hashCode, resourceType, content),
+                    combinedResources.Add(
+                        MakeResourceFromPublicUrl(
+                            _cacheFileService.Save(hashCode, resourceType, combinedContent.ToString()),
                             resourceType
-                        );
-
-                    if (insertIndex == -1) resources.Add(combined);
-                    else resources.Insert(insertIndex, combined);
+                        )
+                    );
 
                     combinedContent.Clear();
                 };
 
-            Func<string, string, string> minify =
-                (path, content) =>
+            Func<string, bool> hasToBeMinified =
+                (path) =>
                 {
-                    if (minifyResources && (String.IsNullOrEmpty(minificationExcludeRegex) || !Regex.IsMatch(path, minificationExcludeRegex)))
-                    {
-                        if (resourceType == ResourceType.Style)
-                        {
-                            content = CssCompressor.Compress(content);
-                        }
-                        else if (resourceType == ResourceType.JavaScript)
-                        {
-                            content = JavaScriptCompressor.Compress(content);
-                        }
-                    }
-
-                    return content;
-                };
-
-            Action<string, int> append =
-                (content, index) =>
-                {
-                    combinedContent.Append(content);
-                    resources.RemoveAt(index);
+                    return minifyResources && (String.IsNullOrEmpty(minificationExcludeRegex) || !Regex.IsMatch(path, minificationExcludeRegex));
                 };
             #endregion
 
-            var applicationPath = _orchardServices.WorkContext.HttpContext.Request.ApplicationPath;
             var fullPath = "";
-            for (int i = 0; i < resources.Count; i++)
+            try
             {
-                try
+                foreach (var resource in resources)
                 {
-                    // Ensuring the resource hasn't got some conditions
-                    if (String.IsNullOrEmpty(resources[i].Settings.Condition))
+                    fullPath = resource.Resource.GetFullPath();
+
+                    // Only unconditional resources are combined
+                    if (String.IsNullOrEmpty(resource.Settings.Condition))
                     {
-                        fullPath = resources[i].Resource.GetFullPath();
                         // Ensuring the resource is a local one
-                        if (!resources[i].Resource.IsCDNResource())
+                        if (!resource.Resource.IsCDNResource())
                         {
-                            if (fullPath.StartsWith(applicationPath))
-                            {
-                                // Strips e.g. /OrchardLocal
-                                if (applicationPath != "/")
-                                {
-                                    int Place = fullPath.IndexOf(applicationPath);
-                                    // Finds the first occurence and replaces it with empty string
-                                    fullPath = fullPath.Remove(Place, applicationPath.Length).Insert(Place, "");
-                                }
+                            var virtualPath = _resourceFileService.GetRelativeVirtualPath(fullPath);
 
-                                fullPath = "~" + fullPath;
+                            var content = _resourceFileService.GetLocalResourceContent(virtualPath);
+
+                            content = AdjustRelativePaths(content, _resourceFileService.GetPublicRelativeUrl(virtualPath), resourceType);
+
+                            if (hasToBeMinified(fullPath))
+                            {
+                                content = MinifyResourceContent(content, resourceType);
                             }
 
-                            var content = _resourceFileService.GetLocalResourceContent(fullPath);
-
-                            // Modify relative paths to have correct values
-                            var uriSegments = fullPath.Replace("~", "").Split('/'); // Path class is not good for this
-                            var parentDirUrl = (applicationPath != "/") ? applicationPath : "";
-                            parentDirUrl += String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
-                            content = content.Replace("../", parentDirUrl);
-
-                            // Modify relative paths that point to the same dir as the stylesheet's to have correct values
-                            if (resourceType == ResourceType.Style)
-                            {
-                                var stylesheetDirUrl = parentDirUrl + uriSegments[uriSegments.Length - 2] + "/";
-                                content = Regex.Replace(
-                                                        content, 
-                                                        "url\\(['|\"]?(.+?)['|\"]?\\)", 
-                                                        (match) => 
-                                                        {
-                                                            var url = match.Groups[1].ToString();
-
-                                                            if (!Uri.IsWellFormedUriString(url, UriKind.Absolute) && !url.StartsWith("../") && !url.StartsWith("/"))
-                                                            {
-                                                                url = stylesheetDirUrl + url;
-                                                            }
-
-                                                            return "url(\"" + url + "\")";
-                                                        }, 
-                                                        RegexOptions.IgnoreCase);
-                            }
-
-                            content = minify(fullPath, content);
-
-                            append(content, i);
-
-                            i--;
+                            combinedContent.Append(content);
                         }
                         else if (combineCDNResources)
                         {
-                            var content = minify(fullPath, _resourceFileService.GetRemoteResourceContent(fullPath));
-                            append(content, i);
-                            i--;
+                            var content = _resourceFileService.GetRemoteResourceContent(fullPath);
+
+                            if (hasToBeMinified(fullPath))
+                            {
+                                content = MinifyResourceContent(content, resourceType);
+                            }
+
+                            combinedContent.Append(content);
                         }
                         else
                         {
                             // This is to ensure that if there's a remote resource inside a list of local resources, their order stays
                             // the same (so the product is: localResourcesCombined1, remoteResource, localResourceCombined2...)
-                            saveCombination(combinedContent.ToString(), i);
-                        }
+                            saveCombination();
+                            combinedResources.Add(resource);
+                        } 
                     }
                     else
                     {
-                        // This is to ensure that if there's a conditional resource inside a list of resources, their order stays
-                        // the same (so the product is: resourcesCombined1, conditionalResource, resourcesCombined2...)
-                        saveCombination(combinedContent.ToString(), i);
+                        // This is to ensure that if there's a conditional resource inside a list of resources, it stays alone
+                        saveCombination();
+                        
+                        // We currently don't minify conditional resources
+                        combinedResources.Add(resource);
                     }
                 }
-                catch (Exception e)
-                {
-                    var message = "Processing of resource " + fullPath + " failed";
-                    throw new ApplicationException(message, e);
-                }
+            }
+            catch (Exception e)
+            {
+                var message = "Processing of resource " + fullPath + " failed";
+                throw new ApplicationException(message, e);
             }
 
+            saveCombination();
 
-            saveCombination(combinedContent.ToString(), -1);
+            return combinedResources;
+        }
 
-            return resources;
+        private string AdjustRelativePaths(string content, string publicUrl, ResourceType resourceType)
+        {
+            // Modify relative paths to have correct values
+            var uriSegments = publicUrl.Split('/'); // Path class is not good for this
+            var parentDirUrl = String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
+            content = content.Replace("../", parentDirUrl);
+
+            // Modify relative paths that point to the same dir as the stylesheet's to have correct values
+            if (resourceType == ResourceType.Style)
+            {
+                var stylesheetDirUrl = parentDirUrl + uriSegments[uriSegments.Length - 2] + "/";
+                content = Regex.Replace(
+                                        content,
+                                        "url\\(['|\"]?(.+?)['|\"]?\\)",
+                                        (match) =>
+                                        {
+                                            var url = match.Groups[1].ToString();
+
+                                            if (!Uri.IsWellFormedUriString(url, UriKind.Absolute) && !url.StartsWith("../") && !url.StartsWith("/"))
+                                            {
+                                                url = stylesheetDirUrl + url;
+                                            }
+
+                                            return "url(\"" + url + "\")";
+                                        },
+                                        RegexOptions.IgnoreCase);
+            }
+
+            return content;
+        }
+
+        private string MinifyResourceContent(string content, ResourceType resourceType)
+        {
+            if (resourceType == ResourceType.Style)
+            {
+                return CssCompressor.Compress(content);
+            }
+            else if (resourceType == ResourceType.JavaScript)
+            {
+                return JavaScriptCompressor.Compress(content);
+            }
+
+            return content;
         }
 
         private IList<ResourceRequiredContext> MakeResourcesFromPublicUrls(IList<string> urls, IList<ResourceRequiredContext> resources, ResourceType resourceType, bool combineCDNResources)
@@ -308,7 +305,7 @@ namespace Piedone.Combinator.Services
         {
             var resource = new ResourceRequiredContext();
 
-            // This is only necessary to buld the ResourceRequiredContext object, therefore we also delete the resource
+            // This is only necessary to build the ResourceRequiredContext object, therefore we also delete the resource
             // from the required ones.
             resource.Settings = ResourceManager.Include(ResourceTypeHelper.EnumToStringType(resourceType), url, url);
             resource.Resource = ResourceManager.FindResource(resource.Settings);

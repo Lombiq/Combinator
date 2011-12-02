@@ -3,25 +3,32 @@ using System.IO;
 using System.Net;
 using System.Text;
 using Orchard.FileSystems.VirtualPath;
+using Orchard.UI.Resources;
+using Orchard;
 
 namespace Piedone.Combinator.Services
 {
     public class ResourceFileService : IResourceFileService
     {
         private readonly IVirtualPathProvider _virtualPathProvider;
+        private readonly WorkContext _workContext;
 
-        public ResourceFileService(IVirtualPathProvider virtualPathProvider)
+        public ResourceFileService(
+            IVirtualPathProvider virtualPathProvider,
+            WorkContext workContext)
         {
             _virtualPathProvider = virtualPathProvider;
+            _workContext = workContext;
         }
 
-        public string GetLocalResourceContent(string path)
+        
+        public string GetLocalResourceContent(string relativeVirtualPath)
         {
             // Maybe TryFileExists would be better?
-            if (!_virtualPathProvider.FileExists(path)) throw new ApplicationException("Local resource file not found under " + path);
+            if (!_virtualPathProvider.FileExists(relativeVirtualPath)) throw new ApplicationException("Local resource file not found under " + relativeVirtualPath);
 
             string content;
-            using (var stream = _virtualPathProvider.OpenFile(path))
+            using (var stream = _virtualPathProvider.OpenFile(relativeVirtualPath))
             {
                 content = new StreamReader(stream).ReadToEnd();
             }
@@ -29,6 +36,44 @@ namespace Piedone.Combinator.Services
             return content;
         }
 
+        #region Path handling
+        private string _applicationPath;
+        private string ApplicationPath
+        {
+            get
+            {
+                if (_applicationPath == null) _applicationPath = _workContext.HttpContext.Request.ApplicationPath;
+                return _applicationPath;
+            }
+            set { _applicationPath = value; }
+        }
+
+        public string GetPublicRelativeUrl(string relativeVirtualPath)
+        {
+            relativeVirtualPath = relativeVirtualPath.Remove(0, 1);
+            return (ApplicationPath != "/") ? ApplicationPath + relativeVirtualPath : relativeVirtualPath;
+        }
+
+        public string GetRelativeVirtualPath(string fullPath)
+        {
+            if (fullPath.StartsWith(ApplicationPath))
+            {
+                // Strips e.g. /OrchardLocal
+                if (ApplicationPath != "/")
+                {
+                    int place = fullPath.IndexOf(ApplicationPath);
+                    // Finds the first occurence and replaces it with empty string
+                    fullPath = fullPath.Remove(place, ApplicationPath.Length).Insert(place, "");
+                }
+
+                fullPath = "~" + fullPath;
+            }
+
+            return fullPath;
+        }
+        #endregion
+
+        #region Remote resource handling
         private string _byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
         private string ByteOrderMarkUtf8
         {
@@ -74,5 +119,6 @@ namespace Piedone.Combinator.Services
 
             return content;
         }
+        #endregion
     }
 }

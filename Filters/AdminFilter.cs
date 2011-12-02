@@ -18,10 +18,11 @@ namespace Piedone.Combinator.Filters
             _resourceManager = resourceManager;
         }
 
-        public void OnAuthorization(AuthorizationContext filterContext) 
+        public void OnAuthorization(AuthorizationContext filterContext)
         {
             var combinedResourceManager = _resourceManager as CombinedResourceManager;
-            if (combinedResourceManager != null) {
+            if (combinedResourceManager != null)
+            {
                 combinedResourceManager.IsDisabled = Orchard.UI.Admin.AdminFilter.IsApplied(filterContext.RequestContext);
             }
         }

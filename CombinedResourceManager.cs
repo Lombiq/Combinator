@@ -66,15 +66,13 @@ namespace Piedone.Combinator
             var currentTheme = _themeManager.GetRequestTheme(_workContext.HttpContext.Request.RequestContext);
             var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
 
-            #region Soon-to-be legacy code
-            // See http://orchard.codeplex.com/discussions/276210
             var distinctResources = new Dictionary<string, ResourceRequiredContext>(resources.Count); // Overshooting the size
             foreach (var resource in resources)
             {
-                
                 if (!resource.Resource.IsCDNResource())
                 {
-                    if (stringResourceType == "stylesheet") {
+                    if (stringResourceType == "stylesheet")
+                    {
                         var shapeName = StylesheetBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
                         var binding = shapeTable.Bindings["Style__" + shapeName].BindingSource;
                         resource.Resource.SetUrl(binding, null);
@@ -91,8 +89,6 @@ namespace Piedone.Combinator
             }
 
             resources = distinctResources.Values.ToList();
-
-            #endregion
 
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
             var settings = _orchardServices.WorkContext.CurrentSite.As<CombinatorSettingsPart>();

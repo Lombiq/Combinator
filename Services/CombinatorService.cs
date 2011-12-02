@@ -250,9 +250,7 @@ namespace Piedone.Combinator.Services
                 catch (Exception e)
                 {
                     var message = "Processing of resource " + fullPath + " failed";
-                    Logger.Error(e, message);
                     throw new ApplicationException(message, e);
-                    //save(combinedContent, i);
                 }
             }
 

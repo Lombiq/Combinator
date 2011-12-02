@@ -5,8 +5,11 @@ using System.Web;
 using Autofac.Features.Metadata;
 using Orchard;
 using Orchard.ContentManagement; // For generic ContentManager methods
+using Orchard.DisplayManagement.Descriptors;
+using Orchard.DisplayManagement.Descriptors.ResourceBindingStrategy;
 using Orchard.Environment.Extensions;
 using Orchard.Logging;
+using Orchard.Themes;
 using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
@@ -24,6 +27,9 @@ namespace Piedone.Combinator
     {
         private readonly IOrchardServices _orchardServices;
         private readonly ICombinatorService _combinatorService;
+        private readonly IShapeTableLocator _shapeTableLocator;
+        private readonly IThemeManager _themeManager;
+        private readonly WorkContext _workContext;
 
         public ILogger Logger { get; set; }
 
@@ -32,12 +38,19 @@ namespace Piedone.Combinator
         public CombinedResourceManager(
             IEnumerable<Meta<IResourceManifestProvider>> resourceProviders,
             IOrchardServices orchardServices,
-            ICombinatorService combinatorService)
+            ICombinatorService combinatorService,
+            IShapeTableLocator shapeTableLocator,
+            IThemeManager themeManager,
+            WorkContext workContext
+            )
             : base(resourceProviders)
         {
             _orchardServices = orchardServices;
             combinatorService.ResourceManager = this;
             _combinatorService = combinatorService;
+            _shapeTableLocator = shapeTableLocator;
+            _themeManager = themeManager;
+            _workContext = workContext;
 
             Logger = NullLogger.Instance;
         }
@@ -50,22 +63,35 @@ namespace Piedone.Combinator
 
             if (resources.Count == 0 || IsDisabled) return resources;
 
+            var currentTheme = _themeManager.GetRequestTheme(_workContext.HttpContext.Request.RequestContext);
+            var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
+
             #region Soon-to-be legacy code
             // See http://orchard.codeplex.com/discussions/276210
             var distinctResources = new Dictionary<string, ResourceRequiredContext>(resources.Count); // Overshooting the size
             foreach (var resource in resources)
             {
-                var fullPath = resource.Resource.GetFullPath();
+                
                 if (!resource.Resource.IsCDNResource())
                 {
+                    if (stringResourceType == "stylesheet") {
+                        var shapeName = StylesheetBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
+                        var binding = shapeTable.Bindings["Style__" + shapeName].BindingSource;
+                        resource.Resource.SetUrl(binding, null);
+                    }
+
+                    var fullPath = resource.Resource.GetFullPath();
                     distinctResources[VirtualPathUtility.GetFileName(fullPath)] = resource;
                 }
                 else
                 {
+                    var fullPath = resource.Resource.GetFullPath();
                     distinctResources[fullPath] = resource;
                 }
             }
-            resources = (from r in distinctResources select r.Value).ToList();
+
+            resources = distinctResources.Values.ToList();
+
             #endregion
 
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);

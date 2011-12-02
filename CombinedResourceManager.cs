@@ -63,35 +63,23 @@ namespace Piedone.Combinator
 
             if (resources.Count == 0 || IsDisabled) return resources;
 
-            var currentTheme = _themeManager.GetRequestTheme(_workContext.HttpContext.Request.RequestContext);
-            var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
-
-            var distinctResources = new Dictionary<string, ResourceRequiredContext>(resources.Count); // Overshooting the size
-            foreach (var resource in resources)
-            {
-                if (!resource.Resource.IsCDNResource())
-                {
-                    if (stringResourceType == "stylesheet")
-                    {
-                        var shapeName = StylesheetBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
-                        var binding = shapeTable.Bindings["Style__" + shapeName].BindingSource;
-                        resource.Resource.SetUrl(binding, null);
-                    }
-
-                    var fullPath = resource.Resource.GetFullPath();
-                    distinctResources[VirtualPathUtility.GetFileName(fullPath)] = resource;
-                }
-                else
-                {
-                    var fullPath = resource.Resource.GetFullPath();
-                    distinctResources[fullPath] = resource;
-                }
-            }
-
-            resources = distinctResources.Values.ToList();
-
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
             var settings = _orchardServices.WorkContext.CurrentSite.As<CombinatorSettingsPart>();
+
+            // Checking for overridden stylesheets
+            if (resourceType == ResourceType.Style)
+            {
+                var currentTheme = _themeManager.GetRequestTheme(_workContext.HttpContext.Request.RequestContext);
+                var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
+
+                foreach (var resource in resources)
+                {
+                    var shapeName = StylesheetBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
+                    var binding = shapeTable.Bindings["Style__" + shapeName].BindingSource;
+                    resource.Resource.SetUrl(binding, null);
+                }
+            }
+            int z = 1;
 
             try
             {

@@ -66,24 +66,21 @@ namespace Piedone.Combinator
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
             var settings = _orchardServices.WorkContext.CurrentSite.As<CombinatorSettingsPart>();
 
-            // Checking for overridden stylesheets
-            if (resourceType == ResourceType.Style)
-            {
-                var currentTheme = _themeManager.GetRequestTheme(_workContext.HttpContext.Request.RequestContext);
-                var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
-
-                foreach (var resource in resources)
-                {
-                    var shapeName = StylesheetBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
-                    var binding = shapeTable.Bindings["Style__" + shapeName].BindingSource;
-                    resource.Resource.SetUrl(binding, null);
-                }
-            }
-
             try
             {
                 if (resourceType == ResourceType.Style)
                 {
+                    // Checking for overridden stylesheets
+                    var currentTheme = _themeManager.GetRequestTheme(_workContext.HttpContext.Request.RequestContext);
+                    var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
+
+                    foreach (var resource in resources)
+                    {
+                        var shapeName = StylesheetBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
+                        var binding = shapeTable.Bindings["Style__" + shapeName].BindingSource;
+                        resource.Resource.SetUrl(binding, null);
+                    }
+
                     return _combinatorService.CombineStylesheets(resources, settings.CombineCDNResources, settings.MinifyResources, settings.MinificationExcludeRegex);
                 }
                 else if (resourceType == ResourceType.JavaScript)

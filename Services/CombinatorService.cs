@@ -56,6 +56,8 @@ namespace Piedone.Combinator.Services
                     Combine(resources, hashCode, ResourceType.Style, combineCDNResources, minifyResources, minificationExcludeRegex);
                 }
 
+                // Getting the urls after we've freshly combined is inefficient, but this way it's simple and it only happens
+                // when a set of resources are first accessed.
                 _combinedResources[hashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(hashCode), resources, ResourceType.Style, combineCDNResources);
             }
 
@@ -86,6 +88,8 @@ namespace Piedone.Combinator.Services
                             Combine(scripts, locationHashCode, ResourceType.JavaScript, combineCDNResources, minifyResources, minificationExcludeRegex);
                         }
 
+                        // Getting the urls after we've freshly combined is inefficient, but this way it's simple and it only happens
+                        // when a set of resources are first accessed.
                         _combinedResources[locationHashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(locationHashCode), scripts, ResourceType.JavaScript, combineCDNResources);
 
                         _combinedResources[locationHashCode].SetLocation(location);
@@ -247,6 +251,13 @@ namespace Piedone.Combinator.Services
             // CDN combination is disabled and conditional resources).
             var combinedResources = new List<ResourceRequiredContext>(resources);
             var urlIndex = 0;
+
+            Action<int> saveResource =
+                (index) =>
+                {
+                    combinedResources[index] = MakeResourceFromPublicUrl(urls[urlIndex++], resourceType);
+                };
+
             for (int i = 0; i < combinedResources.Count; i++)
             {
                 if (!combineCDNResources)
@@ -255,7 +266,7 @@ namespace Piedone.Combinator.Services
                     if (!combinedResources[i].Resource.IsCDNResource() && !combinedResources[i].Settings.IsConditional())
                     {
                         // Overwriting the first local resource with the combined resource
-                        combinedResources[i] = MakeResourceFromPublicUrl(urls[urlIndex++], resourceType);
+                        saveResource(i);
                         // Deleting the other ones to the next remote or conditional resource while we have still space 
                         // for the combined resources
                         i++;
@@ -273,7 +284,7 @@ namespace Piedone.Combinator.Services
                 {
                     if (!combinedResources[i].Settings.IsConditional())
                     {
-                        combinedResources[i] = MakeResourceFromPublicUrl(urls[urlIndex++], resourceType);
+                        saveResource(i);
                         // Deleting the other ones to the next conditional resource while we have still space 
                         // for the combined resources
                         i++;

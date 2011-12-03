@@ -30,16 +30,11 @@ namespace Piedone.Combinator.Drivers
         protected override DriverResult Editor(CombinatorSettingsPart part, dynamic shapeHelper)
         {
             return ContentShape("Parts_CombinatorSettings_SiteSettings",
-                    () =>
-                    {
-                        part.CacheFileCount = _cacheFileService.GetCount();
-
-                        return shapeHelper.EditorTemplate(
+                    () =>   shapeHelper.EditorTemplate(
                             TemplateName: "Parts.CombinatorSettings.SiteSettings",
                             Model: part,
-                            Prefix: Prefix);
-                            
-                    }).OnGroup("Combinator");
+                            Prefix: Prefix))
+                   .OnGroup("Combinator");
         }
 
         // POST

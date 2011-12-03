@@ -1,7 +1,7 @@
 ﻿using System;
+using System.IO;
 using Orchard.Environment.Extensions;
 using Orchard.UI.Resources;
-using System.IO;
 
 namespace Piedone.Combinator.Extensions
 {

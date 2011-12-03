@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using Autofac.Features.Metadata;
 using Orchard;
 using Orchard.ContentManagement; // For generic ContentManager methods
@@ -9,6 +7,7 @@ using Orchard.DisplayManagement.Descriptors;
 using Orchard.DisplayManagement.Descriptors.ResourceBindingStrategy;
 using Orchard.Environment.Extensions;
 using Orchard.Logging;
+using Orchard.Settings;
 using Orchard.Themes;
 using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
@@ -25,7 +24,7 @@ namespace Piedone.Combinator
     [OrchardFeature("Piedone.Combinator")]
     public class CombinedResourceManager : ResourceManager
     {
-        private readonly IOrchardServices _orchardServices;
+        private readonly ISiteService _siteService;
         private readonly ICombinatorService _combinatorService;
         private readonly IShapeTableLocator _shapeTableLocator;
         private readonly IThemeManager _themeManager;
@@ -37,7 +36,7 @@ namespace Piedone.Combinator
 
         public CombinedResourceManager(
             IEnumerable<Meta<IResourceManifestProvider>> resourceProviders,
-            IOrchardServices orchardServices,
+            ISiteService siteService,
             ICombinatorService combinatorService,
             IShapeTableLocator shapeTableLocator,
             IThemeManager themeManager,
@@ -45,7 +44,7 @@ namespace Piedone.Combinator
             )
             : base(resourceProviders)
         {
-            _orchardServices = orchardServices;
+            _siteService = siteService;
             combinatorService.ResourceManager = this;
             _combinatorService = combinatorService;
             _shapeTableLocator = shapeTableLocator;
@@ -64,7 +63,7 @@ namespace Piedone.Combinator
             if (resources.Count == 0 || IsDisabled) return resources;
 
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
-            var settings = _orchardServices.WorkContext.CurrentSite.As<CombinatorSettingsPart>();
+            var settings = _siteService.GetSiteSettings().As<CombinatorSettingsPart>();
 
             try
             {

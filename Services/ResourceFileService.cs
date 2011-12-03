@@ -2,9 +2,8 @@
 using System.IO;
 using System.Net;
 using System.Text;
-using Orchard.FileSystems.VirtualPath;
-using Orchard.UI.Resources;
 using Orchard;
+using Orchard.FileSystems.VirtualPath;
 
 namespace Piedone.Combinator.Services
 {

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Orchard;
 using Orchard.Environment.Extensions;
 using Orchard.Logging;
 using Orchard.UI.Resources;
@@ -114,7 +113,7 @@ namespace Piedone.Combinator.Services
         /// <param name="minificationExcludeRegex">The regex to use when excluding resources from minification</param>
         /// <returns>Most of the times the single combined content, but can return more if some of them couldn't be
         /// combined (e.g. was not found or is not a local resource)</returns>
-        /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (i.e. it was missing or could not be opened)</exception>
+        /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened)</exception>
         private IList<ResourceRequiredContext> Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType resourceType, bool combineCDNResources, bool minifyResources, string minificationExcludeRegex)
         {
             var combinedContent = new StringBuilder(resources.Count * 1000);

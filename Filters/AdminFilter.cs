@@ -9,7 +9,7 @@ namespace Piedone.Combinator.Filters
     /// Disables bundling in the Dashboard
     /// </summary>
     [OrchardFeature("Piedone.Combinator")]
-    public class AdminFilter : FilterProvider, IAuthorizationFilter
+    public class AdminFilter : FilterProvider, IResultFilter
     {
         private readonly IResourceManager _resourceManager;
 
@@ -18,7 +18,11 @@ namespace Piedone.Combinator.Filters
             _resourceManager = resourceManager;
         }
 
-        public void OnAuthorization(AuthorizationContext filterContext)
+        public void OnResultExecuted(ResultExecutedContext filterContext)
+        {
+        }
+
+        public void OnResultExecuting(ResultExecutingContext filterContext)
         {
             var combinedResourceManager = _resourceManager as CombinedResourceManager;
             if (combinedResourceManager != null)

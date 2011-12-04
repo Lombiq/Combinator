@@ -162,7 +162,8 @@ namespace Piedone.Combinator.Services
                     // Resources that have the same condition and are after each other will be combined.
                     if (previousResource != null)
                     {
-                        if (previousResource.IsConditional && previousResource.Settings.Condition != resource.Settings.Condition)
+                        if (previousResource.IsConditional 
+                            && previousResource.Settings.Condition != resource.Settings.Condition)
                         {
                             var conditionalResource = NewResource();
                             conditionalResource.FillRequiredContext("/Fake", resourceType); // Just so we can adjust settings
@@ -204,10 +205,9 @@ namespace Piedone.Combinator.Services
                     }
                     else
                     {
-                        var CDNResource = NewResource();
-                        CDNResource.Type = resourceType;
-                        CDNResource.UrlOverride = resource.FullPath;
-                        _cacheFileService.Save(hashCode, CDNResource);
+                        saveCombination(NewResource());
+                        resource.UrlOverride = resource.FullPath;
+                        _cacheFileService.Save(hashCode, resource);
                     }
 
                     previousResource = resource;

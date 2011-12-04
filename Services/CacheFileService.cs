@@ -52,7 +52,7 @@ namespace Piedone.Combinator.Services
             _signals = signals;
         }
 
-        public string Save(int hashCode, ISmartResource resource)
+        public void Save(int hashCode, ISmartResource resource)
         {
             var scliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
 
@@ -65,19 +65,20 @@ namespace Piedone.Combinator.Services
                 Settings = resource.GetSerializedSettings()
             };
 
-            var path = MakePath(fileRecord);
-
-            using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+            if (!String.IsNullOrEmpty(resource.Content))
             {
-                var bytes = Encoding.UTF8.GetBytes(resource.Content);
-                stream.Write(bytes, 0, bytes.Length);
+                var path = MakePath(fileRecord);
+
+                using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                {
+                    var bytes = Encoding.UTF8.GetBytes(resource.Content);
+                    stream.Write(bytes, 0, bytes.Length);
+                } 
             }
             
             _fileRepository.Create(fileRecord);
 
             TriggerCacheChangedSignal();
-
-            return _storageProvider.GetPublicUrl(path);
         }
 
         public List<ISmartResource> GetCombinedResources(int hashCode)

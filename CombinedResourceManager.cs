@@ -74,8 +74,13 @@ namespace Piedone.Combinator
                     foreach (var resource in resources)
                     {
                         var shapeName = StylesheetBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
-                        var binding = shapeTable.Bindings["Style__" + shapeName].BindingSource;
-                        resource.Resource.SetUrl(binding, null);
+
+                        // Simply included CDN stylesheets are not in the ShapeTable
+                        if (shapeTable.Bindings.ContainsKey("Style__" + shapeName))
+                        {
+                            var binding = shapeTable.Bindings["Style__" + shapeName].BindingSource;
+                            resource.Resource.SetUrl(binding, null);
+                        }
                     }
 
                     return _combinatorService.CombineStylesheets(resources, settings.CombineCDNResources, settings.MinifyResources, settings.MinificationExcludeRegex);

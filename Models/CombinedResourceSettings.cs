@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 using Orchard.UI.Resources;
 using System.Xml;
+using System.Runtime.Serialization;
 
 namespace Piedone.Combinator.Models
 {
@@ -14,51 +15,71 @@ namespace Piedone.Combinator.Models
     /// Settings that are persisted with a combined resource file
     /// </summary>
     /// <remarks>
-    /// Should really be of internal visibility but even with DataContractSerializer it's not possible to serialize
-    /// non-public types in medium trust.
+    /// Should really be of internal visibility but it's not possible to serialize non-public types in medium trust.
     /// </remarks>
+    [DataContract]
     public class CombinedResourceSettings
     {
+        [DataMember]
         public string PublicUrl { get; set; }
+
+        [DataMember]
         public string Culture { get; set; }
+
+        [DataMember]
         public string Condition { get; set; }
 
-        public static CombinedResourceSettings Factory(ResourceRequiredContext resource)
-        {
-            var settings = resource.Settings;
-
-            return new CombinedResourceSettings()
-            {
-                Culture = settings.Culture,
-                Condition = settings.Condition
-            };
-        }
+        [DataMember]
+        public Dictionary<string, string> Attributes { get; set; }
 
         public static CombinedResourceSettings Factory(string serialization)
         {
+            var serializer = new DataContractSerializer(typeof(CombinedResourceSettings));
             var doc = new XmlDocument();
             doc.LoadXml(serialization);
             var reader = new XmlNodeReader(doc.DocumentElement);
-            var serializer = new XmlSerializer(typeof(CombinedResourceSettings));
-            return (CombinedResourceSettings)serializer.Deserialize(reader);
+            return (CombinedResourceSettings)serializer.ReadObject(reader);
         }
 
         public string GetSerialization()
         {
-            var serializer = new XmlSerializer(this.GetType());
-            var sb = new StringBuilder();
-            var sw = new StringWriter(sb);
-            serializer.Serialize(sw, this);
-            sw.Close();
-            return sb.ToString();
+            string xmlString;
+
+            using (var sw = new StringWriter())
+            {
+                using (var writer = new XmlTextWriter(sw))
+                {
+                    var serializer = new DataContractSerializer(this.GetType());
+                    //writer.Formatting = Formatting.Indented; // indent the Xml so it's human readable
+                    serializer.WriteObject(writer, this);
+                    writer.Flush();
+                    xmlString = sw.ToString();
+                }
+            }
+
+            return xmlString;
         }
 
-        public void TranscribeSettings(ResourceRequiredContext resource)
+        public void TranscribeFromRequiredContext(ResourceRequiredContext context)
         {
-            var settings = resource.Settings;
+            if (context == null) return;
+
+            var settings = context.Settings;
+
+            Culture = settings.Culture;
+            Condition = settings.Condition;
+            if (settings.HasAttributes) Attributes = settings.Attributes;
+        }
+
+        public void TranscribeToRequiredContext(ResourceRequiredContext context)
+        {
+            if (context == null) return;
+
+            var settings = context.Settings;
 
             settings.Culture = Culture;
             settings.Condition = Condition;
+            settings.Attributes = Attributes;
         }
     }
 }

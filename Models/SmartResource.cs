@@ -15,6 +15,8 @@ namespace Piedone.Combinator.Models
         private readonly Work<IResourceManager> _resourceManagerWork;
         private readonly Work<WorkContext> _workContextWork;
 
+        private CombinedResourceSettings _serializableSettings;
+
         private IResourceManager _resourceManager;
         private IResourceManager ResourceManager
         {
@@ -78,7 +80,7 @@ namespace Piedone.Combinator.Models
                             path = "~" + path;
                         }
 
-                        _relativeVirtualPath = path; 
+                        _relativeVirtualPath = path;
                     }
                 }
 
@@ -89,7 +91,6 @@ namespace Piedone.Combinator.Models
         #endregion
 
         #region Public properties
-        public int DB { get; set; }
         public ResourceRequiredContext RequiredContext { get; set; }
 
         public ResourceDefinition Resource
@@ -114,7 +115,15 @@ namespace Piedone.Combinator.Models
             get { return !String.IsNullOrEmpty(RequiredContext.Settings.Condition); }
         }
 
-        public string UrlOverride { get; set; }
+        public string UrlOverride
+        {
+            get { return _serializableSettings.PublicUrl; }
+            set
+            {
+                _serializableSettings.PublicUrl = value;
+                if (!String.IsNullOrEmpty(value)) Resource.SetUrl(value, null);
+            }
+        }
 
         public ResourceType Type { get; set; }
 
@@ -122,11 +131,13 @@ namespace Piedone.Combinator.Models
         #endregion
 
         public SmartResource(
-            Work<IResourceManager> resourceManagerWork, 
+            Work<IResourceManager> resourceManagerWork,
             Work<WorkContext> workContextWork)
         {
             _resourceManagerWork = resourceManagerWork;
             _workContextWork = workContextWork;
+
+            _serializableSettings = new CombinedResourceSettings();
         }
 
         public SmartResource FillRequiredContext(string publicUrl, ResourceType resourceType)
@@ -147,14 +158,15 @@ namespace Piedone.Combinator.Models
         #region Serialization
         public string GetSerializedSettings()
         {
-            if (RequiredContext == null) return "";
-            return CombinedResourceSettings.Factory(RequiredContext).GetSerialization();
+            _serializableSettings.TranscribeFromRequiredContext(RequiredContext);
+            return _serializableSettings.GetSerialization();
         }
 
-        public void FillSettingsFromSerialization(string settings)
+        public void FillSettingsFromSerialization(string serializedSettings)
         {
-            if (String.IsNullOrEmpty(settings)) return;
-            CombinedResourceSettings.Factory(settings).TranscribeSettings(RequiredContext);
+            if (String.IsNullOrEmpty(serializedSettings)) return;
+            _serializableSettings = CombinedResourceSettings.Factory(serializedSettings);
+            _serializableSettings.TranscribeToRequiredContext(RequiredContext);
         }
         #endregion
     }

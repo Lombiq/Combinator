@@ -1,10 +1,12 @@
 ﻿using System;
-using Orchard.UI.Resources;
 using System.Text;
+using Orchard.Environment.Extensions;
+using Orchard.UI.Resources;
 
 namespace Piedone.Combinator.Extensions
 {
-    public static class RequireSettingsExtensions
+    [OrchardFeature("Piedone.Combinator")]
+    internal static class RequireSettingsExtensions
     {
         public static bool IsConditional(this RequireSettings settings)
         {

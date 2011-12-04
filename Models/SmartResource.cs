@@ -1,15 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Xml;
+using Orchard;
+using Orchard.Environment;
+using Orchard.Environment.Extensions;
 using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
-using Orchard.Environment;
-using Orchard;
-using Orchard.Environment.Extensions;
-using System.Runtime.Serialization;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System.Xml;
 
 namespace Piedone.Combinator.Models
 {

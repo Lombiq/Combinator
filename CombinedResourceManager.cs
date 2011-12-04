@@ -14,8 +14,6 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
-using System.Diagnostics;
-using Orchard.Caching;
 
 namespace Piedone.Combinator
 {

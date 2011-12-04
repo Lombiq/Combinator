@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Orchard;
 using Orchard.Caching;
 using Orchard.Data;
 using Orchard.Environment.Extensions;
@@ -10,7 +11,6 @@ using Orchard.FileSystems.Media;
 using Orchard.Services;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
-using Orchard;
 
 namespace Piedone.Combinator.Services
 {

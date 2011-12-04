@@ -1,6 +1,6 @@
 ﻿using Orchard.ContentManagement;
-using Orchard.Environment.Extensions;
 using Orchard.Core.Common.Utilities;
+using Orchard.Environment.Extensions;
 
 namespace Piedone.Combinator.Models
 {

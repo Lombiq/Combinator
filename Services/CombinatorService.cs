@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Orchard;
+using Orchard.Caching;
 using Orchard.Environment.Extensions;
 using Orchard.Logging;
 using Orchard.UI.Resources;
 // For generic ContentManager methods
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
-using Yahoo.Yui.Compressor;
 using Piedone.Combinator.Models;
-using Orchard.Environment;
-using Orchard;
-using Orchard.Caching;
+using Yahoo.Yui.Compressor;
 
 namespace Piedone.Combinator.Services
 {

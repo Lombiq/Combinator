@@ -1,8 +1,6 @@
-﻿using Orchard;
-using System.Collections.Generic;
-using Orchard.Logging;
+﻿using System.Collections.Generic;
+using Orchard;
 using Orchard.UI.Resources;
-using Orchard.Caching;
 using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator.Services

@@ -4,14 +4,16 @@ using Orchard.Environment.Extensions;
 namespace Piedone.Combinator.Models
 {
     [OrchardFeature("Piedone.Combinator")]
-    public class CombinatorSettingsPartRecord : ContentPartRecord
+    public class CombinatorSettingsPartRecord : ContentPartRecord, ICombinatorSettings
     {
+        public virtual string CombinationExcludeRegex { get; set; }
         public virtual bool CombineCDNResources { get; set; }
         public virtual bool MinifyResources { get; set; }
         public virtual string MinificationExcludeRegex { get; set; }
 
         public CombinatorSettingsPartRecord()
         {
+            CombinationExcludeRegex = "";
             CombineCDNResources = false;
             MinifyResources = true;
             MinificationExcludeRegex = "";

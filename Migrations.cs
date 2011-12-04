@@ -26,13 +26,14 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.CreateTable(typeof(CombinatorSettingsPartRecord).Name, 
                 table => table
                     .ContentPartRecord()
+                    .Column<string>("CombinationExcludeRegex")
                     .Column<bool>("CombineCDNResources")
                     .Column<bool>("MinifyResources")
                     .Column<string>("MinificationExcludeRegex")
             );
 
 
-            return 2;
+            return 3;
         }
 
         public int UpdateFrom1()
@@ -52,6 +53,11 @@ namespace Piedone.Combinator.Migrations
 
         public int UpdateFrom2()
         {
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+                table => table
+                    .AddColumn<string>("CombinationExcludeRegex")
+            );
+
             SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
                 table => table
                     .AddColumn<string>("Settings", column => column.Unlimited())

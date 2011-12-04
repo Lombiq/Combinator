@@ -43,9 +43,7 @@ namespace Piedone.Combinator.Services
 
         public IList<ResourceRequiredContext> CombineStylesheets(
             IList<ResourceRequiredContext> resources,
-            bool combineCDNResources = false,
-            bool minifyResources = true,
-            string minificationExcludeRegex = "")
+            ICombinatorSettings settings)
         {
             var hashCode = resources.GetResourceListHashCode();
 
@@ -53,7 +51,7 @@ namespace Piedone.Combinator.Services
             {
                 if (!_cacheFileService.Exists(hashCode))
                 {
-                    Combine(resources, hashCode, ResourceType.Style, combineCDNResources, minifyResources, minificationExcludeRegex);
+                    Combine(resources, hashCode, ResourceType.Style, settings);
                 }
                 else
                 {
@@ -68,9 +66,7 @@ namespace Piedone.Combinator.Services
 
         public IList<ResourceRequiredContext> CombineScripts(
             IList<ResourceRequiredContext> resources,
-            bool combineCDNResources = false,
-            bool minifyResources = true,
-            string minificationExcludeRegex = "")
+            ICombinatorSettings settings)
         {
             var hashCode = resources.GetResourceListHashCode();
             var combinedScripts = new List<ResourceRequiredContext>(2);
@@ -90,7 +86,7 @@ namespace Piedone.Combinator.Services
 
                             if (scripts.Count == 0) return new List<ResourceRequiredContext>();
 
-                            Combine(scripts, locationHashCode, ResourceType.JavaScript, combineCDNResources, minifyResources, minificationExcludeRegex);
+                            Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
                         }
                         else
                         {
@@ -123,11 +119,9 @@ namespace Piedone.Combinator.Services
         /// <param name="resources">Resources to combine</param>
         /// <param name="hashCode">Just so it shouldn't be recalculated</param>
         /// <param name="resourceType">Type of the resources</param>
-        /// <param name="combineCDNResources">Whether CDN resources should be combined or not</param>
-        /// <param name="minifyResources">If true, resources will be minified</param>
-        /// <param name="minificationExcludeRegex">The regex to use when excluding resources from minification</param>
+        /// <param name="settings">Combination settings</param>
         /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened)</exception>
-        private void Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType resourceType, bool combineCDNResources, bool minifyResources, string minificationExcludeRegex)
+        private void Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType resourceType, ICombinatorSettings settings)
         {
             var combinedContent = new StringBuilder(resources.Count * 1000);
 
@@ -145,7 +139,7 @@ namespace Piedone.Combinator.Services
             Func<string, bool> hasToBeMinified =
                 (path) =>
                 {
-                    return minifyResources && (String.IsNullOrEmpty(minificationExcludeRegex) || !Regex.IsMatch(path, minificationExcludeRegex));
+                    return settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(path, settings.MinificationExcludeRegex));
                 };
             #endregion
 
@@ -170,32 +164,38 @@ namespace Piedone.Combinator.Services
                         saveCombination(previousResource);
                     }
 
-                    // Ensuring the resource is a local one
-                    if (!resource.IsCDNResource)
+                    if ((String.IsNullOrEmpty(settings.CombinationExcludeRegex) || !Regex.IsMatch(fullPath, settings.CombinationExcludeRegex)))
                     {
-                        var virtualPath = resource.RelativeVirtualPath;
-
-                        var content = _resourceFileService.GetLocalResourceContent(virtualPath);
-
-                        content = AdjustRelativePaths(content, resource.PublicRelativeUrl, resourceType);
-
-                        if (hasToBeMinified(fullPath))
+                        if (!resource.IsCDNResource)
                         {
-                            content = MinifyResourceContent(content, resourceType);
+                            var virtualPath = resource.RelativeVirtualPath;
+
+                            var content = _resourceFileService.GetLocalResourceContent(virtualPath);
+
+                            content = AdjustRelativePaths(content, resource.PublicRelativeUrl, resourceType);
+
+                            if (hasToBeMinified(fullPath))
+                            {
+                                content = MinifyResourceContent(content, resourceType);
+                            }
+
+                            combinedContent.Append(content);
                         }
-
-                        combinedContent.Append(content);
-                    }
-                    else if (combineCDNResources)
-                    {
-                        var content = _resourceFileService.GetRemoteResourceContent(fullPath);
-
-                        if (hasToBeMinified(fullPath))
+                        else if (settings.CombineCDNResources)
                         {
-                            content = MinifyResourceContent(content, resourceType);
-                        }
+                            var content = _resourceFileService.GetRemoteResourceContent(fullPath);
 
-                        combinedContent.Append(content);
+                            if (hasToBeMinified(fullPath))
+                            {
+                                content = MinifyResourceContent(content, resourceType);
+                            }
+
+                            combinedContent.Append(content);
+                        }
+                        else
+                        {
+                            resource.UrlOverride = resource.FullPath;
+                        }
                     }
                     else
                     {

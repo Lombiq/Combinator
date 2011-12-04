@@ -5,8 +5,14 @@ using Orchard.Core.Common.Utilities;
 namespace Piedone.Combinator.Models
 {
     [OrchardFeature("Piedone.Combinator")]
-    public class CombinatorSettingsPart : ContentPart<CombinatorSettingsPartRecord>
+    public class CombinatorSettingsPart : ContentPart<CombinatorSettingsPartRecord>, ICombinatorSettings
     {
+        public string CombinationExcludeRegex
+        {
+            get { return Record.CombinationExcludeRegex; }
+            set { Record.CombinationExcludeRegex = value; }
+        }
+
         public bool CombineCDNResources
         {
             get { return Record.CombineCDNResources; }

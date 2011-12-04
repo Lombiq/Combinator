@@ -85,11 +85,11 @@ namespace Piedone.Combinator
                         }
                     }
 
-                    return _combinatorService.CombineStylesheets(resources, settings.CombineCDNResources, settings.MinifyResources, settings.MinificationExcludeRegex);
+                    return _combinatorService.CombineStylesheets(resources, settings);
                 }
                 else if (resourceType == ResourceType.JavaScript)
                 {
-                    return _combinatorService.CombineScripts(resources, settings.CombineCDNResources, settings.MinifyResources, settings.MinificationExcludeRegex);
+                    return _combinatorService.CombineScripts(resources, settings);
                 }
 
                 return base.BuildRequiredResources(stringResourceType);

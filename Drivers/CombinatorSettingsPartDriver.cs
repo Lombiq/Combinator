@@ -40,6 +40,7 @@ namespace Piedone.Combinator.Drivers
         // POST
         protected override DriverResult Editor(CombinatorSettingsPart part, IUpdateModel updater, dynamic shapeHelper)
         {
+            var combinationExcludeRegexFormer = part.CombinationExcludeRegex;
             var combineCDNResourcesFormer = part.CombineCDNResources;
             var minifyResourcesFormer = part.MinifyResources;
             var minificationExcludeRegexFormer = part.MinificationExcludeRegex;
@@ -47,7 +48,8 @@ namespace Piedone.Combinator.Drivers
             updater.TryUpdateModel(part, Prefix, null, null);
 
             // Not emptying the cache would cause inconsistencies
-            if (part.CombineCDNResources != combineCDNResourcesFormer 
+            if (part.CombinationExcludeRegex != combinationExcludeRegexFormer
+                || part.CombineCDNResources != combineCDNResourcesFormer 
                 || part.MinifyResources != minifyResourcesFormer
                 || (part.MinifyResources && part.MinificationExcludeRegex != minificationExcludeRegexFormer))
             {

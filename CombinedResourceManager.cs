@@ -60,7 +60,7 @@ namespace Piedone.Combinator
             // It's necessary to make a copy since making a change to the local variable also changes the private one.
             var resources = new List<ResourceRequiredContext>(base.BuildRequiredResources(stringResourceType));
 
-            //if (resources.Count == 0 || IsDisabled) return resources;
+            if (resources.Count == 0 || IsDisabled) return resources;
 
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
             var settings = _siteService.GetSiteSettings().As<CombinatorSettingsPart>();

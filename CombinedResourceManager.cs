@@ -45,7 +45,6 @@ namespace Piedone.Combinator
             : base(resourceProviders)
         {
             _siteService = siteService;
-            combinatorService.ResourceManager = this;
             _combinatorService = combinatorService;
             _shapeTableLocator = shapeTableLocator;
             _themeManager = themeManager;
@@ -56,11 +55,10 @@ namespace Piedone.Combinator
 
         public override IList<ResourceRequiredContext> BuildRequiredResources(string stringResourceType)
         {
-            // It's necessary to make a copy since making a change to the local variable also changes the private one. This is most likely some bug
-            // with a reference that shouldn't be given away.
+            // It's necessary to make a copy since making a change to the local variable also changes the private one.
             var resources = new List<ResourceRequiredContext>(base.BuildRequiredResources(stringResourceType));
 
-            if (resources.Count == 0 || IsDisabled) return resources;
+            //if (resources.Count == 0 || IsDisabled) return resources;
 
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
             var settings = _siteService.GetSiteSettings().As<CombinatorSettingsPart>();

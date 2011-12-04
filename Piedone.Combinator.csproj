@@ -88,7 +88,9 @@
     <Compile Include="Models\CombinatorSettingsPartRecord.cs" />
     <Compile Include="Models\CombinedFileRecord.cs" />
     <Compile Include="Models\CombinatorSettingsPart.cs" />
-    <Compile Include="Models\Resource.cs" />
+    <Compile Include="Models\CombinedResourceSettings.cs" />
+    <Compile Include="Models\ISmartResource.cs" />
+    <Compile Include="Models\SmartResource.cs" />
     <Compile Include="Services\CacheFileService.cs" />
     <Compile Include="Services\CombinatorService.cs" />
     <Compile Include="Services\ICacheFileService.cs" />

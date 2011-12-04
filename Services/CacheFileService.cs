@@ -10,6 +10,7 @@ using Orchard.FileSystems.Media;
 using Orchard.Services;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
+using Orchard;
 
 namespace Piedone.Combinator.Services
 {
@@ -19,6 +20,7 @@ namespace Piedone.Combinator.Services
         private readonly IStorageProvider _storageProvider;
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly IClock _clock;
+        private readonly IWorkContextAccessor _workContextAccessor;
 
         #region In-memory caching fields
         private readonly ICacheManager _cacheManager;
@@ -37,18 +39,20 @@ namespace Piedone.Combinator.Services
             IStorageProvider storageProvider,
             IRepository<CombinedFileRecord> fileRepository,
             IClock clock,
+            IWorkContextAccessor workContextAccessor,
             ICacheManager cacheManager,
             ISignals signals)
         {
             _fileRepository = fileRepository;
             _storageProvider = storageProvider;
             _clock = clock;
+            _workContextAccessor = workContextAccessor;
 
             _cacheManager = cacheManager;
             _signals = signals;
         }
 
-        public string Save(int hashCode, ResourceType type, string content)
+        public string Save(int hashCode, ISmartResource resource)
         {
             var scliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
 
@@ -56,15 +60,16 @@ namespace Piedone.Combinator.Services
             {
                 HashCode = hashCode,
                 Slice = ++scliceCount,
-                Type = type,
-                LastUpdatedUtc = _clock.UtcNow
+                Type = resource.Type,
+                LastUpdatedUtc = _clock.UtcNow,
+                Settings = resource.GetSerializedSettings()
             };
 
             var path = MakePath(fileRecord);
 
             using (var stream = _storageProvider.CreateFile(path).OpenWrite())
             {
-                var bytes = Encoding.UTF8.GetBytes(content);
+                var bytes = Encoding.UTF8.GetBytes(resource.Content);
                 stream.Write(bytes, 0, bytes.Length);
             }
             
@@ -75,7 +80,7 @@ namespace Piedone.Combinator.Services
             return _storageProvider.GetPublicUrl(path);
         }
 
-        public List<string> GetPublicUrls(int hashCode)
+        public List<ISmartResource> GetCombinedResources(int hashCode)
         {
             return _cacheManager.Get(MakeCacheKey("GetPublicUrls." + hashCode.ToString()), ctx =>
             {
@@ -84,14 +89,17 @@ namespace Piedone.Combinator.Services
                 var files = GetRecords(hashCode);
                 var fileCount = files.Count;
 
-                var urls = new List<string>(fileCount);
+                var resources = new List<ISmartResource>(fileCount);
 
                 foreach (var file in files)
                 {
-                    urls.Add(_storageProvider.GetPublicUrl(MakePath(file)));
+                    var resource = _workContextAccessor.GetContext().Resolve<ISmartResource>();
+                    resource.FillRequiredContext(_storageProvider.GetPublicUrl(MakePath(file)), file.Type);
+                    resource.FillSettingsFromSerialization(file.Settings);
+                    resources.Add(resource);
                 }
 
-                return urls;
+                return resources;
             });
 
         }

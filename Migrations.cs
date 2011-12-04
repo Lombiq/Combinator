@@ -17,6 +17,7 @@ namespace Piedone.Combinator.Migrations
                     .Column<int>("Slice")
                     .Column<string>("Type")
                     .Column<DateTime>("LastUpdatedUtc")
+                    .Column<string>("Settings")
             ).AlterTable("CombinedFileRecord",
                 table => table
                     .CreateIndex("File", new string[] { "HashCode" })
@@ -47,6 +48,16 @@ namespace Piedone.Combinator.Migrations
             );
 
             return 2;
+        }
+
+        public int UpdateFrom2()
+        {
+            SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
+                table => table
+                    .AddColumn<string>("Settings")
+            );
+
+            return 3;
         }
     }
 }

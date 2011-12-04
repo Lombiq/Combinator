@@ -10,6 +10,9 @@ using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Yahoo.Yui.Compressor;
+using Piedone.Combinator.Models;
+using Orchard.Environment;
+using Orchard;
 
 namespace Piedone.Combinator.Services
 {
@@ -26,17 +29,18 @@ namespace Piedone.Combinator.Services
 
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceFileService _resourceFileService;
+        private readonly WorkContext _workContext;
 
         public ILogger Logger { get; set; }
 
-        public IResourceManager ResourceManager { get; set; }
-
         public CombinatorService(
             ICacheFileService cacheFileService,
-            IResourceFileService resourceFileService)
+            IResourceFileService resourceFileService,
+            WorkContext workContext)
         {
             _cacheFileService = cacheFileService;
             _resourceFileService = resourceFileService;
+            _workContext = workContext;
 
             Logger = NullLogger.Instance;
         }
@@ -56,9 +60,7 @@ namespace Piedone.Combinator.Services
                     Combine(resources, hashCode, ResourceType.Style, combineCDNResources, minifyResources, minificationExcludeRegex);
                 }
 
-                // Getting the urls after we've freshly combined is inefficient, but this way it's simple and it only happens
-                // when a set of resources are first accessed.
-                _combinedResources[hashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(hashCode), resources, ResourceType.Style, combineCDNResources);
+                _combinedResources[hashCode] = ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode));
             }
 
             return _combinedResources[hashCode];
@@ -83,14 +85,14 @@ namespace Piedone.Combinator.Services
                                        where r.Settings.Location == location
                                        select r).ToList();
 
+                        if (scripts.Count == 0) return;
+
                         if (!_cacheFileService.Exists(locationHashCode))
                         {
                             Combine(scripts, locationHashCode, ResourceType.JavaScript, combineCDNResources, minifyResources, minificationExcludeRegex);
                         }
 
-                        // Getting the urls after we've freshly combined is inefficient, but this way it's simple and it only happens
-                        // when a set of resources are first accessed.
-                        _combinedResources[locationHashCode] = MakeResourcesFromPublicUrls(_cacheFileService.GetPublicUrls(locationHashCode), scripts, ResourceType.JavaScript, combineCDNResources);
+                        _combinedResources[locationHashCode] = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode));
 
                         _combinedResources[locationHashCode].SetLocation(location);
                     }
@@ -107,7 +109,7 @@ namespace Piedone.Combinator.Services
         }
 
         /// <summary>
-        /// Combines the content of resources
+        /// Combines (and minifies) the content of resources and saves the combinations
         /// </summary>
         /// <param name="resources">Resources to combine</param>
         /// <param name="hashCode">Just so it shouldn't be recalculated</param>
@@ -115,26 +117,20 @@ namespace Piedone.Combinator.Services
         /// <param name="combineCDNResources">Whether CDN resources should be combined or not</param>
         /// <param name="minifyResources">If true, resources will be minified</param>
         /// <param name="minificationExcludeRegex">The regex to use when excluding resources from minification</param>
-        /// <returns>Most of the times the single combined content, but can return more if some of them couldn't be
-        /// combined (e.g. was not found or is not a local resource)</returns>
         /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened)</exception>
-        private IList<ResourceRequiredContext> Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType resourceType, bool combineCDNResources, bool minifyResources, string minificationExcludeRegex)
+        private void Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType resourceType, bool combineCDNResources, bool minifyResources, string minificationExcludeRegex)
         {
             var combinedContent = new StringBuilder(resources.Count * 1000);
-            var combinedResources = new List<ResourceRequiredContext>();
 
             #region Functions
-            Action saveCombination =
-                () =>
+            Action<ISmartResource> saveCombination =
+                (combinedResource) =>
                 {
                     if (combinedContent.Length == 0) return;
 
-                    combinedResources.Add(
-                        MakeResourceFromPublicUrl(
-                            _cacheFileService.Save(hashCode, resourceType, combinedContent.ToString()),
-                            resourceType
-                        )
-                    );
+                    combinedResource.Content = combinedContent.ToString();
+                    combinedResource.Type = resourceType;
+                    _cacheFileService.Save(hashCode, combinedResource);
 
                     combinedContent.Clear();
                 };
@@ -146,45 +142,75 @@ namespace Piedone.Combinator.Services
                 };
             #endregion
 
+            var smartResources = new List<ISmartResource>(resources.Count);
+            foreach (var resource in resources)
+            {
+                var smartResource = NewResource();
+                smartResource.RequiredContext = resource;
+                smartResources.Add(smartResource);
+            }
+
             var fullPath = "";
             try
             {
-                foreach (var resource in resources)
+                ISmartResource previousResource = null;
+                foreach (var resource in smartResources)
                 {
-                    fullPath = resource.Resource.GetFullPath();
+                    fullPath = resource.FullPath;
 
-                    // Only unconditional resources are combined or minified
-                    if (!resource.Settings.IsConditional())
+                    // Conditional resources are stored separately to apply conditions
+                    // Resources that have the same condition and are after each other will be combined.
+                    if (previousResource != null)
                     {
-                        // Ensuring the resource is a local one
-                        if (!resource.Resource.IsCDNResource())
+                        if (previousResource.IsConditional && previousResource.Settings.Condition != resource.Settings.Condition)
                         {
-                            var virtualPath = _resourceFileService.GetRelativeVirtualPath(fullPath);
-
-                            var content = _resourceFileService.GetLocalResourceContent(virtualPath);
-
-                            content = AdjustRelativePaths(content, _resourceFileService.GetPublicRelativeUrl(virtualPath), resourceType);
-
-                            if (hasToBeMinified(fullPath))
-                            {
-                                content = MinifyResourceContent(content, resourceType);
-                            }
-
-                            combinedContent.Append(content);
+                            var conditionalResource = NewResource();
+                            conditionalResource.FillRequiredContext("/Fake", resourceType); // Just so we can adjust settings
+                            conditionalResource.Settings.Condition = previousResource.Settings.Condition;
+                            saveCombination(conditionalResource);
                         }
-                        else if (combineCDNResources)
+                        else if (!previousResource.IsConditional && resource.IsConditional)
                         {
-                            var content = _resourceFileService.GetRemoteResourceContent(fullPath);
-
-                            if (hasToBeMinified(fullPath))
-                            {
-                                content = MinifyResourceContent(content, resourceType);
-                            }
-
-                            combinedContent.Append(content);
-                        }
+                            saveCombination(NewResource());
+                        } 
                     }
-                    else saveCombination();
+
+                    // Ensuring the resource is a local one
+                    if (!resource.IsCDNResource)
+                    {
+                        var virtualPath = resource.RelativeVirtualPath;
+
+                        var content = _resourceFileService.GetLocalResourceContent(virtualPath);
+
+                        content = AdjustRelativePaths(content, resource.PublicRelativeUrl, resourceType);
+
+                        if (hasToBeMinified(fullPath))
+                        {
+                            content = MinifyResourceContent(content, resourceType);
+                        }
+
+                        combinedContent.Append(content);
+                    }
+                    else if (combineCDNResources)
+                    {
+                        var content = _resourceFileService.GetRemoteResourceContent(fullPath);
+
+                        if (hasToBeMinified(fullPath))
+                        {
+                            content = MinifyResourceContent(content, resourceType);
+                        }
+
+                        combinedContent.Append(content);
+                    }
+                    else
+                    {
+                        var CDNResource = NewResource();
+                        CDNResource.Type = resourceType;
+                        CDNResource.UrlOverride = resource.FullPath;
+                        _cacheFileService.Save(hashCode, CDNResource);
+                    }
+
+                    previousResource = resource;
                 }
             }
             catch (Exception e)
@@ -193,9 +219,7 @@ namespace Piedone.Combinator.Services
                 throw new ApplicationException(message, e);
             }
 
-            saveCombination();
-
-            return combinedResources;
+            saveCombination(NewResource());
         }
 
         private string AdjustRelativePaths(string content, string publicUrl, ResourceType resourceType)
@@ -243,76 +267,14 @@ namespace Piedone.Combinator.Services
             return content;
         }
 
-        private IList<ResourceRequiredContext> MakeResourcesFromPublicUrls(IList<string> urls, IList<ResourceRequiredContext> resources, ResourceType resourceType, bool combineCDNResources)
+        private IList<ResourceRequiredContext> ProcessCombinedResources(IList<ISmartResource> combinedResources)
         {
-            if (ResourceManager == null) throw new ApplicationException("The ResourceManager instance should be set after instantiating.");
-
-            // The below algorithm merges saved (combined and/or minified) resources with unsaved ones (CDN resources if
-            // CDN combination is disabled and conditional resources).
-            var combinedResources = new List<ResourceRequiredContext>(resources);
-            var urlIndex = 0;
-
-            Action<int> saveResource =
-                (index) =>
-                {
-                    combinedResources[index] = MakeResourceFromPublicUrl(urls[urlIndex++], resourceType);
-                };
-
-            for (int i = 0; i < combinedResources.Count; i++)
-            {
-                if (!combineCDNResources)
-                {
-                    // Here combined resources are merged with CDN resources
-                    if (!combinedResources[i].Resource.IsCDNResource() && !combinedResources[i].Settings.IsConditional())
-                    {
-                        // Overwriting the first local resource with the combined resource
-                        saveResource(i);
-                        // Deleting the other ones to the next remote or conditional resource while we have still space 
-                        // for the combined resources
-                        i++;
-                        while (
-                            i < combinedResources.Count
-                            && combinedResources.Count > urls.Count
-                            && !combinedResources[i].Resource.IsCDNResource()
-                            && !combinedResources[i].Settings.IsConditional())
-                        {
-                            combinedResources.RemoveAt(i);
-                        }
-                    }
-                }
-                else
-                {
-                    if (!combinedResources[i].Settings.IsConditional())
-                    {
-                        saveResource(i);
-                        // Deleting the other ones to the next conditional resource while we have still space 
-                        // for the combined resources
-                        i++;
-                        while (
-                            i < combinedResources.Count
-                            && combinedResources.Count > urls.Count
-                            && !combinedResources[i].Settings.IsConditional())
-                        {
-                            combinedResources.RemoveAt(i);
-                        }
-                    }
-                }
-            }
-
-            return combinedResources;
+            return (from r in combinedResources select r.RequiredContext).ToList();
         }
 
-        private ResourceRequiredContext MakeResourceFromPublicUrl(string url, ResourceType resourceType)
+        private ISmartResource NewResource()
         {
-            var resource = new ResourceRequiredContext();
-
-            // This is only necessary to build the ResourceRequiredContext object, therefore we also delete the resource
-            // from the required ones.
-            resource.Settings = ResourceManager.Include(ResourceTypeHelper.EnumToStringType(resourceType), url, url);
-            resource.Resource = ResourceManager.FindResource(resource.Settings);
-            ResourceManager.NotRequired(ResourceTypeHelper.EnumToStringType(resourceType), resource.Resource.Name);
-
-            return resource;
+            return _workContext.Resolve<ISmartResource>();
         }
     }
 }

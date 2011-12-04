@@ -35,43 +35,6 @@ namespace Piedone.Combinator.Services
             return content;
         }
 
-        #region Path handling
-        private string _applicationPath;
-        private string ApplicationPath
-        {
-            get
-            {
-                if (_applicationPath == null) _applicationPath = _workContext.HttpContext.Request.ApplicationPath;
-                return _applicationPath;
-            }
-            set { _applicationPath = value; }
-        }
-
-        public string GetPublicRelativeUrl(string relativeVirtualPath)
-        {
-            relativeVirtualPath = relativeVirtualPath.Remove(0, 1);
-            return (ApplicationPath != "/") ? ApplicationPath + relativeVirtualPath : relativeVirtualPath;
-        }
-
-        public string GetRelativeVirtualPath(string fullPath)
-        {
-            if (fullPath.StartsWith(ApplicationPath))
-            {
-                // Strips e.g. /OrchardLocal
-                if (ApplicationPath != "/")
-                {
-                    int place = fullPath.IndexOf(ApplicationPath);
-                    // Finds the first occurence and replaces it with empty string
-                    fullPath = fullPath.Remove(place, ApplicationPath.Length).Insert(place, "");
-                }
-
-                fullPath = "~" + fullPath;
-            }
-
-            return fullPath;
-        }
-        #endregion
-
         #region Remote resource handling
         private string _byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
         private string ByteOrderMarkUtf8

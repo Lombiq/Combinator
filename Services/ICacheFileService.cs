@@ -2,6 +2,7 @@
 using Orchard;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
+using Orchard.Caching;
 
 namespace Piedone.Combinator.Services
 {
@@ -13,5 +14,6 @@ namespace Piedone.Combinator.Services
         int GetCount();
         void Delete(int hashCode, ResourceType type);
         void Empty();
+        void MonitorCacheChangedSignal(AcquireContext<string> ctx, int hashCode);
     }
 }

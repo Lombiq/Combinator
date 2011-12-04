@@ -13,34 +13,30 @@ using Yahoo.Yui.Compressor;
 using Piedone.Combinator.Models;
 using Orchard.Environment;
 using Orchard;
+using Orchard.Caching;
 
 namespace Piedone.Combinator.Services
 {
     [OrchardFeature("Piedone.Combinator")]
     public class CombinatorService : ICombinatorService
     {
-        /// <summary>
-        /// Instance cache for combined resources
-        /// </summary>
-        /// <remarks>
-        /// Is reasonable when a Combine*() method is called multiple times in the same request (that's currently only with js files)
-        /// </remarks>
-        private Dictionary<int, IList<ResourceRequiredContext>> _combinedResources = new Dictionary<int, IList<ResourceRequiredContext>>();
-
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceFileService _resourceFileService;
         private readonly WorkContext _workContext;
+        private readonly ICacheManager _cacheManager;
 
         public ILogger Logger { get; set; }
 
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceFileService resourceFileService,
-            WorkContext workContext)
+            WorkContext workContext,
+            ICacheManager cacheManager)
         {
             _cacheFileService = cacheFileService;
             _resourceFileService = resourceFileService;
             _workContext = workContext;
+            _cacheManager = cacheManager;
 
             Logger = NullLogger.Instance;
         }
@@ -53,17 +49,21 @@ namespace Piedone.Combinator.Services
         {
             var hashCode = resources.GetResourceListHashCode();
 
-            if (!_combinedResources.ContainsKey(hashCode))
+            return _cacheManager.Get("Piedone.Combinator.CombinedResources." + hashCode.ToString(), ctx =>
             {
                 if (!_cacheFileService.Exists(hashCode))
                 {
                     Combine(resources, hashCode, ResourceType.Style, combineCDNResources, minifyResources, minificationExcludeRegex);
                 }
+                else
+                {
+                    // Cache invalidation signals will be only monitored if the combined resources were properly saved.
+                    // Not doing so would just immediately invalidate this cache entry anyway.
+                    _cacheFileService.MonitorCacheChangedSignal(ctx, hashCode);
+                }
 
-                _combinedResources[hashCode] = ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode));
-            }
-
-            return _combinedResources[hashCode];
+                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode));
+            });
         }
 
         public IList<ResourceRequiredContext> CombineScripts(
@@ -79,24 +79,33 @@ namespace Piedone.Combinator.Services
                 (location) =>
                 {
                     var locationHashCode = hashCode + (int)location;
-                    if (!_combinedResources.ContainsKey(locationHashCode))
+
+                    var combinedResourcesAtLocation = _cacheManager.Get("Piedone.Combinator.CombinedResources." + locationHashCode.ToString(), ctx =>
                     {
-                        var scripts = (from r in resources
-                                       where r.Settings.Location == location
-                                       select r).ToList();
-
-                        if (scripts.Count == 0) return;
-
                         if (!_cacheFileService.Exists(locationHashCode))
                         {
+                            var scripts = (from r in resources
+                                           where r.Settings.Location == location
+                                           select r).ToList();
+
+                            if (scripts.Count == 0) return new List<ResourceRequiredContext>();
+
                             Combine(scripts, locationHashCode, ResourceType.JavaScript, combineCDNResources, minifyResources, minificationExcludeRegex);
                         }
+                        else
+                        {
+                            // Cache invalidation signals will be only monitored if the combined resources were properly saved.
+                            // Not doing so would just immediately invalidate this cache entry anyway.
+                            _cacheFileService.MonitorCacheChangedSignal(ctx, locationHashCode);
+                        }
 
-                        _combinedResources[locationHashCode] = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode));
+                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode));
+                        combinedResources.SetLocation(location);
 
-                        _combinedResources[locationHashCode].SetLocation(location);
-                    }
-                    combinedScripts = combinedScripts.Union(_combinedResources[locationHashCode]).ToList();
+                        return combinedResources;
+                    });
+
+                    combinedScripts = combinedScripts.Union(combinedResourcesAtLocation).ToList();
                 };
 
             // Scripts at different locations are processed separately

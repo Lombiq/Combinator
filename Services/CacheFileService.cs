@@ -78,14 +78,14 @@ namespace Piedone.Combinator.Services
             
             _fileRepository.Create(fileRecord);
 
-            TriggerCacheChangedSignal();
+            TriggerCacheChangedSignal(hashCode);
         }
 
         public List<ISmartResource> GetCombinedResources(int hashCode)
         {
             return _cacheManager.Get(MakeCacheKey("GetPublicUrls." + hashCode.ToString()), ctx =>
             {
-                MonitorCacheChangedSignal(ctx);
+                MonitorCacheChangedSignal(ctx, hashCode);
 
                 var files = GetRecords(hashCode);
                 var fileCount = files.Count;
@@ -108,7 +108,7 @@ namespace Piedone.Combinator.Services
         {
             return _cacheManager.Get(MakeCacheKey("Exists." + hashCode.ToString()), ctx =>
             {
-                MonitorCacheChangedSignal(ctx);
+                MonitorCacheChangedSignal(ctx, hashCode);
                 // Maybe also check if the file exists?
                 return _fileRepository.Count(file => file.HashCode == hashCode) != 0;
             });
@@ -123,7 +123,7 @@ namespace Piedone.Combinator.Services
         {
             DeleteFiles(GetRecords(hashCode));
 
-            TriggerCacheChangedSignal();
+            TriggerCacheChangedSignal(hashCode);
         }
 
         public void Empty()
@@ -172,8 +172,6 @@ namespace Piedone.Combinator.Services
                 {
                 }
             }
-
-            TriggerCacheChangedSignal();
         }
 
         private string MakePath(CombinedFileRecord file)
@@ -196,19 +194,37 @@ namespace Piedone.Combinator.Services
         }
 
         #region In-memory caching methods
-        private void MonitorCacheChangedSignal(AcquireContext<string> ctx)
+        public void MonitorCacheChangedSignal(AcquireContext<string> ctx, int hashCode)
         {
+            ctx.Monitor(_signals.When(MakeCacheChangedSignal(hashCode)));
             ctx.Monitor(_signals.When(CacheChangedSignal));
         }
 
+        /// <summary>
+        /// Trigger for the whole cache
+        /// </summary>
         private void TriggerCacheChangedSignal()
         {
             _signals.Trigger(CacheChangedSignal);
         }
 
+        /// <summary>
+        /// Trigger for parts of the cache corresponding to set of resources
+        /// </summary>
+        /// <param name="hashCode">Hash of the resources set</param>
+        private void TriggerCacheChangedSignal(int hashCode)
+        {
+            _signals.Trigger(MakeCacheChangedSignal(hashCode));
+        }
+
         private string MakeCacheKey(string name)
         {
             return CachePrefix + name;
+        }
+
+        private string MakeCacheChangedSignal(int hashCode)
+        {
+            return CacheChangedSignal + "." + hashCode.ToString();
         }
         #endregion
     }

@@ -14,6 +14,8 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using System.Diagnostics;
+using Orchard.Caching;
 
 namespace Piedone.Combinator
 {
@@ -75,7 +77,7 @@ namespace Piedone.Combinator
                     {
                         var shapeName = StylesheetBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
 
-                        // Simply included CDN stylesheets are not in the ShapeTable
+                        // Simply included CDN stylesheets are not in the ShapeTable, so we have to check
                         if (shapeTable.Bindings.ContainsKey("Style__" + shapeName))
                         {
                             var binding = shapeTable.Bindings["Style__" + shapeName].BindingSource;

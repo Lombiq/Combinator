@@ -126,8 +126,6 @@ namespace Piedone.Combinator.Services
             Action<ISmartResource> saveCombination =
                 (combinedResource) =>
                 {
-                    if (combinedContent.Length == 0) return;
-
                     combinedResource.Content = combinedContent.ToString();
                     combinedResource.Type = resourceType;
                     _cacheFileService.Save(hashCode, combinedResource);
@@ -151,29 +149,16 @@ namespace Piedone.Combinator.Services
             }
 
             var fullPath = "";
+            ISmartResource previousResource = null;
             try
             {
-                ISmartResource previousResource = null;
                 foreach (var resource in smartResources)
                 {
                     fullPath = resource.FullPath;
 
-                    // Conditional resources are stored separately to apply conditions
-                    // Resources that have the same condition and are after each other will be combined.
-                    if (previousResource != null)
+                    if (previousResource != null && !previousResource.SerializableSettingsEqual(resource))
                     {
-                        if (previousResource.IsConditional 
-                            && previousResource.Settings.Condition != resource.Settings.Condition)
-                        {
-                            var conditionalResource = NewResource();
-                            conditionalResource.FillRequiredContext("/Fake", resourceType); // Just so we can adjust settings
-                            conditionalResource.Settings.Condition = previousResource.Settings.Condition;
-                            saveCombination(conditionalResource);
-                        }
-                        else if (!previousResource.IsConditional && resource.IsConditional)
-                        {
-                            saveCombination(NewResource());
-                        } 
+                        saveCombination(previousResource);
                     }
 
                     // Ensuring the resource is a local one
@@ -205,9 +190,7 @@ namespace Piedone.Combinator.Services
                     }
                     else
                     {
-                        saveCombination(NewResource());
                         resource.UrlOverride = resource.FullPath;
-                        _cacheFileService.Save(hashCode, resource);
                     }
 
                     previousResource = resource;
@@ -219,7 +202,7 @@ namespace Piedone.Combinator.Services
                 throw new ApplicationException(message, e);
             }
 
-            saveCombination(NewResource());
+            saveCombination(previousResource);
         }
 
         private string AdjustRelativePaths(string content, string publicUrl, ResourceType resourceType)

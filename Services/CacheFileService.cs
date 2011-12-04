@@ -102,7 +102,6 @@ namespace Piedone.Combinator.Services
 
                 return resources;
             });
-
         }
 
         public bool Exists(int hashCode)
@@ -110,7 +109,7 @@ namespace Piedone.Combinator.Services
             return _cacheManager.Get(MakeCacheKey("Exists." + hashCode.ToString()), ctx =>
             {
                 MonitorCacheChangedSignal(ctx);
-                // Maybe also chek if the file exists?
+                // Maybe also check if the file exists?
                 return _fileRepository.Count(file => file.HashCode == hashCode) != 0;
             });
         }

@@ -19,6 +19,7 @@ namespace Piedone.Combinator.Models
         ResourceType Type { get; set; }
         string Content { get; set; }
         SmartResource FillRequiredContext(string publicUrl, ResourceType resourceType);
+        bool SerializableSettingsEqual(ISmartResource other);
         string GetSerializedSettings();
         void FillSettingsFromSerialization(string settings);
     }

@@ -5,6 +5,11 @@ using Piedone.Combinator.Helpers;
 using Orchard.Environment;
 using Orchard;
 using Orchard.Environment.Extensions;
+using System.Runtime.Serialization;
+using System.Collections.Generic;
+using System.Text;
+using System.IO;
+using System.Xml;
 
 namespace Piedone.Combinator.Models
 {
@@ -14,8 +19,6 @@ namespace Piedone.Combinator.Models
         #region Private fields and properties
         private readonly Work<IResourceManager> _resourceManagerWork;
         private readonly Work<WorkContext> _workContextWork;
-
-        private CombinedResourceSettings _serializableSettings;
 
         private IResourceManager _resourceManager;
         private IResourceManager ResourceManager
@@ -115,12 +118,13 @@ namespace Piedone.Combinator.Models
             get { return !String.IsNullOrEmpty(RequiredContext.Settings.Condition); }
         }
 
+        private string _urlOverride;
         public string UrlOverride
         {
-            get { return _serializableSettings.PublicUrl; }
+            get { return _urlOverride; }
             set
             {
-                _serializableSettings.PublicUrl = value;
+                _urlOverride = value;
                 if (!String.IsNullOrEmpty(value)) Resource.SetUrl(value, null);
             }
         }
@@ -136,10 +140,9 @@ namespace Piedone.Combinator.Models
         {
             _resourceManagerWork = resourceManagerWork;
             _workContextWork = workContextWork;
-
-            _serializableSettings = new CombinedResourceSettings();
         }
 
+        // Looks unneeded
         public SmartResource FillRequiredContext(string publicUrl, ResourceType resourceType)
         {
             Type = resourceType;
@@ -156,17 +159,74 @@ namespace Piedone.Combinator.Models
         }
 
         #region Serialization
-        public string GetSerializedSettings()
+        [DataContract]
+        public class SerializableSettings
         {
-            _serializableSettings.TranscribeFromRequiredContext(RequiredContext);
-            return _serializableSettings.GetSerialization();
+            [DataMember]
+            public string UrlOverride { get; set; }
+
+            [DataMember]
+            public string Culture { get; set; }
+
+            [DataMember]
+            public string Condition { get; set; }
+
+            [DataMember]
+            public Dictionary<string, string> Attributes { get; set; }
         }
 
-        public void FillSettingsFromSerialization(string serializedSettings)
+        public bool SerializableSettingsEqual(ISmartResource other)
         {
-            if (String.IsNullOrEmpty(serializedSettings)) return;
-            _serializableSettings = CombinedResourceSettings.Factory(serializedSettings);
-            _serializableSettings.TranscribeToRequiredContext(RequiredContext);
+            if (RequiredContext == null ^ other.RequiredContext == null
+                && RequiredContext == null && other.RequiredContext == null) return false;
+
+            return
+                UrlOverride == other.UrlOverride
+                && Settings.Culture == other.Settings.Culture
+                && Settings.Condition == other.Settings.Condition
+                && Settings.AttributesEqual(other.Settings);
+        }
+
+        public string GetSerializedSettings()
+        {
+            string serialization;
+
+            using (var sw = new StringWriter())
+            {
+                using (var writer = new XmlTextWriter(sw))
+                {
+                    var settings = new SerializableSettings()
+                    {
+                        UrlOverride = UrlOverride,
+                        Culture = Settings.Culture,
+                        Condition = Settings.Condition,
+                        Attributes = Settings.Attributes
+                    };
+
+                    var serializer = new DataContractSerializer(settings.GetType());
+                    serializer.WriteObject(writer, settings);
+                    writer.Flush();
+                    serialization = sw.ToString();
+                }
+            }
+
+            return serialization;
+        }
+
+        public void FillSettingsFromSerialization(string serialization)
+        {
+            if (String.IsNullOrEmpty(serialization)) return;
+
+            var serializer = new DataContractSerializer(typeof(SerializableSettings));
+            var doc = new XmlDocument();
+            doc.LoadXml(serialization);
+            var reader = new XmlNodeReader(doc.DocumentElement);
+            var settings = (SerializableSettings)serializer.ReadObject(reader);
+
+            UrlOverride = settings.UrlOverride;
+            Settings.Culture = settings.Culture;
+            Settings.Condition = settings.Condition;
+            Settings.Attributes = settings.Attributes;
         }
         #endregion
     }

@@ -73,7 +73,7 @@ namespace Piedone.Combinator.Services
                 {
                     var bytes = Encoding.UTF8.GetBytes(resource.Content);
                     stream.Write(bytes, 0, bytes.Length);
-                } 
+                }
             }
             
             _fileRepository.Create(fileRecord);
@@ -119,7 +119,7 @@ namespace Piedone.Combinator.Services
             return _fileRepository.Table.Count();
         }
 
-        public void Delete(int hashCode, ResourceType type)
+        public void Delete(int hashCode)
         {
             DeleteFiles(GetRecords(hashCode));
 

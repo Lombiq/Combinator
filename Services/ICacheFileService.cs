@@ -12,7 +12,7 @@ namespace Piedone.Combinator.Services
         List<ISmartResource> GetCombinedResources(int hashCode);
         bool Exists(int hashCode);
         int GetCount();
-        void Delete(int hashCode, ResourceType type);
+        void Delete(int hashCode);
         void Empty();
         void MonitorCacheChangedSignal(AcquireContext<string> ctx, int hashCode);
     }

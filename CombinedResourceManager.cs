@@ -28,7 +28,7 @@ namespace Piedone.Combinator
         private readonly ICombinatorService _combinatorService;
         private readonly IShapeTableLocator _shapeTableLocator;
         private readonly IThemeManager _themeManager;
-        private readonly WorkContext _workContext;
+        private readonly IWorkContextAccessor _workContextAccessor;
 
         public ILogger Logger { get; set; }
 
@@ -40,7 +40,7 @@ namespace Piedone.Combinator
             ICombinatorService combinatorService,
             IShapeTableLocator shapeTableLocator,
             IThemeManager themeManager,
-            WorkContext workContext
+            IWorkContextAccessor workContextAccessor
             )
             : base(resourceProviders)
         {
@@ -48,7 +48,7 @@ namespace Piedone.Combinator
             _combinatorService = combinatorService;
             _shapeTableLocator = shapeTableLocator;
             _themeManager = themeManager;
-            _workContext = workContext;
+            _workContextAccessor = workContextAccessor;
 
             Logger = NullLogger.Instance;
         }
@@ -68,7 +68,7 @@ namespace Piedone.Combinator
                 if (resourceType == ResourceType.Style)
                 {
                     // Checking for overridden stylesheets
-                    var currentTheme = _themeManager.GetRequestTheme(_workContext.HttpContext.Request.RequestContext);
+                    var currentTheme = _themeManager.GetRequestTheme(_workContextAccessor.GetContext().HttpContext.Request.RequestContext);
                     var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
 
                     foreach (var resource in resources)

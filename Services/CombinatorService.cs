@@ -21,7 +21,7 @@ namespace Piedone.Combinator.Services
     {
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceFileService _resourceFileService;
-        private readonly WorkContext _workContext;
+        private readonly IWorkContextAccessor _workContextAccessor;
         private readonly ICacheManager _cacheManager;
 
         public ILogger Logger { get; set; }
@@ -29,12 +29,12 @@ namespace Piedone.Combinator.Services
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceFileService resourceFileService,
-            WorkContext workContext,
+            IWorkContextAccessor workContextAccessor,
             ICacheManager cacheManager)
         {
             _cacheFileService = cacheFileService;
             _resourceFileService = resourceFileService;
-            _workContext = workContext;
+            _workContextAccessor = workContextAccessor;
             _cacheManager = cacheManager;
 
             Logger = NullLogger.Instance;
@@ -265,7 +265,7 @@ namespace Piedone.Combinator.Services
 
         private ISmartResource NewResource()
         {
-            return _workContext.Resolve<ISmartResource>();
+            return _workContextAccessor.GetContext().Resolve<ISmartResource>();
         }
     }
 }

@@ -2,7 +2,6 @@
 using System.IO;
 using System.Net;
 using System.Text;
-using Orchard;
 using Orchard.FileSystems.VirtualPath;
 
 namespace Piedone.Combinator.Services
@@ -10,14 +9,11 @@ namespace Piedone.Combinator.Services
     public class ResourceFileService : IResourceFileService
     {
         private readonly IVirtualPathProvider _virtualPathProvider;
-        private readonly WorkContext _workContext;
 
         public ResourceFileService(
-            IVirtualPathProvider virtualPathProvider,
-            WorkContext workContext)
+            IVirtualPathProvider virtualPathProvider)
         {
             _virtualPathProvider = virtualPathProvider;
-            _workContext = workContext;
         }
 
         

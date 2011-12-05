@@ -4,10 +4,10 @@ Author: Piedone
 Website: http://combinator.codeplex.com
 Version: 1.0
 OrchardVersion: 1.3
-Description: WARNING! When upgrading from 0.6 please make sure to empty the cache first! Combines and minifies (with YUI Compressor) external stylesheets and javascript files
+Description: Combines and minifies (with YUI Compressor) external stylesheets and javascript files
 Features:
     Piedone.Combinator:
 		Name: Combinator
         Description: Combines and minifies external stylesheets and javascript files
 		Category: Optimization
-		Dependencies: Orchard.jQuery
+		Dependencies: Orchard.jQuery, Piedone.HelpfulLibraries.Serialization

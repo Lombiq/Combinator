@@ -188,39 +188,21 @@ namespace Piedone.Combinator.Models
 
         public string GetSerializedSettings()
         {
-            string serialization;
-
-            using (var sw = new StringWriter())
-            {
-                using (var writer = new XmlTextWriter(sw))
-                {
-                    var settings = new SerializableSettings()
+            return Piedone.HelpfulLibraries.Serialization.Helpers.Serializer.Serialize(
+                new SerializableSettings()
                     {
                         UrlOverride = UrlOverride,
                         Culture = Settings.Culture,
                         Condition = Settings.Condition,
                         Attributes = Settings.Attributes
-                    };
-
-                    var serializer = new DataContractSerializer(settings.GetType());
-                    serializer.WriteObject(writer, settings);
-                    writer.Flush();
-                    serialization = sw.ToString();
-                }
-            }
-
-            return serialization;
+                    });
         }
 
         public void FillSettingsFromSerialization(string serialization)
         {
             if (String.IsNullOrEmpty(serialization)) return;
 
-            var serializer = new DataContractSerializer(typeof(SerializableSettings));
-            var doc = new XmlDocument();
-            doc.LoadXml(serialization);
-            var reader = new XmlNodeReader(doc.DocumentElement);
-            var settings = (SerializableSettings)serializer.ReadObject(reader);
+            var settings = Piedone.HelpfulLibraries.Serialization.Helpers.Serializer.Deserialize<SerializableSettings>(serialization);
 
             UrlOverride = settings.UrlOverride;
             Settings.Culture = settings.Culture;

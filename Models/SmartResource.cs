@@ -142,7 +142,7 @@ namespace Piedone.Combinator.Models
         }
 
         // Looks unneeded
-        public SmartResource FillRequiredContext(string publicUrl, ResourceType resourceType)
+        public ISmartResource FillRequiredContext(string publicUrl, ResourceType resourceType)
         {
             Type = resourceType;
 

@@ -135,10 +135,15 @@ namespace Piedone.Combinator.Services
                     combinedContent.Clear();
                 };
 
-            Func<string, bool> hasToBeMinified =
-                (path) =>
+            Func<string, string, string> tryMinify =
+                (path, content) =>
                 {
-                    return settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(path, settings.MinificationExcludeRegex));
+                    if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(path, settings.MinificationExcludeRegex)))
+                    {
+                        return MinifyResourceContent(content, resourceType);
+                    }
+
+                    return content;
                 };
             #endregion
 
@@ -173,10 +178,7 @@ namespace Piedone.Combinator.Services
 
                             content = AdjustRelativePaths(content, resource.PublicRelativeUrl, resourceType);
 
-                            if (hasToBeMinified(fullPath))
-                            {
-                                content = MinifyResourceContent(content, resourceType);
-                            }
+                            content = tryMinify(fullPath, content);
 
                             combinedContent.Append(content);
                         }
@@ -184,10 +186,7 @@ namespace Piedone.Combinator.Services
                         {
                             var content = _resourceFileService.GetRemoteResourceContent(fullPath);
 
-                            if (hasToBeMinified(fullPath))
-                            {
-                                content = MinifyResourceContent(content, resourceType);
-                            }
+                            content = tryMinify(fullPath, content);
 
                             combinedContent.Append(content);
                         }

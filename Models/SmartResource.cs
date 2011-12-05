@@ -141,7 +141,6 @@ namespace Piedone.Combinator.Models
             _workContextWork = workContextWork;
         }
 
-        // Looks unneeded
         public ISmartResource FillRequiredContext(string publicUrl, ResourceType resourceType)
         {
             Type = resourceType;

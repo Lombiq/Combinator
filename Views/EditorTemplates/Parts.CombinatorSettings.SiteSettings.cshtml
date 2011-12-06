@@ -33,7 +33,7 @@
             @Html.LabelFor(m => m.CombinationExcludeRegex, T("Exclude from combination"))
             @Html.TextBoxFor(m => m.CombinationExcludeRegex, new { @class = "textMedium" })
             @Html.ValidationMessageFor(m => m.CombinationExcludeRegex)
-            <span class="hint">@T("Please provide a valid regular expression. Note that the full paths (relative in case of local resources and absolute with CDN resource) of all resources will be checked against this regex. The match is case-sensitive. Regex.IsMatch() is used internally, so look at it for how to use. Example (without quotes): \".*?\\.min*|jQuery\" will exclude all resources whose name contains \".min\" or \"jQuery\".")</span>
+            <span class="hint">@T("Please provide a valid regular expression. Note that the full paths (relative in case of local resources and absolute with CDN resource) of all resources will be checked against this regex. The match is case-sensitive. Regex.IsMatch() is used internally, so look at it for how to use. Example (without quotes): \"\\.min|jQuery\" will exclude all resources whose name contains \".min\" or \"jQuery\".")</span>
         </li>
         <li>
             @Html.EditorFor(m => m.CombineCDNResources)
@@ -50,7 +50,7 @@
             @Html.LabelFor(m => m.MinificationExcludeRegex, T("Exclude from minification"))
             @Html.TextBoxFor(m => m.MinificationExcludeRegex, new { @class = "textMedium" })
             @Html.ValidationMessageFor(m => m.MinificationExcludeRegex)
-            <span class="hint">@T("The same rules apply as with the combination exclusion regex.")</span>
+            <span class="hint">@T("The same rules apply as with the combination exclusion regex. Note that the two filters are independent, thus if a resource is excluded from combination it will still be minified by default.")</span>
         </li>
     </ol>
     <button type="button" id="button.EmptyCache" name="button.EmptyCache" value="EmptyCache" onclick="$.combinator.emptyCache(); return false;">@T("Empty cache")</button>

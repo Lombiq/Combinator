@@ -122,9 +122,13 @@ namespace Piedone.Combinator.Services
         /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened)</exception>
         private void Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType resourceType, ICombinatorSettings settings)
         {
+            if (resources.Count == 0) return;
+
             var combinedContent = new StringBuilder(resources.Count * 1000); // Rough estimate
 
             #region Functions
+
+
             Action<ISmartResource> saveCombination =
                 (combinedResource) =>
                 {
@@ -145,6 +149,37 @@ namespace Piedone.Combinator.Services
 
                     return content;
                 };
+
+            Action<ISmartResource> processResource =
+                (resource) =>
+                {
+                    var fullPath = resource.FullPath;
+                    if (!resource.IsCDNResource)
+                    {
+
+                        var virtualPath = resource.RelativeVirtualPath;
+
+                        var content = _resourceFileService.GetLocalResourceContent(virtualPath);
+
+                        content = AdjustRelativePaths(content, resource.PublicRelativeUrl, resourceType);
+
+                        content = tryMinify(fullPath, content);
+
+                        combinedContent.Append(content);
+                    }
+                    else if (settings.CombineCDNResources)
+                    {
+                        var content = _resourceFileService.GetRemoteResourceContent(fullPath);
+
+                        content = tryMinify(fullPath, content);
+
+                        combinedContent.Append(content);
+                    }
+                    else
+                    {
+                        resource.UrlOverride = resource.FullPath;
+                    }
+                };
             #endregion
 
             var smartResources = new List<ISmartResource>(resources.Count);
@@ -155,61 +190,43 @@ namespace Piedone.Combinator.Services
                 smartResources.Add(smartResource);
             }
 
-            var fullPath = "";
-            ISmartResource previousResource = null;
-            try
+            for (int i = 0; i < smartResources.Count; i++)
             {
-                foreach (var resource in smartResources)
+                var resource = smartResources[i];
+                var previousResource = (i != 0) ? smartResources[i - 1] : null;
+                var fullPath = "";
+
+                try
                 {
                     fullPath = resource.FullPath;
 
-                    if (previousResource != null && !previousResource.SerializableSettingsEqual(resource))
-                    {
-                        saveCombination(previousResource);
-                    }
-
                     if ((String.IsNullOrEmpty(settings.CombinationExcludeRegex) || !Regex.IsMatch(fullPath, settings.CombinationExcludeRegex)))
                     {
-                        if (!resource.IsCDNResource)
+                        // Since this resource differs from the previous one in terms of settings, they can't be combined
+                        if (previousResource != null && !previousResource.SerializableSettingsEqual(resource))
                         {
-                            var virtualPath = resource.RelativeVirtualPath;
-
-                            var content = _resourceFileService.GetLocalResourceContent(virtualPath);
-
-                            content = AdjustRelativePaths(content, resource.PublicRelativeUrl, resourceType);
-
-                            content = tryMinify(fullPath, content);
-
-                            combinedContent.Append(content);
+                            saveCombination(previousResource);
                         }
-                        else if (settings.CombineCDNResources)
-                        {
-                            var content = _resourceFileService.GetRemoteResourceContent(fullPath);
 
-                            content = tryMinify(fullPath, content);
-
-                            combinedContent.Append(content);
-                        }
-                        else
-                        {
-                            resource.UrlOverride = resource.FullPath;
-                        }
+                        processResource(resource);
                     }
                     else
                     {
-                        resource.UrlOverride = resource.FullPath;
+                        if (previousResource != null) saveCombination(previousResource);
+                        processResource(resource);
+                        saveCombination(resource);
+                        smartResources[i] = null;
                     }
-
-                    previousResource = resource;
+                }
+                catch (Exception e)
+                {
+                    var message = "Processing of resource " + fullPath + " failed";
+                    throw new ApplicationException(message, e);
                 }
             }
-            catch (Exception e)
-            {
-                var message = "Processing of resource " + fullPath + " failed";
-                throw new ApplicationException(message, e);
-            }
 
-            saveCombination(previousResource);
+
+            saveCombination(smartResources[smartResources.Count - 1]);
         }
 
         private string AdjustRelativePaths(string content, string publicUrl, ResourceType resourceType)

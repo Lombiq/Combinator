@@ -52,12 +52,8 @@ namespace Piedone.Combinator.Services
                 {
                     Combine(resources, hashCode, ResourceType.Style, settings);
                 }
-                else
-                {
-                    // Cache invalidation signals will be only monitored if the combined resources were properly saved.
-                    // Not doing so would just immediately invalidate this cache entry anyway.
-                    _cacheFileService.MonitorCacheChangedSignal(ctx, hashCode);
-                }
+
+                _cacheFileService.MonitorCacheChangedSignal(ctx, hashCode);
 
                 return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode));
             });
@@ -87,12 +83,8 @@ namespace Piedone.Combinator.Services
 
                             Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
                         }
-                        else
-                        {
-                            // Cache invalidation signals will be only monitored if the combined resources were properly saved.
-                            // Not doing so would just immediately invalidate this cache entry anyway.
-                            _cacheFileService.MonitorCacheChangedSignal(ctx, locationHashCode);
-                        }
+
+                        _cacheFileService.MonitorCacheChangedSignal(ctx, locationHashCode);
 
                         var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode));
                         combinedResources.SetLocation(location);

@@ -8,7 +8,7 @@ namespace Piedone.Combinator.Models
     {
         string FullPath { get; }
         string PublicRelativeUrl { get; }
-        string RelativeVirtualPath { get; set; }
+        string RelativeVirtualPath { get; }
         ResourceRequiredContext RequiredContext { get; set; }
         ResourceDefinition Resource { get; set; }
         RequireSettings Settings { get; set; }

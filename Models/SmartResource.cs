@@ -86,7 +86,7 @@ namespace Piedone.Combinator.Models
 
                 return _relativeVirtualPath;
             }
-            set { _relativeVirtualPath = value; }
+            private set { _relativeVirtualPath = value; }
         }
         #endregion
 

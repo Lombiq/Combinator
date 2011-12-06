@@ -1,10 +1,11 @@
 ﻿using Orchard;
+using System;
 
 namespace Piedone.Combinator.Services
 {
     public interface IResourceFileService : IDependency
     {
         string GetLocalResourceContent(string relativeVirtualPath);
-        string GetRemoteResourceContent(string url);
+        string GetRemoteResourceContent(Uri url);
     }
 }

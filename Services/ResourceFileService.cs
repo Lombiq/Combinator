@@ -66,7 +66,7 @@ namespace Piedone.Combinator.Services
         }
 
 
-        public string GetRemoteResourceContent(string url)
+        public string GetRemoteResourceContent(Uri url)
         {
             //var content = webClient.DownloadString(url);
             var content = Utf8Encoding.GetString(WebClient.DownloadData(url));

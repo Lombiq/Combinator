@@ -161,7 +161,7 @@ namespace Piedone.Combinator.Services
                     }
                     else if (settings.CombineCDNResources)
                     {
-                        var content = _resourceFileService.GetRemoteResourceContent(fullPath);
+                        var content = _resourceFileService.GetRemoteResourceContent(new Uri(fullPath));
 
                         content = tryMinify(fullPath, content);
 

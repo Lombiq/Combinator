@@ -122,7 +122,7 @@ namespace Piedone.Combinator.Services
         /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened)</exception>
         private void Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType resourceType, ICombinatorSettings settings)
         {
-            var combinedContent = new StringBuilder(resources.Count * 1000);
+            var combinedContent = new StringBuilder(resources.Count * 1000); // Rough estimate
 
             #region Functions
             Action<ISmartResource> saveCombination =

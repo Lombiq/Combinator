@@ -1,20 +1,20 @@
 ﻿using Orchard;
 using Orchard.UI.Resources;
 using Piedone.Combinator.Helpers;
+using System;
 
 namespace Piedone.Combinator.Models
 {
     public interface ISmartResource : ITransientDependency
     {
-        string FullPath { get; }
-        string PublicRelativeUrl { get; }
+        Uri PublicUrl { get; }
         string RelativeVirtualPath { get; }
         ResourceRequiredContext RequiredContext { get; set; }
         ResourceDefinition Resource { get; set; }
         RequireSettings Settings { get; set; }
         bool IsCDNResource { get; }
         bool IsConditional { get; }
-        string UrlOverride { get; set; }
+        Uri UrlOverride { get; set; }
         ResourceType Type { get; set; }
         string Content { get; set; }
         ISmartResource FillRequiredContext(string publicUrl, ResourceType resourceType);

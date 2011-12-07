@@ -121,8 +121,8 @@ namespace Piedone.Combinator.Services
             {
                 var smartResource = NewResource();
                 smartResource.RequiredContext = resource;
-                smartResources.Add(smartResource);
                 smartResource.Type = resourceType;
+                smartResources.Add(smartResource);
             }
 
             var combinedContent = new StringBuilder(resources.Count * 1000); // Rough estimate
@@ -137,17 +137,18 @@ namespace Piedone.Combinator.Services
                     combinedContent.Clear();
                 };
 
+
             for (int i = 0; i < smartResources.Count; i++)
             {
                 var resource = smartResources[i];
                 var previousResource = (i != 0) ? smartResources[i - 1] : null;
-                var fullPath = "";
+                var publicUrl = "";
 
                 try
                 {
-                    fullPath = resource.FullPath;
+                    publicUrl = resource.PublicUrl.ToString();
 
-                    if ((String.IsNullOrEmpty(settings.CombinationExcludeRegex) || !Regex.IsMatch(fullPath, settings.CombinationExcludeRegex)))
+                    if ((String.IsNullOrEmpty(settings.CombinationExcludeRegex) || !Regex.IsMatch(publicUrl, settings.CombinationExcludeRegex)))
                     {
                         // Since this resource differs from the previous one in terms of settings, they can't be combined
                         if (previousResource != null && !previousResource.SerializableSettingsEqual(resource))
@@ -167,7 +168,7 @@ namespace Piedone.Combinator.Services
                 }
                 catch (Exception e)
                 {
-                    var message = "Processing of resource " + fullPath + " failed";
+                    var message = "Processing of resource " + publicUrl + " failed";
                     throw new ApplicationException(message, e);
                 }
             }
@@ -179,54 +180,54 @@ namespace Piedone.Combinator.Services
         // Todo: better name?
         private void ProcessResource(ISmartResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
         {
-            Func<string, string, string> tryMinify =
-                (path, content) =>
+            Action tryMinify =
+                () =>
                 {
-                    if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(path, settings.MinificationExcludeRegex)))
+                    if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(resource.PublicUrl.ToString(), settings.MinificationExcludeRegex)))
                     {
-                        return MinifyResourceContent(content, resource.Type);
+                        MinifyResourceContent(resource);
                     }
-
-                    return content;
                 };
 
-
-            var fullPath = resource.FullPath;
+            
             if (!resource.IsCDNResource)
             {
                 var virtualPath = resource.RelativeVirtualPath;
 
-                var content = _resourceFileService.GetLocalResourceContent(virtualPath);
+                resource.Content = _resourceFileService.GetLocalResourceContent(virtualPath);
 
-                content = AdjustRelativePaths(content, resource.PublicRelativeUrl, resource.Type);
+                AdjustRelativePaths(resource);
 
-                content = tryMinify(fullPath, content);
+                tryMinify();
 
-                combinedContent.Append(content);
+                combinedContent.Append(resource.Content);
             }
             else if (settings.CombineCDNResources)
             {
-                var content = _resourceFileService.GetRemoteResourceContent(new Uri(fullPath));
+                resource.Content = _resourceFileService.GetRemoteResourceContent(resource.PublicUrl);
 
-                content = tryMinify(fullPath, content);
+                tryMinify();
 
-                combinedContent.Append(content);
+                combinedContent.Append(resource.Content);
             }
             else
             {
-                resource.UrlOverride = resource.FullPath;
+                resource.UrlOverride = resource.PublicUrl;
             }
         }
 
-        private string AdjustRelativePaths(string content, string publicUrl, ResourceType resourceType)
+        private void AdjustRelativePaths(ISmartResource resource)
         {
+            string content = resource.Content;
+            string publicUrl = resource.PublicUrl.ToString();
+
             // Modify relative paths to have correct values
             var uriSegments = publicUrl.Split('/'); // Path class is not good for this
             var parentDirUrl = String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
             content = content.Replace("../", parentDirUrl);
 
             // Modify relative paths that point to the same dir as the stylesheet's to have correct values
-            if (resourceType == ResourceType.Style)
+            if (resource.Type == ResourceType.Style)
             {
                 var stylesheetDirUrl = parentDirUrl + uriSegments[uriSegments.Length - 2] + "/";
                 content = Regex.Replace(
@@ -246,21 +247,19 @@ namespace Piedone.Combinator.Services
                                         RegexOptions.IgnoreCase);
             }
 
-            return content;
+            resource.Content = content;
         }
 
-        private string MinifyResourceContent(string content, ResourceType resourceType)
+        private void MinifyResourceContent(ISmartResource resource)
         {
-            if (resourceType == ResourceType.Style)
+            if (resource.Type == ResourceType.Style)
             {
-                return CssCompressor.Compress(content);
+                resource.Content = CssCompressor.Compress(resource.Content);
             }
-            else if (resourceType == ResourceType.JavaScript)
+            else if (resource.Type == ResourceType.JavaScript)
             {
-                return JavaScriptCompressor.Compress(content);
+                resource.Content = JavaScriptCompressor.Compress(resource.Content);
             }
-
-            return content;
         }
 
         private IList<ResourceRequiredContext> ProcessCombinedResources(IList<ISmartResource> combinedResources)

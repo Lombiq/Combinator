@@ -39,16 +39,24 @@ namespace Piedone.Combinator.Models
             }
         }
 
-        public string FullPath
+        private string FullPath
         {
             get
             {
-                if (RequiredContext != null) return RequiredContext.Resource.GetFullPath();
-                else return UrlOverride;
+                return RequiredContext.Resource.GetFullPath();
             }
         }
 
-        public string PublicRelativeUrl
+        public Uri PublicUrl
+        {
+            get
+            {
+                if (IsCDNResource) return new Uri(FullPath);
+                else return new Uri(_workContextWork.Value.HttpContext.Request.Url, PublicRelativeUrl);
+            }
+        }
+
+        private string PublicRelativeUrl
         {
             get
             {
@@ -96,14 +104,14 @@ namespace Piedone.Combinator.Models
             get { return !String.IsNullOrEmpty(RequiredContext.Settings.Condition); }
         }
 
-        private string _urlOverride;
-        public string UrlOverride
+        private Uri _urlOverride;
+        public Uri UrlOverride
         {
             get { return _urlOverride; }
             set
             {
                 _urlOverride = value;
-                if (!String.IsNullOrEmpty(value) && RequiredContext != null) Resource.SetUrl(value, null);
+                if (value != null && !String.IsNullOrEmpty(value.ToString()) && RequiredContext != null) Resource.SetUrl(value.ToString(), null);
             }
         }
 
@@ -140,7 +148,7 @@ namespace Piedone.Combinator.Models
         public class SerializableSettings
         {
             [DataMember]
-            public string UrlOverride { get; set; }
+            public Uri UrlOverride { get; set; }
 
             [DataMember]
             public string Culture { get; set; }

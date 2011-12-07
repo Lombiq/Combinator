@@ -41,7 +41,11 @@ namespace Piedone.Combinator.Models
 
         public string FullPath
         {
-            get { return RequiredContext.Resource.GetFullPath(); }
+            get
+            {
+                if (RequiredContext != null) return RequiredContext.Resource.GetFullPath();
+                else return UrlOverride;
+            }
         }
 
         public string PublicRelativeUrl
@@ -99,7 +103,7 @@ namespace Piedone.Combinator.Models
             set
             {
                 _urlOverride = value;
-                if (!String.IsNullOrEmpty(value)) Resource.SetUrl(value, null);
+                if (!String.IsNullOrEmpty(value) && RequiredContext != null) Resource.SetUrl(value, null);
             }
         }
 

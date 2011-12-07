@@ -21,10 +21,5 @@ namespace Piedone.Combinator.Extensions
 
             return Path.Combine(resource.BasePath + resource.Url);
         }
-
-        public static bool IsCDNResource(this ResourceDefinition resource)
-        {
-            return Uri.IsWellFormedUriString(resource.GetFullPath(), UriKind.Absolute);
-        }
     }
 }

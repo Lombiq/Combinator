@@ -78,7 +78,13 @@ namespace Piedone.Combinator.Models
 
         public bool IsCDNResource
         {
-            get { return RequiredContext.Resource.IsCDNResource(); }
+            get
+            {
+                var fullPath = FullPath;
+
+                return Uri.IsWellFormedUriString(fullPath, UriKind.Absolute)
+                    && new Uri(fullPath).Host != _workContextWork.Value.HttpContext.Request.Url.Host;
+            }
         }
 
         public bool IsConditional

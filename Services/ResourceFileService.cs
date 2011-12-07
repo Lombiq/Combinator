@@ -31,52 +31,17 @@ namespace Piedone.Combinator.Services
             return content;
         }
 
-        #region Remote resource handling
-        private string _byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
-        private string ByteOrderMarkUtf8
-        {
-            get
-            {
-                if (_byteOrderMarkUtf8 == null) _byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
-                return _byteOrderMarkUtf8;
-            }
-            set { _byteOrderMarkUtf8 = value; }
-        }
-
-        private UTF8Encoding _utf8Encoding;
-        private UTF8Encoding Utf8Encoding
-        {
-            get
-            {
-                if (_utf8Encoding == null) _utf8Encoding = new UTF8Encoding(false);
-                return _utf8Encoding;
-            }
-            set { _utf8Encoding = value; }
-        }
-
-        private WebClient _webClient;
-        private WebClient WebClient
-        {
-            get
-            {
-                if (_webClient == null) _webClient = new WebClient();
-                return _webClient;
-            }
-            set { _webClient = value; }
-        }
-
-
         public string GetRemoteResourceContent(Uri url)
         {
+            var byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
             //var content = webClient.DownloadString(url);
-            var content = Utf8Encoding.GetString(WebClient.DownloadData(url));
-            if (content.StartsWith(_byteOrderMarkUtf8)) // Stripping "?"s from the beginning of css commments "/*"
+            var content = new UTF8Encoding(false).GetString(new WebClient().DownloadData(url));
+            if (content.StartsWith(byteOrderMarkUtf8)) // Stripping "?"s from the beginning of css commments "/*"
             {
-                content = content.Remove(0, _byteOrderMarkUtf8.Length);
+                content = content.Remove(0, byteOrderMarkUtf8.Length);
             }
 
             return content;
         }
-        #endregion
     }
 }

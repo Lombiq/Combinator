@@ -154,8 +154,11 @@ namespace Piedone.Combinator.Models
 
         public bool SerializableSettingsEqual(ISmartResource other)
         {
-            if (RequiredContext == null ^ other.RequiredContext == null
-                && RequiredContext == null && other.RequiredContext == null) return false;
+            // If one's RequiredContext is null, their settings are not identical...
+            if (RequiredContext == null ^ other.RequiredContext == null) return false;
+
+            // However if both of them are null, we say the settings are identical
+            if (RequiredContext == null && other.RequiredContext == null) return true;
 
             return
                 UrlOverride == other.UrlOverride

@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using Orchard.FileSystems.VirtualPath;
+using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator.Services
 {
@@ -16,9 +17,11 @@ namespace Piedone.Combinator.Services
             _virtualPathProvider = virtualPathProvider;
         }
 
-        
-        public string GetLocalResourceContent(string relativeVirtualPath)
+
+        public string GetLocalResourceContent(ISmartResource resource)
         {
+            var relativeVirtualPath = resource.RelativeVirtualPath;
+
             // Maybe TryFileExists would be better?
             if (!_virtualPathProvider.FileExists(relativeVirtualPath)) throw new ApplicationException("Local resource file not found under " + relativeVirtualPath);
 
@@ -31,11 +34,11 @@ namespace Piedone.Combinator.Services
             return content;
         }
 
-        public string GetRemoteResourceContent(Uri url)
+        public string GetRemoteResourceContent(ISmartResource resource)
         {
             var byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
             //var content = webClient.DownloadString(url);
-            var content = new UTF8Encoding(false).GetString(new WebClient().DownloadData(url));
+            var content = new UTF8Encoding(false).GetString(new WebClient().DownloadData(resource.PublicUrl));
             if (content.StartsWith(byteOrderMarkUtf8)) // Stripping "?"s from the beginning of css commments "/*"
             {
                 content = content.Remove(0, byteOrderMarkUtf8.Length);

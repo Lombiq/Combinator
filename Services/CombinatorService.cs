@@ -199,12 +199,12 @@ namespace Piedone.Combinator.Services
 
             if (!resource.IsCDNResource)
             {
-                resource.Content = _resourceFileService.GetLocalResourceContent(resource.RelativeVirtualPath);
+                resource.Content = _resourceFileService.GetLocalResourceContent(resource);
                 processResourceContent();
             }
             else if (settings.CombineCDNResources)
             {
-                resource.Content = _resourceFileService.GetRemoteResourceContent(resource.PublicUrl);
+                resource.Content = _resourceFileService.GetRemoteResourceContent(resource);
                 processResourceContent();
             }
             else

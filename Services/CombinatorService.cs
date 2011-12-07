@@ -180,35 +180,32 @@ namespace Piedone.Combinator.Services
         // Todo: better name?
         private void ProcessResource(ISmartResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
         {
-            Action tryMinify =
+            Action processResourceContent =
                 () =>
                 {
+                    if (resource.Type == ResourceType.Style)
+                    {
+                        AdjustRelativePaths(resource);
+                    }
+
                     if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(resource.PublicUrl.ToString(), settings.MinificationExcludeRegex)))
                     {
                         MinifyResourceContent(resource);
                     }
+
+                    combinedContent.Append(resource.Content);
                 };
 
-            
+
             if (!resource.IsCDNResource)
             {
-                var virtualPath = resource.RelativeVirtualPath;
-
-                resource.Content = _resourceFileService.GetLocalResourceContent(virtualPath);
-
-                AdjustRelativePaths(resource);
-
-                tryMinify();
-
-                combinedContent.Append(resource.Content);
+                resource.Content = _resourceFileService.GetLocalResourceContent(resource.RelativeVirtualPath);
+                processResourceContent();
             }
             else if (settings.CombineCDNResources)
             {
                 resource.Content = _resourceFileService.GetRemoteResourceContent(resource.PublicUrl);
-
-                tryMinify();
-
-                combinedContent.Append(resource.Content);
+                processResourceContent();
             }
             else
             {
@@ -221,31 +218,16 @@ namespace Piedone.Combinator.Services
             string content = resource.Content;
             string publicUrl = resource.PublicUrl.ToString();
 
-            // Modify relative paths to have correct values
-            var uriSegments = publicUrl.Split('/'); // Path class is not good for this
-            var parentDirUrl = String.Join("/", uriSegments.Take(uriSegments.Length - 2).ToArray()) + "/"; // Jumping up a directory
-            content = content.Replace("../", parentDirUrl);
+            content = Regex.Replace(
+                                    content,
+                                    "url\\(['|\"]?(.+?)['|\"]?\\)",
+                                    (match) =>
+                                    {
+                                        var url = match.Groups[1].ToString();
 
-            // Modify relative paths that point to the same dir as the stylesheet's to have correct values
-            if (resource.Type == ResourceType.Style)
-            {
-                var stylesheetDirUrl = parentDirUrl + uriSegments[uriSegments.Length - 2] + "/";
-                content = Regex.Replace(
-                                        content,
-                                        "url\\(['|\"]?(.+?)['|\"]?\\)",
-                                        (match) =>
-                                        {
-                                            var url = match.Groups[1].ToString();
-
-                                            if (!Uri.IsWellFormedUriString(url, UriKind.Absolute) && !url.StartsWith("../") && !url.StartsWith("/"))
-                                            {
-                                                url = stylesheetDirUrl + url;
-                                            }
-
-                                            return "url(\"" + url + "\")";
-                                        },
-                                        RegexOptions.IgnoreCase);
-            }
+                                        return "url(\"" + new Uri(resource.PublicUrl, url) + "\")";
+                                    },
+                                    RegexOptions.IgnoreCase);
 
             resource.Content = content;
         }

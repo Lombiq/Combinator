@@ -10,7 +10,6 @@ namespace Piedone.Combinator.Drivers
     [OrchardFeature("Piedone.Combinator")]
     public class CombinatorSettingsPartDriver : ContentPartDriver<CombinatorSettingsPart>
     {
-        private readonly IOrchardServices _orchardServices;
         private readonly ICacheFileService _cacheFileService;
 
         protected override string Prefix
@@ -18,11 +17,8 @@ namespace Piedone.Combinator.Drivers
             get { return "Combinator"; }
         }
 
-        public CombinatorSettingsPartDriver(
-            IOrchardServices orchardServices,
-            ICacheFileService cacheFileService)
+        public CombinatorSettingsPartDriver(ICacheFileService cacheFileService)
         {
-            _orchardServices = orchardServices;
             _cacheFileService = cacheFileService;
         }
 

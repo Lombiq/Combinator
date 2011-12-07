@@ -174,7 +174,7 @@ namespace Piedone.Combinator.Services
             }
         }
 
-        private string MakePath(CombinedFileRecord file)
+        private static string MakePath(CombinedFileRecord file)
         {
             // Maybe others will come, therefore the architecture
             string extension = "";
@@ -217,12 +217,12 @@ namespace Piedone.Combinator.Services
             _signals.Trigger(MakeCacheChangedSignal(hashCode));
         }
 
-        private string MakeCacheKey(string name)
+        private static string MakeCacheKey(string name)
         {
             return CachePrefix + name;
         }
 
-        private string MakeCacheChangedSignal(int hashCode)
+        private static string MakeCacheChangedSignal(int hashCode)
         {
             return CacheChangedSignal + "." + hashCode.ToString();
         }

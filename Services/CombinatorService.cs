@@ -213,10 +213,9 @@ namespace Piedone.Combinator.Services
             }
         }
 
-        private void AdjustRelativePaths(ISmartResource resource)
+        private static void AdjustRelativePaths(ISmartResource resource)
         {
             string content = resource.Content;
-            string publicUrl = resource.PublicUrl.ToString();
 
             content = Regex.Replace(
                                     content,
@@ -232,7 +231,7 @@ namespace Piedone.Combinator.Services
             resource.Content = content;
         }
 
-        private void MinifyResourceContent(ISmartResource resource)
+        private static void MinifyResourceContent(ISmartResource resource)
         {
             if (resource.Type == ResourceType.Style)
             {

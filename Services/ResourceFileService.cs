@@ -36,15 +36,16 @@ namespace Piedone.Combinator.Services
 
         public string GetRemoteResourceContent(ISmartResource resource)
         {
-            var byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
-            //var content = webClient.DownloadString(url);
-            var content = new UTF8Encoding(false).GetString(new WebClient().DownloadData(resource.PublicUrl));
-            if (content.StartsWith(byteOrderMarkUtf8)) // Stripping "?"s from the beginning of css commments "/*"
+            using (var wc = new WebClient())
             {
-                content = content.Remove(0, byteOrderMarkUtf8.Length);
+                var byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
+                var content = new UTF8Encoding(false).GetString(wc.DownloadData(resource.PublicUrl));
+                if (content.StartsWith(byteOrderMarkUtf8)) // Stripping "?"s from the beginning of css commments "/*"
+                {
+                    content = content.Remove(0, byteOrderMarkUtf8.Length);
+                }
+                return content; 
             }
-
-            return content;
         }
     }
 }

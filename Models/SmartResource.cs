@@ -7,6 +7,8 @@ using Orchard.Environment.Extensions;
 using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
+using System.IO;
+using System.Web;
 
 namespace Piedone.Combinator.Models
 {
@@ -29,15 +31,12 @@ namespace Piedone.Combinator.Models
         #endregion
 
         #region Path handling
-        private string _applicationPath;
         private string ApplicationPath
         {
             get
             {
-                if (_applicationPath == null) _applicationPath = _workContextWork.Value.HttpContext.Request.ApplicationPath;
-                return _applicationPath;
+                return _workContextWork.Value.HttpContext.Request.ApplicationPath;
             }
-            set { _applicationPath = value; }
         }
 
         public string FullPath
@@ -49,44 +48,16 @@ namespace Piedone.Combinator.Models
         {
             get
             {
-                var url = RelativeVirtualPath.Remove(0, 1); // Removing the tilde
-                return (ApplicationPath != "/") ? ApplicationPath + url : url;
+                return VirtualPathUtility.ToAbsolute(RelativeVirtualPath, ApplicationPath);
             }
         }
 
-        private string _fullPathReference;
-        private string _relativeVirtualPath;
         public string RelativeVirtualPath
         {
             get
             {
-                if (String.IsNullOrEmpty(_relativeVirtualPath))
-                {
-                    var path = FullPath;
-
-                    if (String.IsNullOrEmpty(_fullPathReference) || _fullPathReference != path)
-                    {
-                        _fullPathReference = path;
-                        if (path.StartsWith(ApplicationPath))
-                        {
-                            // Strips e.g. /OrchardLocal
-                            if (ApplicationPath != "/")
-                            {
-                                int place = path.IndexOf(ApplicationPath);
-                                // Finds the first occurence and replaces it with empty string
-                                path = path.Remove(place, ApplicationPath.Length).Insert(place, "");
-                            }
-
-                            path = "~" + path;
-                        }
-
-                        _relativeVirtualPath = path;
-                    }
-                }
-
-                return _relativeVirtualPath;
+                return VirtualPathUtility.ToAppRelative(FullPath, ApplicationPath);
             }
-            private set { _relativeVirtualPath = value; }
         }
         #endregion
 

@@ -116,10 +116,16 @@ namespace Piedone.Combinator.Services
         {
             if (resources.Count == 0) return;
 
+            var smartResources = new List<ISmartResource>(resources.Count);
+            foreach (var resource in resources)
+            {
+                var smartResource = NewResource();
+                smartResource.RequiredContext = resource;
+                smartResources.Add(smartResource);
+                smartResource.Type = resourceType;
+            }
+
             var combinedContent = new StringBuilder(resources.Count * 1000); // Rough estimate
-
-            #region Functions
-
 
             Action<ISmartResource> saveCombination =
                 (combinedResource) =>
@@ -130,57 +136,6 @@ namespace Piedone.Combinator.Services
 
                     combinedContent.Clear();
                 };
-
-            Func<string, string, string> tryMinify =
-                (path, content) =>
-                {
-                    if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(path, settings.MinificationExcludeRegex)))
-                    {
-                        return MinifyResourceContent(content, resourceType);
-                    }
-
-                    return content;
-                };
-
-            Action<ISmartResource> processResource =
-                (resource) =>
-                {
-                    var fullPath = resource.FullPath;
-                    if (!resource.IsCDNResource)
-                    {
-
-                        var virtualPath = resource.RelativeVirtualPath;
-
-                        var content = _resourceFileService.GetLocalResourceContent(virtualPath);
-
-                        content = AdjustRelativePaths(content, resource.PublicRelativeUrl, resourceType);
-
-                        content = tryMinify(fullPath, content);
-
-                        combinedContent.Append(content);
-                    }
-                    else if (settings.CombineCDNResources)
-                    {
-                        var content = _resourceFileService.GetRemoteResourceContent(new Uri(fullPath));
-
-                        content = tryMinify(fullPath, content);
-
-                        combinedContent.Append(content);
-                    }
-                    else
-                    {
-                        resource.UrlOverride = resource.FullPath;
-                    }
-                };
-            #endregion
-
-            var smartResources = new List<ISmartResource>(resources.Count);
-            foreach (var resource in resources)
-            {
-                var smartResource = NewResource();
-                smartResource.RequiredContext = resource;
-                smartResources.Add(smartResource);
-            }
 
             for (int i = 0; i < smartResources.Count; i++)
             {
@@ -200,12 +155,12 @@ namespace Piedone.Combinator.Services
                             saveCombination(previousResource);
                         }
 
-                        processResource(resource);
+                        ProcessResource(resource, combinedContent, settings);
                     }
                     else
                     {
                         if (previousResource != null) saveCombination(previousResource);
-                        processResource(resource);
+                        ProcessResource(resource, combinedContent, settings);
                         saveCombination(resource);
                         smartResources[i] = null;
                     }
@@ -219,6 +174,48 @@ namespace Piedone.Combinator.Services
 
 
             saveCombination(smartResources[smartResources.Count - 1]);
+        }
+
+        // Todo: better name?
+        private void ProcessResource(ISmartResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
+        {
+            Func<string, string, string> tryMinify =
+                (path, content) =>
+                {
+                    if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(path, settings.MinificationExcludeRegex)))
+                    {
+                        return MinifyResourceContent(content, resource.Type);
+                    }
+
+                    return content;
+                };
+
+
+            var fullPath = resource.FullPath;
+            if (!resource.IsCDNResource)
+            {
+                var virtualPath = resource.RelativeVirtualPath;
+
+                var content = _resourceFileService.GetLocalResourceContent(virtualPath);
+
+                content = AdjustRelativePaths(content, resource.PublicRelativeUrl, resource.Type);
+
+                content = tryMinify(fullPath, content);
+
+                combinedContent.Append(content);
+            }
+            else if (settings.CombineCDNResources)
+            {
+                var content = _resourceFileService.GetRemoteResourceContent(new Uri(fullPath));
+
+                content = tryMinify(fullPath, content);
+
+                combinedContent.Append(content);
+            }
+            else
+            {
+                resource.UrlOverride = resource.FullPath;
+            }
         }
 
         private string AdjustRelativePaths(string content, string publicUrl, ResourceType resourceType)

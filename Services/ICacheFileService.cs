@@ -8,7 +8,7 @@ namespace Piedone.Combinator.Services
     public interface ICacheFileService : IDependency
     {
         void Save(int hashCode, ISmartResource resource);
-        List<ISmartResource> GetCombinedResources(int hashCode);
+        IList<ISmartResource> GetCombinedResources(int hashCode);
         bool Exists(int hashCode);
         int GetCount();
         void Delete(int hashCode);

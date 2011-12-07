@@ -81,7 +81,7 @@ namespace Piedone.Combinator.Services
             TriggerCacheChangedSignal(hashCode);
         }
 
-        public List<ISmartResource> GetCombinedResources(int hashCode)
+        public IList<ISmartResource> GetCombinedResources(int hashCode)
         {
             return _cacheManager.Get(MakeCacheKey("GetPublicUrls." + hashCode.ToString()), ctx =>
             {

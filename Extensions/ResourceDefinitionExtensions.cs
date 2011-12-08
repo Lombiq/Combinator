@@ -5,8 +5,7 @@ using Orchard.UI.Resources;
 
 namespace Piedone.Combinator.Extensions
 {
-    [OrchardFeature("Piedone.Combinator")]
-    internal static class ResourceDefinitionExtensions
+    public static class ResourceDefinitionExtensions
     {
         /// <summary>
         /// Gets the ultimate full path of a resource, even if it uses CDN. Note that the paths are not uniform, they're

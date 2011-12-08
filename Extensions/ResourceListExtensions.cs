@@ -5,8 +5,7 @@ using Orchard.UI.Resources;
 
 namespace Piedone.Combinator.Extensions
 {
-    [OrchardFeature("Piedone.Combinator")]
-    internal static class ResourceListExtensions
+    public static class ResourceListExtensions
     {
         public static int GetResourceListHashCode<T>(this IList<T> resources) where T: ResourceRequiredContext
         {

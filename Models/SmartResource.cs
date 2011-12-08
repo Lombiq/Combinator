@@ -120,7 +120,8 @@ namespace Piedone.Combinator.Models
             _serializerWork = serializerWork;
         }
 
-        public ISmartResource FillRequiredContext(string publicUrl, ResourceType resourceType)
+
+        public void FillRequiredContext(string url, ResourceType resourceType, string serializedSettings = "")
         {
             Type = resourceType;
 
@@ -128,11 +129,20 @@ namespace Piedone.Combinator.Models
 
             // This is only necessary to build the ResourceRequiredContext object, therefore we also delete the resource
             // from the required ones.
-            RequiredContext.Settings = _resourceManager.Include(ResourceTypeHelper.EnumToStringType(resourceType), publicUrl, publicUrl);
-            RequiredContext.Resource = _resourceManager.FindResource(RequiredContext.Settings);
-            _resourceManager.NotRequired(ResourceTypeHelper.EnumToStringType(resourceType), RequiredContext.Resource.Name);
+            Settings = _resourceManager.Include(ResourceTypeHelper.EnumToStringType(resourceType), url, url);
+            if (!String.IsNullOrEmpty(serializedSettings)) FillSettingsFromSerialization(serializedSettings);
 
-            return this;
+            Resource = _resourceManager.FindResource(RequiredContext.Settings);
+            
+
+            _resourceManager.NotRequired(ResourceTypeHelper.EnumToStringType(resourceType), RequiredContext.Resource.Name);
+        }
+
+        public void FillRequiredContext(string name, string url, ResourceType resourceType, string serializedSettings = "")
+        {
+            // Slash in front of name to avoid exception from ResourceManager.FixPath()
+            FillRequiredContext("/" + name, resourceType, serializedSettings);
+            Resource.SetUrl(url);
         }
 
         #region Serialization

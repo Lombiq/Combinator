@@ -11,6 +11,7 @@ using Orchard.FileSystems.Media;
 using Orchard.Services;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
+using Piedone.Combinator.Extensions;
 
 namespace Piedone.Combinator.Services
 {
@@ -95,8 +96,7 @@ namespace Piedone.Combinator.Services
                 foreach (var file in files)
                 {
                     var resource = _workContextAccessor.GetContext().Resolve<ISmartResource>();
-                    resource.FillRequiredContext(_storageProvider.GetPublicUrl(MakePath(file)), file.Type);
-                    resource.FillSettingsFromSerialization(file.Settings);
+                    resource.FillRequiredContext(_storageProvider.GetPublicUrl(MakePath(file)), file.Type, file.Settings);
                     resources.Add(resource);
                 }
 
@@ -190,7 +190,7 @@ namespace Piedone.Combinator.Services
                 extension = "css";
             }
 
-            return folderPath + file.HashCode + "-" + file.Slice + "." + extension;
+            return folderPath + file.GetFileName() + "." + extension;
         }
 
         #region In-memory caching methods

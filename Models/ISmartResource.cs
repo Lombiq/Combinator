@@ -17,7 +17,8 @@ namespace Piedone.Combinator.Models
         Uri UrlOverride { get; set; }
         ResourceType Type { get; set; }
         string Content { get; set; }
-        ISmartResource FillRequiredContext(string publicUrl, ResourceType resourceType);
+        void FillRequiredContext(string url, ResourceType resourceType, string serializedSettings = "");
+        void FillRequiredContext(string name, string url, ResourceType resourceType, string serializedSettings = "");
         bool SerializableSettingsEqual(ISmartResource other);
         string GetSerializedSettings();
         void FillSettingsFromSerialization(string settings);

@@ -15,27 +15,15 @@ namespace Piedone.Combinator.Models
     [OrchardFeature("Piedone.Combinator")]
     public class SmartResource : ISmartResource
     {
-        #region Private fields and properties
-        private readonly Work<IResourceManager> _resourceManagerWork;
-        private readonly Work<WorkContext> _workContextWork;
-
-        private IResourceManager _resourceManager;
-        private IResourceManager ResourceManager
-        {
-            get
-            {
-                if (_resourceManager == null) _resourceManager = _resourceManagerWork.Value;
-                return _resourceManager;
-            }
-        }
-        #endregion
+        private readonly IResourceManager _resourceManager;
+        private readonly WorkContext _workContext;
 
         #region Path handling
         private string ApplicationPath
         {
             get
             {
-                return _workContextWork.Value.HttpContext.Request.ApplicationPath;
+                return _workContext.HttpContext.Request.ApplicationPath;
             }
         }
 
@@ -52,7 +40,7 @@ namespace Piedone.Combinator.Models
             get
             {
                 if (IsCDNResource) return new Uri(FullPath);
-                else return new Uri(_workContextWork.Value.HttpContext.Request.Url, PublicRelativeUrl);
+                else return new Uri(_workContext.HttpContext.Request.Url, PublicRelativeUrl);
             }
         }
 
@@ -95,7 +83,7 @@ namespace Piedone.Combinator.Models
                 var fullPath = FullPath;
 
                 return Uri.IsWellFormedUriString(fullPath, UriKind.Absolute)
-                    && new Uri(fullPath).Host != _workContextWork.Value.HttpContext.Request.Url.Host;
+                    && new Uri(fullPath).Host != _workContext.HttpContext.Request.Url.Host;
             }
         }
 
@@ -121,11 +109,11 @@ namespace Piedone.Combinator.Models
         #endregion
 
         public SmartResource(
-            Work<IResourceManager> resourceManagerWork,
-            Work<WorkContext> workContextWork)
+            IResourceManager resourceManager,
+            IWorkContextAccessor workContextAccessor)
         {
-            _resourceManagerWork = resourceManagerWork;
-            _workContextWork = workContextWork;
+            _resourceManager = resourceManager;
+            _workContext = workContextAccessor.GetContext();
         }
 
         public ISmartResource FillRequiredContext(string publicUrl, ResourceType resourceType)
@@ -136,9 +124,9 @@ namespace Piedone.Combinator.Models
 
             // This is only necessary to build the ResourceRequiredContext object, therefore we also delete the resource
             // from the required ones.
-            RequiredContext.Settings = ResourceManager.Include(ResourceTypeHelper.EnumToStringType(resourceType), publicUrl, publicUrl);
-            RequiredContext.Resource = ResourceManager.FindResource(RequiredContext.Settings);
-            ResourceManager.NotRequired(ResourceTypeHelper.EnumToStringType(resourceType), RequiredContext.Resource.Name);
+            RequiredContext.Settings = _resourceManager.Include(ResourceTypeHelper.EnumToStringType(resourceType), publicUrl, publicUrl);
+            RequiredContext.Resource = _resourceManager.FindResource(RequiredContext.Settings);
+            _resourceManager.NotRequired(ResourceTypeHelper.EnumToStringType(resourceType), RequiredContext.Resource.Name);
 
             return this;
         }

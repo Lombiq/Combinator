@@ -9,6 +9,7 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using System.IO;
 using System.Web;
+using Piedone.HelpfulLibraries.Serialization;
 
 namespace Piedone.Combinator.Models
 {
@@ -17,6 +18,7 @@ namespace Piedone.Combinator.Models
     {
         private readonly IResourceManager _resourceManager;
         private readonly WorkContext _workContext;
+        private readonly Work<ISimpleSerializer> _serializerWork;
 
         #region Path handling
         private string ApplicationPath
@@ -110,10 +112,12 @@ namespace Piedone.Combinator.Models
 
         public SmartResource(
             IResourceManager resourceManager,
-            IWorkContextAccessor workContextAccessor)
+            IWorkContextAccessor workContextAccessor,
+            Work<ISimpleSerializer> serializerWork)
         {
             _resourceManager = resourceManager;
             _workContext = workContextAccessor.GetContext();
+            _serializerWork = serializerWork;
         }
 
         public ISmartResource FillRequiredContext(string publicUrl, ResourceType resourceType)
@@ -165,7 +169,7 @@ namespace Piedone.Combinator.Models
 
         public string GetSerializedSettings()
         {
-            return Piedone.HelpfulLibraries.Serialization.Helpers.Serializer.Serialize(
+            return _serializerWork.Value.Serialize(
                 new SerializableSettings()
                     {
                         UrlOverride = UrlOverride,
@@ -179,7 +183,7 @@ namespace Piedone.Combinator.Models
         {
             if (String.IsNullOrEmpty(serialization)) return;
 
-            var settings = Piedone.HelpfulLibraries.Serialization.Helpers.Serializer.Deserialize<SerializableSettings>(serialization);
+            var settings = _serializerWork.Value.Deserialize<SerializableSettings>(serialization);
 
             UrlOverride = settings.UrlOverride;
             Settings.Culture = settings.Culture;

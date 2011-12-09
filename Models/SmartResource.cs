@@ -10,13 +10,14 @@ using Piedone.Combinator.Helpers;
 using System.IO;
 using System.Web;
 using Piedone.HelpfulLibraries.Serialization;
+using Orchard.Mvc;
 
 namespace Piedone.Combinator.Models
 {
     [OrchardFeature("Piedone.Combinator")]
     public class SmartResource : ISmartResource
     {
-        private readonly WorkContext _workContext;
+        private readonly HttpContextBase _httpContext;
         private readonly Work<ISimpleSerializer> _serializerWork;
 
         #region Path handling
@@ -24,7 +25,7 @@ namespace Piedone.Combinator.Models
         {
             get
             {
-                return _workContext.HttpContext.Request.ApplicationPath;
+                return _httpContext.Request.ApplicationPath;
             }
         }
 
@@ -41,7 +42,7 @@ namespace Piedone.Combinator.Models
             get
             {
                 if (IsCDNResource) return new Uri(FullPath);
-                else return new Uri(_workContext.HttpContext.Request.Url, PublicRelativeUrl);
+                else return new Uri(_httpContext.Request.Url, PublicRelativeUrl);
             }
         }
 
@@ -84,7 +85,7 @@ namespace Piedone.Combinator.Models
                 var fullPath = FullPath;
 
                 return Uri.IsWellFormedUriString(fullPath, UriKind.Absolute)
-                    && new Uri(fullPath).Host != _workContext.HttpContext.Request.Url.Host;
+                    && new Uri(fullPath).Host != _httpContext.Request.Url.Host;
             }
         }
 
@@ -110,10 +111,10 @@ namespace Piedone.Combinator.Models
         #endregion
 
         public SmartResource(
-            IWorkContextAccessor workContextAccessor,
+            IHttpContextAccessor httpContextAccessor,
             Work<ISimpleSerializer> serializerWork)
         {
-            _workContext = workContextAccessor.GetContext();
+            _httpContext = httpContextAccessor.Current();
             _serializerWork = serializerWork;
         }
 

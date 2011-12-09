@@ -125,23 +125,23 @@ namespace Piedone.Combinator.Models
         {
             Type = resourceType;
 
+            var stringResourceType = ResourceTypeHelper.EnumToStringType(resourceType);
+
+            var resourceManifest = new ResourceManifest();
+            resourceManifest.DefineResource(stringResourceType, url); // SetUrl() doesn't work here for some reason
+
             RequiredContext = new ResourceRequiredContext();
+            Resource = new ResourceDefinition(resourceManifest, stringResourceType, url);
+            Resource.SetUrl(url);
+            Settings = new RequireSettings();
 
-            // This is only necessary to build the ResourceRequiredContext object, therefore we also delete the resource
-            // from the required ones.
-            Settings = _resourceManager.Include(ResourceTypeHelper.EnumToStringType(resourceType), url, url);
             if (!String.IsNullOrEmpty(serializedSettings)) FillSettingsFromSerialization(serializedSettings);
-
-            Resource = _resourceManager.FindResource(RequiredContext.Settings);
-            
-
-            _resourceManager.NotRequired(ResourceTypeHelper.EnumToStringType(resourceType), RequiredContext.Resource.Name);
         }
 
         public void FillRequiredContext(string name, string url, ResourceType resourceType, string serializedSettings = "")
         {
             // Slash in front of name to avoid exception from ResourceManager.FixPath()
-            FillRequiredContext("/" + name, resourceType, serializedSettings);
+            FillRequiredContext(name, resourceType, serializedSettings);
             Resource.SetUrl(url);
         }
 
@@ -192,6 +192,8 @@ namespace Piedone.Combinator.Models
         public void FillSettingsFromSerialization(string serialization)
         {
             if (String.IsNullOrEmpty(serialization)) return;
+
+            if (Settings == null) Settings = new RequireSettings();
 
             var settings = _serializerWork.Value.Deserialize<SerializableSettings>(serialization);
 

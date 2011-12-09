@@ -96,7 +96,8 @@ namespace Piedone.Combinator.Services
                 foreach (var file in files)
                 {
                     var resource = _workContextAccessor.GetContext().Resolve<ISmartResource>();
-                    resource.FillRequiredContext(_storageProvider.GetPublicUrl(MakePath(file)), file.Type, file.Settings);
+                    resource.Type = file.Type;
+                    resource.FillRequiredContext(_storageProvider.GetPublicUrl(MakePath(file)), file.Settings);
                     resources.Add(resource);
                 }
 

@@ -11,6 +11,7 @@ using System.IO;
 using System.Web;
 using Piedone.HelpfulLibraries.Serialization;
 using Orchard.Mvc;
+using System.Linq;
 
 namespace Piedone.Combinator.Models
 {
@@ -42,7 +43,12 @@ namespace Piedone.Combinator.Models
             get
             {
                 if (IsCDNResource) return new Uri(FullPath);
-                else return new Uri(_httpContext.Request.Url, PublicRelativeUrl);
+                else
+                {
+                    if (Uri.IsWellFormedUriString(FullPath, UriKind.Absolute)) return new Uri(FullPath);
+
+                    return new Uri(_httpContext.Request.Url, PublicRelativeUrl);
+                }
             }
         }
 
@@ -115,11 +121,11 @@ namespace Piedone.Combinator.Models
             CombinedUrlIsOverridden = true;
         }
 
-        public void FillRequiredContext(string url, ResourceType resourceType, string serializedSettings = "")
+        public void FillRequiredContext(string url, string serializedSettings = "")
         {
-            Type = resourceType;
+            if (Type == null) throw new InvalidOperationException("To fill RequiredContext, the type of the resource should be set.");
 
-            var stringResourceType = ResourceTypeHelper.EnumToStringType(resourceType);
+            var stringResourceType = ResourceTypeHelper.EnumToStringType(Type);
 
             var resourceManifest = new ResourceManifest();
             resourceManifest.DefineResource(stringResourceType, url); // SetUrl() doesn't work here for some reason
@@ -132,11 +138,20 @@ namespace Piedone.Combinator.Models
             if (!String.IsNullOrEmpty(serializedSettings)) FillSettingsFromSerialization(serializedSettings);
         }
 
-        public void FillRequiredContext(string name, string url, ResourceType resourceType, string serializedSettings = "")
+        public void FillRequiredContext(string name, string url, string serializedSettings = "")
         {
-            // Slash in front of name to avoid exception from ResourceManager.FixPath()
-            FillRequiredContext(name, resourceType, serializedSettings);
+            FillRequiredContext(name, serializedSettings);
             Resource.SetUrl(url);
+        }
+
+        public void FillRequiredContext(ResourceRequiredContext requiredContext)
+        {
+            FillRequiredContext(requiredContext.Resource.Url);
+
+            var settings = requiredContext.Settings;
+            Settings.Culture = settings.Culture;
+            Settings.Condition = settings.Condition;
+            Settings.Attributes = new Dictionary<string, string>(settings.Attributes);
         }
 
         #region Serialization

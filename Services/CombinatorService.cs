@@ -120,8 +120,8 @@ namespace Piedone.Combinator.Services
             foreach (var resource in resources)
             {
                 var smartResource = NewResource();
-                smartResource.RequiredContext = resource;
                 smartResource.Type = resourceType;
+                smartResource.FillRequiredContext(resource);
                 smartResources.Add(smartResource);
             }
 

@@ -123,8 +123,6 @@ namespace Piedone.Combinator.Models
 
         public void FillRequiredContext(string url, string serializedSettings = "")
         {
-            if (Type == null) throw new InvalidOperationException("To fill RequiredContext, the type of the resource should be set.");
-
             var stringResourceType = ResourceTypeHelper.EnumToStringType(Type);
 
             var resourceManifest = new ResourceManifest();
@@ -146,7 +144,7 @@ namespace Piedone.Combinator.Models
 
         public void FillRequiredContext(ResourceRequiredContext requiredContext)
         {
-            FillRequiredContext(requiredContext.Resource.Url);
+            FillRequiredContext(requiredContext.Resource.GetFullPath());
 
             var settings = requiredContext.Settings;
             Settings.Culture = settings.Culture;

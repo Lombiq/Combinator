@@ -21,6 +21,7 @@ namespace Piedone.Combinator.Services
     {
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceFileService _resourceFileService;
+        private readonly IMinificationService _minificationService;
         private readonly IWorkContextAccessor _workContextAccessor;
         private readonly ICacheManager _cacheManager;
 
@@ -29,11 +30,13 @@ namespace Piedone.Combinator.Services
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceFileService resourceFileService,
+            IMinificationService minificationService,
             IWorkContextAccessor workContextAccessor,
             ICacheManager cacheManager)
         {
             _cacheFileService = cacheFileService;
             _resourceFileService = resourceFileService;
+            _minificationService = minificationService;
             _workContextAccessor = workContextAccessor;
             _cacheManager = cacheManager;
 
@@ -121,7 +124,7 @@ namespace Piedone.Combinator.Services
             {
                 var smartResource = NewResource();
                 smartResource.Type = resourceType;
-                smartResource.FillRequiredContext(resource);
+                smartResource.FillRequiredContext(resource); // Copying the context so the original one won't be touched
                 smartResources.Add(smartResource);
             }
 
@@ -232,15 +235,16 @@ namespace Piedone.Combinator.Services
             resource.Content = content;
         }
 
-        private static void MinifyResourceContent(ISmartResource resource)
+        private void MinifyResourceContent(ISmartResource resource)
         {
             if (resource.Type == ResourceType.Style)
             {
-                resource.Content = CssCompressor.Compress(resource.Content);
+                var z = _minificationService.MinifyCss(resource.Content);
+                resource.Content = _minificationService.MinifyCss(resource.Content);
             }
             else if (resource.Type == ResourceType.JavaScript)
             {
-                resource.Content = JavaScriptCompressor.Compress(resource.Content);
+                resource.Content = _minificationService.MinifyJavaScript(resource.Content);
             }
         }
 

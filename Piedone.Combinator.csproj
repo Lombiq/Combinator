@@ -98,7 +98,9 @@
     <Compile Include="Services\CombinatorService.cs" />
     <Compile Include="Services\ICacheFileService.cs" />
     <Compile Include="Services\ICombinatorService.cs" />
+    <Compile Include="Services\IMinificationService.cs" />
     <Compile Include="Services\IResourceFileService.cs" />
+    <Compile Include="Services\MinificationService.cs" />
     <Compile Include="Services\ResourceFileService.cs" />
   </ItemGroup>
   <ItemGroup>

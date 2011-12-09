@@ -87,6 +87,7 @@
     <Compile Include="Helpers\ResourceTypeHelper.cs" />
     <Compile Include="Migrations.cs" />
     <Compile Include="CombinedResourceManager.cs" />
+    <Compile Include="Models\CombinatorSettings.cs" />
     <Compile Include="Models\CombinatorSettingsPartRecord.cs" />
     <Compile Include="Models\CombinedFileRecord.cs" />
     <Compile Include="Models\CombinatorSettingsPart.cs" />

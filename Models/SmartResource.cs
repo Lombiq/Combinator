@@ -94,19 +94,8 @@ namespace Piedone.Combinator.Models
             get { return !String.IsNullOrEmpty(RequiredContext.Settings.Condition); }
         }
 
-        private Uri _urlOverride;
-        public Uri UrlOverride
-        {
-            get { return _urlOverride; }
-            set
-            {
-                _urlOverride = value;
-                if (value != null && !String.IsNullOrEmpty(value.ToString()) && RequiredContext != null) Resource.SetUrl(value.ToString(), null);
-            }
-        }
-
+        public bool CombinedUrlIsOverridden { get; private set; }
         public ResourceType Type { get; set; }
-
         public string Content { get; set; }
         #endregion
 
@@ -116,8 +105,15 @@ namespace Piedone.Combinator.Models
         {
             _httpContext = httpContextAccessor.Current();
             _serializerWork = serializerWork;
-        }
 
+            CombinedUrlIsOverridden = false;
+        }
+        
+        public void OverrideCombinedUrl(Uri url)
+        {
+            if (url != null && !String.IsNullOrEmpty(url.ToString()) && RequiredContext != null) Resource.SetUrl(url.ToString(), null);
+            CombinedUrlIsOverridden = true;
+        }
 
         public void FillRequiredContext(string url, ResourceType resourceType, string serializedSettings = "")
         {
@@ -160,7 +156,7 @@ namespace Piedone.Combinator.Models
             public Dictionary<string, string> Attributes { get; set; }
         }
 
-        public bool SerializableSettingsEqual(ISmartResource other)
+        public bool SettingsEqual(ISmartResource other)
         {
             // If one's RequiredContext is null, their settings are not identical...
             if (RequiredContext == null ^ other.RequiredContext == null) return false;
@@ -169,7 +165,7 @@ namespace Piedone.Combinator.Models
             if (RequiredContext == null && other.RequiredContext == null) return true;
 
             return
-                UrlOverride == other.UrlOverride
+                CombinedUrlIsOverridden == other.CombinedUrlIsOverridden
                 && Settings.Culture == other.Settings.Culture
                 && Settings.Condition == other.Settings.Condition
                 && Settings.AttributesEqual(other.Settings);
@@ -180,7 +176,7 @@ namespace Piedone.Combinator.Models
             return _serializerWork.Value.Serialize(
                 new SerializableSettings()
                     {
-                        UrlOverride = UrlOverride,
+                        UrlOverride = CombinedUrlIsOverridden ? new Uri(Resource.Url) : null,
                         Culture = Settings.Culture,
                         Condition = Settings.Condition,
                         Attributes = Settings.Attributes
@@ -195,7 +191,7 @@ namespace Piedone.Combinator.Models
 
             var settings = _serializerWork.Value.Deserialize<SerializableSettings>(serialization);
 
-            UrlOverride = settings.UrlOverride;
+            if (settings.UrlOverride != null) OverrideCombinedUrl(settings.UrlOverride);
             Settings.Culture = settings.Culture;
             Settings.Condition = settings.Condition;
             Settings.Attributes = settings.Attributes;

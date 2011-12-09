@@ -14,12 +14,13 @@ namespace Piedone.Combinator.Models
         RequireSettings Settings { get; set; }
         bool IsCDNResource { get; }
         bool IsConditional { get; }
-        Uri UrlOverride { get; set; }
+        bool CombinedUrlIsOverridden { get; }
         ResourceType Type { get; set; }
         string Content { get; set; }
+        void OverrideCombinedUrl(Uri url);
         void FillRequiredContext(string url, ResourceType resourceType, string serializedSettings = "");
         void FillRequiredContext(string name, string url, ResourceType resourceType, string serializedSettings = "");
-        bool SerializableSettingsEqual(ISmartResource other);
+        bool SettingsEqual(ISmartResource other);
         string GetSerializedSettings();
         void FillSettingsFromSerialization(string settings);
     }

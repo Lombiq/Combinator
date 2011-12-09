@@ -151,7 +151,7 @@ namespace Piedone.Combinator.Services
                     if ((String.IsNullOrEmpty(settings.CombinationExcludeRegex) || !Regex.IsMatch(publicUrl, settings.CombinationExcludeRegex)))
                     {
                         // Since this resource differs from the previous one in terms of settings, they can't be combined
-                        if (previousResource != null && !previousResource.SerializableSettingsEqual(resource))
+                        if (previousResource != null && !previousResource.SettingsEqual(resource))
                         {
                             saveCombination(previousResource);
                         }
@@ -209,7 +209,7 @@ namespace Piedone.Combinator.Services
             }
             else
             {
-                resource.UrlOverride = resource.PublicUrl;
+                resource.OverrideCombinedUrl(resource.PublicUrl);
             }
         }
 

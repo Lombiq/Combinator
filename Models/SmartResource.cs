@@ -16,7 +16,6 @@ namespace Piedone.Combinator.Models
     [OrchardFeature("Piedone.Combinator")]
     public class SmartResource : ISmartResource
     {
-        private readonly IResourceManager _resourceManager;
         private readonly WorkContext _workContext;
         private readonly Work<ISimpleSerializer> _serializerWork;
 
@@ -111,11 +110,9 @@ namespace Piedone.Combinator.Models
         #endregion
 
         public SmartResource(
-            IResourceManager resourceManager,
             IWorkContextAccessor workContextAccessor,
             Work<ISimpleSerializer> serializerWork)
         {
-            _resourceManager = resourceManager;
             _workContext = workContextAccessor.GetContext();
             _serializerWork = serializerWork;
         }

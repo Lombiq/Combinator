@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using Orchard.Environment.Extensions;
 using Orchard.UI.Resources;
 
 namespace Piedone.Combinator.Extensions

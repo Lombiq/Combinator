@@ -12,7 +12,6 @@ using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
-using Yahoo.Yui.Compressor;
 
 namespace Piedone.Combinator.Services
 {
@@ -239,7 +238,6 @@ namespace Piedone.Combinator.Services
         {
             if (resource.Type == ResourceType.Style)
             {
-                var z = _minificationService.MinifyCss(resource.Content);
                 resource.Content = _minificationService.MinifyCss(resource.Content);
             }
             else if (resource.Type == ResourceType.JavaScript)

@@ -1,5 +1,4 @@
-﻿using Orchard;
-using Orchard.ContentManagement;
+﻿using Orchard.ContentManagement;
 using Orchard.ContentManagement.Drivers;
 using Orchard.Environment.Extensions;
 using Piedone.Combinator.Models;

@@ -1,7 +1,7 @@
-﻿using Orchard;
+﻿using System;
+using Orchard;
 using Orchard.UI.Resources;
 using Piedone.Combinator.Helpers;
-using System;
 
 namespace Piedone.Combinator.Models
 {

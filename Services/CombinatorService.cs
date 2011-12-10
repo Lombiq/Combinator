@@ -13,6 +13,7 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using System.IO;
+using System.Diagnostics;
 
 namespace Piedone.Combinator.Services
 {
@@ -154,7 +155,7 @@ namespace Piedone.Combinator.Services
                     if ((String.IsNullOrEmpty(settings.CombinationExcludeRegex) || !Regex.IsMatch(publicUrl, settings.CombinationExcludeRegex)))
                     {
                         // If this resource differs from the previous one in terms of settings or CDN, they can't be combined
-                        if (previousResource != null && 
+                        if (previousResource != null &&
                             (!previousResource.SettingsEqual(resource) || (previousResource.IsCDNResource != resource.IsCDNResource && !settings.CombineCDNResources)))
                         {
                             saveCombination(previousResource);
@@ -172,8 +173,7 @@ namespace Piedone.Combinator.Services
                 }
                 catch (Exception e)
                 {
-                    var message = "Processing of resource " + publicUrl + " failed";
-                    throw new ApplicationException(message, e);
+                    throw new ApplicationException("Processing of resource " + publicUrl + " failed", e);
                 }
             }
 
@@ -188,7 +188,7 @@ namespace Piedone.Combinator.Services
             {
                 if (!resource.IsCDNResource)
                 {
-                    resource.Content = _resourceFileService.GetLocalResourceContent(resource); 
+                    resource.Content = _resourceFileService.GetLocalResourceContent(resource);
                 }
                 else if (settings.CombineCDNResources)
                 {
@@ -197,9 +197,9 @@ namespace Piedone.Combinator.Services
 
                 if (resource.Type == ResourceType.Style)
                 {
-                    if (false)
+                    if (settings.EmbedCssImages)
                     {
-                        EmbedImages(resource); 
+                        EmbedImages(resource);
                     }
                     else
                     {
@@ -222,28 +222,50 @@ namespace Piedone.Combinator.Services
 
         private void EmbedImages(ISmartResource resource)
         {
-            var imageUrls = new List<Tuple<string, Uri>>();
+            // Uri is the key so that the key is uniform, inclusion urls are not
+            var imageUrls = new Dictionary<Uri, string>();
 
             ProcessUrlSettings(resource,
                 (match) =>
                 {
                     var url = match.Groups[1].ToString();
+                    var extension = Path.GetExtension(url).Replace(".", "").ToLowerInvariant();
 
-                    Uri imageUrl;
-                    if (!Uri.IsWellFormedUriString(url, UriKind.Absolute)) imageUrl = new Uri(resource.PublicUrl, url);
-                    else imageUrl = new Uri(url);
-                    imageUrls.Add(new Tuple<string,Uri>(url, imageUrl));
+                    // This is a dumb check but otherwise we'd have to inspect the file thoroughly
+                    if ("jpg jpeg png gif tiff bmp".Contains(extension))
+                    {
+                        Uri imageUrl;
+                        if (!Uri.IsWellFormedUriString(url, UriKind.Absolute)) imageUrl = new Uri(resource.PublicUrl, url);
+                        else imageUrl = new Uri(url);
+                        imageUrls[imageUrl] = url;
+                    }
 
                     return match.Groups[0].ToString();
                 });
 
+            var dataUrls = new List<Tuple<string, string>>(imageUrls.Count);
+
             foreach (var url in imageUrls)
             {
-                var dataUrl = "data:image/"
-                    + Path.GetExtension(url.Item2.ToString()).Replace(".", "") 
-                    + ";base64," 
-                    + _resourceFileService.GetImageBase64Data(url.Item2);
-                resource.Content = resource.Content.Replace(url.Item1, dataUrl);
+                try
+                {
+                    dataUrls.Add(new Tuple<string, string>(
+                        url.Value,
+                        "data:image/"
+                            + Path.GetExtension(url.Key.ToString()).Replace(".", "")
+                            +";base64,"
+                            + _resourceFileService.GetImageBase64Data(url.Key))
+                        ); 
+                }
+                catch (Exception e)
+                {
+                    throw new ApplicationException("The image with url " + url.Value + " can't be embedded", e);
+                }
+            }
+
+            foreach (var url in dataUrls)
+            {
+                resource.Content = resource.Content.Replace(url.Item1, url.Item2);
             }
         }
 

@@ -7,5 +7,6 @@ namespace Piedone.Combinator.Models
         bool CombineCDNResources { get; }
         bool MinifyResources { get; }
         string MinificationExcludeRegex { get; }
+        bool EmbedCssImages { get; }
     }
 }

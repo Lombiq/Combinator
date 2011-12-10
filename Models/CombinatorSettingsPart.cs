@@ -31,6 +31,12 @@ namespace Piedone.Combinator.Models
             set { Record.MinificationExcludeRegex = value; }
         }
 
+        public bool EmbedCssImages
+        {
+            get { return Record.EmbedCssImages; }
+            set { Record.EmbedCssImages = value; }
+        }
+
         private readonly LazyField<int> _cacheFileCount = new LazyField<int>();
         public LazyField<int> CacheFileCountField { get { return _cacheFileCount; } }
         public int CacheFileCount

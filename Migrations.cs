@@ -30,6 +30,7 @@ namespace Piedone.Combinator.Migrations
                     .Column<bool>("CombineCDNResources")
                     .Column<bool>("MinifyResources")
                     .Column<string>("MinificationExcludeRegex")
+                    .Column<bool>("EmbedCssImages")
             );
 
 
@@ -64,6 +65,16 @@ namespace Piedone.Combinator.Migrations
             );
 
             return 3;
+        }
+
+        public int UpdateFrom3()
+        {
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+                table => table
+                    .AddColumn<bool>("EmbedCssImages")
+            );
+
+            return 4;
         }
     }
 }

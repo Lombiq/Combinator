@@ -10,6 +10,7 @@ namespace Piedone.Combinator.Models
         public virtual bool CombineCDNResources { get; set; }
         public virtual bool MinifyResources { get; set; }
         public virtual string MinificationExcludeRegex { get; set; }
+        public virtual bool EmbedCssImages { get; set; }
 
         public CombinatorSettingsPartRecord()
         {
@@ -17,6 +18,7 @@ namespace Piedone.Combinator.Models
             CombineCDNResources = false;
             MinifyResources = true;
             MinificationExcludeRegex = "";
+            EmbedCssImages = false;
         }
     }
 }

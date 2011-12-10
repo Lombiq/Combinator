@@ -19,8 +19,7 @@ namespace Piedone.Combinator.Services
     public class CombinatorService : ICombinatorService
     {
         private readonly ICacheFileService _cacheFileService;
-        private readonly IResourceFileService _resourceFileService;
-        private readonly IMinificationService _minificationService;
+        private readonly IResourceProcessingService _resourceProcessingService;
         private readonly IWorkContextAccessor _workContextAccessor;
         private readonly ICacheManager _cacheManager;
 
@@ -28,14 +27,12 @@ namespace Piedone.Combinator.Services
 
         public CombinatorService(
             ICacheFileService cacheFileService,
-            IResourceFileService resourceFileService,
-            IMinificationService minificationService,
+            IResourceProcessingService resourceProcessingService,
             IWorkContextAccessor workContextAccessor,
             ICacheManager cacheManager)
         {
             _cacheFileService = cacheFileService;
-            _resourceFileService = resourceFileService;
-            _minificationService = minificationService;
+            _resourceProcessingService = resourceProcessingService;
             _workContextAccessor = workContextAccessor;
             _cacheManager = cacheManager;
 
@@ -127,7 +124,7 @@ namespace Piedone.Combinator.Services
                 smartResources.Add(smartResource);
             }
 
-            var combinedContent = new StringBuilder(resources.Count * 1000); // Rough estimate
+            var combinedContent = new StringBuilder(1000);
 
             Action<ISmartResource> saveCombination =
                 (combinedResource) =>
@@ -153,93 +150,30 @@ namespace Piedone.Combinator.Services
                     if ((String.IsNullOrEmpty(settings.CombinationExcludeRegex) || !Regex.IsMatch(publicUrl, settings.CombinationExcludeRegex)))
                     {
                         // If this resource differs from the previous one in terms of settings or CDN, they can't be combined
-                        if (previousResource != null && 
+                        if (previousResource != null &&
                             (!previousResource.SettingsEqual(resource) || (previousResource.IsCDNResource != resource.IsCDNResource && !settings.CombineCDNResources)))
                         {
                             saveCombination(previousResource);
                         }
 
-                        ProcessResource(resource, combinedContent, settings);
+                        _resourceProcessingService.ProcessResource(resource, combinedContent, settings);
                     }
                     else
                     {
                         if (previousResource != null) saveCombination(previousResource);
-                        ProcessResource(resource, combinedContent, settings);
+                        _resourceProcessingService.ProcessResource(resource, combinedContent, settings);
                         saveCombination(resource);
                         smartResources[i] = null;
                     }
                 }
                 catch (Exception e)
                 {
-                    var message = "Processing of resource " + publicUrl + " failed";
-                    throw new ApplicationException(message, e);
+                    throw new ApplicationException("Processing of resource " + publicUrl + " failed", e);
                 }
             }
 
 
             saveCombination(smartResources[smartResources.Count - 1]);
-        }
-
-        // Todo: better name?
-        private void ProcessResource(ISmartResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
-        {
-            if (!resource.IsCDNResource || settings.CombineCDNResources)
-            {
-                if (!resource.IsCDNResource)
-                {
-                    resource.Content = _resourceFileService.GetLocalResourceContent(resource); 
-                }
-                else if (settings.CombineCDNResources)
-                {
-                    resource.Content = _resourceFileService.GetRemoteResourceContent(resource);
-                }
-
-                if (resource.Type == ResourceType.Style)
-                {
-                    AdjustRelativePaths(resource);
-                }
-
-                if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(resource.PublicUrl.ToString(), settings.MinificationExcludeRegex)))
-                {
-                    MinifyResourceContent(resource);
-                }
-
-                combinedContent.Append(resource.Content);
-            }
-            else
-            {
-                resource.OverrideCombinedUrl(resource.PublicUrl);
-            }
-        }
-
-        private static void AdjustRelativePaths(ISmartResource resource)
-        {
-            string content = resource.Content;
-
-            content = Regex.Replace(
-                                    content,
-                                    "url\\(['|\"]?(.+?)['|\"]?\\)",
-                                    (match) =>
-                                    {
-                                        var url = match.Groups[1].ToString();
-
-                                        return "url(\"" + new Uri(resource.PublicUrl, url) + "\")";
-                                    },
-                                    RegexOptions.IgnoreCase);
-
-            resource.Content = content;
-        }
-
-        private void MinifyResourceContent(ISmartResource resource)
-        {
-            if (resource.Type == ResourceType.Style)
-            {
-                resource.Content = _minificationService.MinifyCss(resource.Content);
-            }
-            else if (resource.Type == ResourceType.JavaScript)
-            {
-                resource.Content = _minificationService.MinifyJavaScript(resource.Content);
-            }
         }
 
         private IList<ResourceRequiredContext> ProcessCombinedResources(IList<ISmartResource> combinedResources)
@@ -249,6 +183,8 @@ namespace Piedone.Combinator.Services
 
         private ISmartResource NewResource()
         {
+            // Work<ISmartResource>.Value would be better, but gives the same instance every time
+            // See issue: http://orchard.codeplex.com/workitem/18271
             return _workContextAccessor.GetContext().Resolve<ISmartResource>();
         }
     }

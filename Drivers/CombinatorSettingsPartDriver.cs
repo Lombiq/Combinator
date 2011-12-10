@@ -39,6 +39,7 @@ namespace Piedone.Combinator.Drivers
             var combineCDNResourcesFormer = part.CombineCDNResources;
             var minifyResourcesFormer = part.MinifyResources;
             var minificationExcludeRegexFormer = part.MinificationExcludeRegex;
+            var embedCssImagesFormer = part.EmbedCssImages;
 
             updater.TryUpdateModel(part, Prefix, null, null);
 
@@ -46,7 +47,8 @@ namespace Piedone.Combinator.Drivers
             if (part.CombinationExcludeRegex != combinationExcludeRegexFormer
                 || part.CombineCDNResources != combineCDNResourcesFormer 
                 || part.MinifyResources != minifyResourcesFormer
-                || (part.MinifyResources && part.MinificationExcludeRegex != minificationExcludeRegexFormer))
+                || (part.MinifyResources && part.MinificationExcludeRegex != minificationExcludeRegexFormer)
+                || part.EmbedCssImages != embedCssImagesFormer)
             {
                 _cacheFileService.Empty();
             }

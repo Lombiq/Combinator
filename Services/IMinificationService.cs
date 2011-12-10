@@ -2,7 +2,7 @@
 
 namespace Piedone.Combinator.Services
 {
-    public interface IMinificationService : ISingletonDependency
+    public interface IMinificationService : IDependency
     {
         string MinifyCss(string css);
         string MinifyJavaScript(string javaScript);

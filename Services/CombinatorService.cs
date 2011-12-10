@@ -183,32 +183,28 @@ namespace Piedone.Combinator.Services
         // Todo: better name?
         private void ProcessResource(ISmartResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
         {
-            Action processResourceContent =
-                () =>
+            if (!resource.IsCDNResource || settings.CombineCDNResources)
+            {
+                if (!resource.IsCDNResource)
                 {
-                    if (resource.Type == ResourceType.Style)
-                    {
-                        AdjustRelativePaths(resource);
-                    }
+                    resource.Content = _resourceFileService.GetLocalResourceContent(resource); 
+                }
+                else if (settings.CombineCDNResources)
+                {
+                    resource.Content = _resourceFileService.GetRemoteResourceContent(resource);
+                }
 
-                    if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(resource.PublicUrl.ToString(), settings.MinificationExcludeRegex)))
-                    {
-                        MinifyResourceContent(resource);
-                    }
+                if (resource.Type == ResourceType.Style)
+                {
+                    AdjustRelativePaths(resource);
+                }
 
-                    combinedContent.Append(resource.Content);
-                };
+                if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(resource.PublicUrl.ToString(), settings.MinificationExcludeRegex)))
+                {
+                    MinifyResourceContent(resource);
+                }
 
-
-            if (!resource.IsCDNResource)
-            {
-                resource.Content = _resourceFileService.GetLocalResourceContent(resource);
-                processResourceContent();
-            }
-            else if (settings.CombineCDNResources)
-            {
-                resource.Content = _resourceFileService.GetRemoteResourceContent(resource);
-                processResourceContent();
+                combinedContent.Append(resource.Content);
             }
             else
             {

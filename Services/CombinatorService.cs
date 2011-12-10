@@ -12,6 +12,7 @@ using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
+using System.IO;
 
 namespace Piedone.Combinator.Services
 {
@@ -196,7 +197,14 @@ namespace Piedone.Combinator.Services
 
                 if (resource.Type == ResourceType.Style)
                 {
-                    AdjustRelativePaths(resource);
+                    if (false)
+                    {
+                        EmbedImages(resource); 
+                    }
+                    else
+                    {
+                        AdjustRelativePaths(resource);
+                    }
                 }
 
                 if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(resource.PublicUrl.ToString(), settings.MinificationExcludeRegex)))
@@ -212,19 +220,52 @@ namespace Piedone.Combinator.Services
             }
         }
 
+        private void EmbedImages(ISmartResource resource)
+        {
+            var imageUrls = new List<Tuple<string, Uri>>();
+
+            ProcessUrlSettings(resource,
+                (match) =>
+                {
+                    var url = match.Groups[1].ToString();
+
+                    Uri imageUrl;
+                    if (!Uri.IsWellFormedUriString(url, UriKind.Absolute)) imageUrl = new Uri(resource.PublicUrl, url);
+                    else imageUrl = new Uri(url);
+                    imageUrls.Add(new Tuple<string,Uri>(url, imageUrl));
+
+                    return match.Groups[0].ToString();
+                });
+
+            foreach (var url in imageUrls)
+            {
+                var dataUrl = "data:image/"
+                    + Path.GetExtension(url.Item2.ToString()).Replace(".", "") 
+                    + ";base64," 
+                    + _resourceFileService.GetImageBase64Data(url.Item2);
+                resource.Content = resource.Content.Replace(url.Item1, dataUrl);
+            }
+        }
+
         private static void AdjustRelativePaths(ISmartResource resource)
+        {
+            ProcessUrlSettings(resource,
+                (match) =>
+                {
+                    var url = match.Groups[1].ToString();
+
+                    return "url(\"" + new Uri(resource.PublicUrl, url) + "\")";
+                });
+        }
+
+        private static void ProcessUrlSettings(ISmartResource resource, MatchEvaluator evaluator)
         {
             string content = resource.Content;
 
             content = Regex.Replace(
                                     content,
                                     "url\\(['|\"]?(.+?)['|\"]?\\)",
-                                    (match) =>
-                                    {
-                                        var url = match.Groups[1].ToString();
-
-                                        return "url(\"" + new Uri(resource.PublicUrl, url) + "\")";
-                                    },
+                                    evaluator,
                                     RegexOptions.IgnoreCase);
 
             resource.Content = content;

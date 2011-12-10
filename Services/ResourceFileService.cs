@@ -47,5 +47,13 @@ namespace Piedone.Combinator.Services
                 return content; 
             }
         }
+
+        public string GetImageBase64Data(Uri imageUrl)
+        {
+            using (var wc = new WebClient())
+            {
+                return Convert.ToBase64String(wc.DownloadData(imageUrl));
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Orchard;
 using Piedone.Combinator.Models;
+using System;
 
 namespace Piedone.Combinator.Services
 {
@@ -7,5 +8,6 @@ namespace Piedone.Combinator.Services
     {
         string GetLocalResourceContent(ISmartResource resource);
         string GetRemoteResourceContent(ISmartResource resource);
+        string GetImageBase64Data(Uri imageUrl);
     }
 }

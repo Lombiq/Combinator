@@ -183,6 +183,8 @@ namespace Piedone.Combinator.Services
 
         private ISmartResource NewResource()
         {
+            // Work<ISmartResource>.Value would be better, but gives the same instance every time
+            // See issue: http://orchard.codeplex.com/workitem/18271
             return _workContextAccessor.GetContext().Resolve<ISmartResource>();
         }
     }

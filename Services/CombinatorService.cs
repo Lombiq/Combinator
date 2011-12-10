@@ -27,7 +27,6 @@ namespace Piedone.Combinator.Services
         private readonly IResourceProcessingService _resourceProcessingService;
         private readonly IWorkContextAccessor _workContextAccessor;
         private readonly ICacheManager _cacheManager;
-        private readonly ITaskFactory _taskFactory;
 
         public ILogger Logger { get; set; }
 
@@ -35,14 +34,12 @@ namespace Piedone.Combinator.Services
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
             IWorkContextAccessor workContextAccessor,
-            ICacheManager cacheManager,
-            ITaskFactory taskFactory)
+            ICacheManager cacheManager)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
             _workContextAccessor = workContextAccessor;
             _cacheManager = cacheManager;
-            _taskFactory = taskFactory;
 
             Logger = NullLogger.Instance;
         }
@@ -132,7 +129,7 @@ namespace Piedone.Combinator.Services
                 smartResources.Add(smartResource);
             }
 
-            var combinedContent = new StringBuilder(resources.Count * 1000); // Rough estimate
+            var combinedContent = new StringBuilder(1000);
 
             Action<ISmartResource> saveCombination =
                 (combinedResource) =>

@@ -100,8 +100,10 @@
     <Compile Include="Services\ICombinatorService.cs" />
     <Compile Include="Services\IMinificationService.cs" />
     <Compile Include="Services\IResourceFileService.cs" />
+    <Compile Include="Services\IResourceProcessingService.cs" />
     <Compile Include="Services\MinificationService.cs" />
     <Compile Include="Services\ResourceFileService.cs" />
+    <Compile Include="Services\ResourceProcessingService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Web.config" />

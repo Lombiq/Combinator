@@ -24,8 +24,7 @@ namespace Piedone.Combinator.Services
     public class CombinatorService : ICombinatorService
     {
         private readonly ICacheFileService _cacheFileService;
-        private readonly IResourceFileService _resourceFileService;
-        private readonly IMinificationService _minificationService;
+        private readonly IResourceProcessingService _resourceProcessingService;
         private readonly IWorkContextAccessor _workContextAccessor;
         private readonly ICacheManager _cacheManager;
         private readonly ITaskFactory _taskFactory;
@@ -34,15 +33,13 @@ namespace Piedone.Combinator.Services
 
         public CombinatorService(
             ICacheFileService cacheFileService,
-            IResourceFileService resourceFileService,
-            IMinificationService minificationService,
+            IResourceProcessingService resourceProcessingService,
             IWorkContextAccessor workContextAccessor,
             ICacheManager cacheManager,
             ITaskFactory taskFactory)
         {
             _cacheFileService = cacheFileService;
-            _resourceFileService = resourceFileService;
-            _minificationService = minificationService;
+            _resourceProcessingService = resourceProcessingService;
             _workContextAccessor = workContextAccessor;
             _cacheManager = cacheManager;
             _taskFactory = taskFactory;
@@ -167,12 +164,12 @@ namespace Piedone.Combinator.Services
                             saveCombination(previousResource);
                         }
 
-                        ProcessResource(resource, combinedContent, settings);
+                        _resourceProcessingService.ProcessResource(resource, combinedContent, settings);
                     }
                     else
                     {
                         if (previousResource != null) saveCombination(previousResource);
-                        ProcessResource(resource, combinedContent, settings);
+                        _resourceProcessingService.ProcessResource(resource, combinedContent, settings);
                         saveCombination(resource);
                         smartResources[i] = null;
                     }
@@ -185,153 +182,6 @@ namespace Piedone.Combinator.Services
 
 
             saveCombination(smartResources[smartResources.Count - 1]);
-        }
-
-        // Todo: better name?
-        private void ProcessResource(ISmartResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
-        {
-            if (!resource.IsCDNResource || settings.CombineCDNResources)
-            {
-                if (!resource.IsCDNResource)
-                {
-                    resource.Content = _resourceFileService.GetLocalResourceContent(resource);
-                }
-                else if (settings.CombineCDNResources)
-                {
-                    resource.Content = _resourceFileService.GetRemoteResourceContent(resource);
-                }
-
-                if (resource.Type == ResourceType.Style)
-                {
-                    if (settings.EmbedCssImages)
-                    {
-                        EmbedImages(resource);
-                    }
-                    else
-                    {
-                        AdjustRelativePaths(resource);
-                    }
-                }
-
-                if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(resource.PublicUrl.ToString(), settings.MinificationExcludeRegex)))
-                {
-                    MinifyResourceContent(resource);
-                }
-
-                combinedContent.Append(resource.Content);
-            }
-            else
-            {
-                resource.OverrideCombinedUrl(resource.PublicUrl);
-            }
-        }
-
-        private void EmbedImages(ISmartResource resource)
-        {
-            // Uri is the key so that the key is uniform, inclusion urls are not
-            var imageUrls = new Dictionary<Uri, string>();
-
-            ProcessUrlSettings(resource,
-                (match) =>
-                {
-                    var url = match.Groups[1].ToString();
-                    var extension = Path.GetExtension(url).Replace(".", "").ToLowerInvariant();
-
-                    // This is a dumb check but otherwise we'd have to inspect the file thoroughly
-                    if ("jpg jpeg png gif tiff bmp".Contains(extension))
-                    {
-                        Uri imageUrl;
-                        if (!Uri.IsWellFormedUriString(url, UriKind.Absolute)) imageUrl = new Uri(resource.PublicUrl, url);
-                        else imageUrl = new Uri(url);
-                        imageUrls[imageUrl] = url;
-                    }
-
-                    return match.Groups[0].ToString();
-                });
-
-
-            if (imageUrls.Count != 0)
-            {
-                var dataUrls = new ConcurrentBag<Tuple<string, string>>();
-                Task[] tasks = new Task[imageUrls.Count];
-
-                var downloaderAction = _taskFactory.BuildTaskAction(
-                    (urlObject) =>
-                    {
-                        var url = (KeyValuePair<Uri, string>)urlObject;
-                        try
-                        {
-                            dataUrls.Add(new Tuple<string, string>(
-                                url.Value,
-                                "data:image/"
-                                    + Path.GetExtension(url.Key.ToString()).Replace(".", "")
-                                    + ";base64,"
-                                    + _resourceFileService.GetImageBase64Data(url.Key)));
-                        }
-                        catch (Exception e)
-                        {
-                            throw new ApplicationException("The image with url " + url.Value + " can't be embedded", e);
-                        }
-                    }, false);
-
-
-                int taskIndex = 0;
-                foreach (var imageUrl in imageUrls)
-                {
-                    tasks[taskIndex++] = Task.Factory.StartNew(downloaderAction, imageUrl);
-                }
-
-                try
-                {
-                    Task.WaitAll(tasks);
-                }
-                catch (AggregateException e)
-                {
-                    throw;
-                }
-
-
-                foreach (var url in dataUrls)
-                {
-                    resource.Content = resource.Content.Replace(url.Item1, url.Item2);
-                } 
-            }
-        }
-
-        private static void AdjustRelativePaths(ISmartResource resource)
-        {
-            ProcessUrlSettings(resource,
-                (match) =>
-                {
-                    var url = match.Groups[1].ToString();
-
-                    return "url(\"" + new Uri(resource.PublicUrl, url) + "\")";
-                });
-        }
-
-        private static void ProcessUrlSettings(ISmartResource resource, MatchEvaluator evaluator)
-        {
-            string content = resource.Content;
-
-            content = Regex.Replace(
-                                    content,
-                                    "url\\(['|\"]?(.+?)['|\"]?\\)",
-                                    evaluator,
-                                    RegexOptions.IgnoreCase);
-
-            resource.Content = content;
-        }
-
-        private void MinifyResourceContent(ISmartResource resource)
-        {
-            if (resource.Type == ResourceType.Style)
-            {
-                resource.Content = _minificationService.MinifyCss(resource.Content);
-            }
-            else if (resource.Type == ResourceType.JavaScript)
-            {
-                resource.Content = _minificationService.MinifyJavaScript(resource.Content);
-            }
         }
 
         private IList<ResourceRequiredContext> ProcessCombinedResources(IList<ISmartResource> combinedResources)

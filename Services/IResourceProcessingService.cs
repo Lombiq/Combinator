@@ -1,7 +1,6 @@
-﻿using System;
-using Piedone.Combinator.Models;
-using System.Text;
+﻿using System.Text;
 using Orchard;
+using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator.Services
 {

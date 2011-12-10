@@ -12,11 +12,6 @@ using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
-using System.IO;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using Piedone.HelpfulLibraries.Tasks;
 
 namespace Piedone.Combinator.Services
 {

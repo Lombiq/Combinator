@@ -14,6 +14,9 @@ using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using System.IO;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
+using Piedone.HelpfulLibraries.Tasks;
 
 namespace Piedone.Combinator.Services
 {
@@ -25,6 +28,7 @@ namespace Piedone.Combinator.Services
         private readonly IMinificationService _minificationService;
         private readonly IWorkContextAccessor _workContextAccessor;
         private readonly ICacheManager _cacheManager;
+        private readonly ITaskFactory _taskFactory;
 
         public ILogger Logger { get; set; }
 
@@ -33,13 +37,15 @@ namespace Piedone.Combinator.Services
             IResourceFileService resourceFileService,
             IMinificationService minificationService,
             IWorkContextAccessor workContextAccessor,
-            ICacheManager cacheManager)
+            ICacheManager cacheManager,
+            ITaskFactory taskFactory)
         {
             _cacheFileService = cacheFileService;
             _resourceFileService = resourceFileService;
             _minificationService = minificationService;
             _workContextAccessor = workContextAccessor;
             _cacheManager = cacheManager;
+            _taskFactory = taskFactory;
 
             Logger = NullLogger.Instance;
         }
@@ -243,29 +249,52 @@ namespace Piedone.Combinator.Services
                     return match.Groups[0].ToString();
                 });
 
-            var dataUrls = new List<Tuple<string, string>>(imageUrls.Count);
 
-            foreach (var url in imageUrls)
+            if (imageUrls.Count != 0)
             {
+                var dataUrls = new ConcurrentBag<Tuple<string, string>>();
+                Task[] tasks = new Task[imageUrls.Count];
+
+                var downloaderAction = _taskFactory.BuildTaskAction(
+                    (urlObject) =>
+                    {
+                        var url = (KeyValuePair<Uri, string>)urlObject;
+                        try
+                        {
+                            dataUrls.Add(new Tuple<string, string>(
+                                url.Value,
+                                "data:image/"
+                                    + Path.GetExtension(url.Key.ToString()).Replace(".", "")
+                                    + ";base64,"
+                                    + _resourceFileService.GetImageBase64Data(url.Key)));
+                        }
+                        catch (Exception e)
+                        {
+                            throw new ApplicationException("The image with url " + url.Value + " can't be embedded", e);
+                        }
+                    }, false);
+
+
+                int taskIndex = 0;
+                foreach (var imageUrl in imageUrls)
+                {
+                    tasks[taskIndex++] = Task.Factory.StartNew(downloaderAction, imageUrl);
+                }
+
                 try
                 {
-                    dataUrls.Add(new Tuple<string, string>(
-                        url.Value,
-                        "data:image/"
-                            + Path.GetExtension(url.Key.ToString()).Replace(".", "")
-                            +";base64,"
-                            + _resourceFileService.GetImageBase64Data(url.Key))
-                        ); 
+                    Task.WaitAll(tasks);
                 }
-                catch (Exception e)
+                catch (AggregateException e)
                 {
-                    throw new ApplicationException("The image with url " + url.Value + " can't be embedded", e);
+                    throw;
                 }
-            }
 
-            foreach (var url in dataUrls)
-            {
-                resource.Content = resource.Content.Replace(url.Item1, url.Item2);
+
+                foreach (var url in dataUrls)
+                {
+                    resource.Content = resource.Content.Replace(url.Item1, url.Item2);
+                } 
             }
         }
 

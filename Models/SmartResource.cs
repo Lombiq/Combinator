@@ -31,7 +31,14 @@ namespace Piedone.Combinator.Models
         {
             get
             {
-                return RequiredContext.Resource.GetFullPath();
+                var fullPath = RequiredContext.Resource.GetFullPath();
+
+                if (fullPath.StartsWith("//"))
+                {
+                    fullPath = _httpContext.Request.Url.Scheme + ":" + fullPath; // For urls with the "//domain.com" notation
+                }
+
+                return fullPath;
             }
         }
 

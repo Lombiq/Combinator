@@ -1,21 +1,19 @@
 ﻿@model Piedone.Combinator.Models.CombinatorSettingsPart
-
 @{
     Script.Require("jQuery").AtHead();
 }
-
 @using (Script.Head())
 {
     <script type="text/javascript">
         (function ($) {
-        // Doing this with JS is not a nice solution but it seems there is no other way to make a POST to the action
+            // Doing this with JS is not a nice solution but it seems there is no other way to make a POST to the action
             $.extend({
                 combinator: {
                     emptyCache: function () {
                         $("#button\\.EmptyCache").attr("disabled", "disabled");
                         var url = '@Url.Action("EmptyCache", new { Controller = "CombinatorAdmin", Area = "Piedone.Combinator" })';
                         var postData = { __RequestVerificationToken: "@Html.AntiForgeryTokenValueOrchard()" };
-                        $.post(url, postData, function(response) {
+                        $.post(url, postData, function (response) {
                             location.reload();
                         });
                     }
@@ -24,10 +22,8 @@
         })(jQuery);
     </script>
 }
-           
 <fieldset>
-    <legend>@T("Combinator Settings")</legend>
-    <span class="hint">@T("There are currently {0} combined resource files cached.", Model.CacheFileCount)</span>
+    <legend>@T("Combinator Settings")</legend><span class="hint">@T("There are currently {0} combined resource files cached.", Model.CacheFileCount)</span>
     <ol>
         <li>
             @Html.LabelFor(m => m.CombinationExcludeRegex, T("Exclude from combination"))
@@ -56,8 +52,11 @@
             @Html.EditorFor(m => m.EmbedCssImages)
             <label for="@Html.FieldIdFor(m => m.EmbedCssImages)" class="forcheckbox">@T("Embed images in stylesheets")</label>
             @Html.ValidationMessageFor(m => m.EmbedCssImages)
-            <span class="hint">@T("If checked, images referenced in stylesheets (e.g. as background with an url()) will be embedded as data urls in the css.")</span>
-        </li>
+            <span class="hint">
+                @T("If checked, images referenced in stylesheets (e.g. as background with an url()) will be embedded as data urls in the css.")<br>
+                @T("Note that Internet explorer fully supports data urls only since version 9. Prior to version 8 it doesn't support data urls at all and version 8 has a limitation of 32KB per url. Since data urls are ~1/3 bigger than the original images this feature is advised only if you have many small images and if none of your images is bigger than ~24KB if you want to support IE 8.")
+            </span></li>
     </ol>
-    <button type="button" id="button.EmptyCache" name="button.EmptyCache" value="EmptyCache" onclick="$.combinator.emptyCache(); return false;">@T("Empty cache")</button>
+    <button type="button" id="button.EmptyCache" name="button.EmptyCache" value="EmptyCache"
+        onclick="$.combinator.emptyCache(); return false;">@T("Empty cache")</button>
 </fieldset>

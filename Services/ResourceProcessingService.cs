@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.HelpfulLibraries.Tasks;
@@ -66,71 +63,26 @@ namespace Piedone.Combinator.Services
 
         private void EmbedImages(ISmartResource resource)
         {
-            // Uri is the key so that the key is uniform, inclusion urls are not
-            var imageUrls = new Dictionary<Uri, string>();
-
             ProcessUrlSettings(resource,
                 (match) =>
                 {
-                    var url = match.Groups[1].ToString();
+                    var url = match.Groups[1].Value;
                     var extension = Path.GetExtension(url).ToLowerInvariant();
 
                     // This is a dumb check but otherwise we'd have to inspect the file thoroughly
                     if (!String.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
                     {
-                        imageUrls[new Uri(url)] = url;
+                       var dataUrl =
+                                "data:image/"
+                                    + Path.GetExtension(url).Replace(".", "")
+                                    + ";base64,"
+                                    + _resourceFileService.GetImageBase64Data(new Uri(url));
+
+                        return "url(\"" +  dataUrl + "\")";
                     }
 
-                    return match.Groups[0].ToString();
+                    return match.Groups[0].Value;
                 });
-
-
-            if (imageUrls.Count != 0)
-            {
-                var dataUrls = new ConcurrentBag<Tuple<string, string>>();
-                var tasks = new Task[imageUrls.Count];
-
-                var downloaderAction = _taskFactory.BuildBackgroundAction(
-                    (urlObject) =>
-                    {
-                        var url = (KeyValuePair<Uri, string>)urlObject;
-                        try
-                        {
-                            dataUrls.Add(new Tuple<string, string>(
-                                url.Value,
-                                "data:image/"
-                                    + Path.GetExtension(url.Key.ToString()).Replace(".", "")
-                                    + ";base64,"
-                                    + _resourceFileService.GetImageBase64Data(url.Key)));
-                        }
-                        catch (Exception e)
-                        {
-                            throw new ApplicationException("The image with url " + url.Value + " can't be embedded", e);
-                        }
-                    }, false);
-
-
-                int taskIndex = 0;
-                foreach (var imageUrl in imageUrls)
-                {
-                    tasks[taskIndex++] = Task.Factory.StartNew(downloaderAction, imageUrl);
-                }
-
-                try
-                {
-                    Task.WaitAll(tasks);
-                }
-                catch (AggregateException ex)
-                {
-                    throw new ApplicationException("Embedding image files into css failed.", ex);
-                }
-
-
-                foreach (var url in dataUrls)
-                {
-                    resource.Content = resource.Content.Replace(url.Item1, url.Item2);
-                }
-            }
         }
 
         private static void AdjustRelativePaths(ISmartResource resource)

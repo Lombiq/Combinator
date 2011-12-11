@@ -88,9 +88,9 @@ namespace Piedone.Combinator.Services
             if (imageUrls.Count != 0)
             {
                 var dataUrls = new ConcurrentBag<Tuple<string, string>>();
-                Task[] tasks = new Task[imageUrls.Count];
+                var tasks = new Task[imageUrls.Count];
 
-                var downloaderAction = _taskFactory.BuildTaskAction(
+                var downloaderAction = _taskFactory.BuildBackgroundAction(
                     (urlObject) =>
                     {
                         var url = (KeyValuePair<Uri, string>)urlObject;
@@ -120,9 +120,9 @@ namespace Piedone.Combinator.Services
                 {
                     Task.WaitAll(tasks);
                 }
-                catch (AggregateException e)
+                catch (AggregateException ex)
                 {
-                    throw new ApplicationException("Embedding image files into css failed.", e);
+                    throw new ApplicationException("Embedding image files into css failed.", ex);
                 }
 
 

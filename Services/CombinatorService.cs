@@ -166,9 +166,9 @@ namespace Piedone.Combinator.Services
                         smartResources[i] = null;
                     }
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    throw new ApplicationException("Processing of resource " + publicUrl + " failed", e);
+                    throw new ApplicationException("Processing of resource " + publicUrl + " failed", ex);
                 }
             }
 

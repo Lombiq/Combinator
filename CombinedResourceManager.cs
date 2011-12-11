@@ -92,9 +92,9 @@ namespace Piedone.Combinator
 
                 return base.BuildRequiredResources(stringResourceType);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.Error(e, "Error when combining " + resourceType + " files");
+                Logger.Error(ex, "Error when combining " + resourceType + " files");
                 return base.BuildRequiredResources(stringResourceType);
             }
         }

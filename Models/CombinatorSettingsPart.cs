@@ -43,6 +43,12 @@ namespace Piedone.Combinator.Models
             set { Record.EmbeddedImagesMaxSizeKB = value; }
         }
 
+        public string EmbedCssImagesStylesheetExcludeRegex
+        {
+            get { return Record.EmbedCssImagesStylesheetExcludeRegex; }
+            set { Record.EmbedCssImagesStylesheetExcludeRegex = value; }
+        }
+
         private readonly LazyField<int> _cacheFileCount = new LazyField<int>();
         public LazyField<int> CacheFileCountField { get { return _cacheFileCount; } }
         public int CacheFileCount

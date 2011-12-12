@@ -12,6 +12,7 @@ namespace Piedone.Combinator.Models
         public virtual string MinificationExcludeRegex { get; set; }
         public virtual bool EmbedCssImages { get; set; }
         public virtual int EmbeddedImagesMaxSizeKB { get; set; }
+        public virtual string EmbedCssImagesStylesheetExcludeRegex { get; set; }
 
         public CombinatorSettingsPartRecord()
         {
@@ -21,6 +22,7 @@ namespace Piedone.Combinator.Models
             MinificationExcludeRegex = "";
             EmbedCssImages = false;
             EmbeddedImagesMaxSizeKB = 15;
+            EmbedCssImagesStylesheetExcludeRegex = "";
         }
     }
 }

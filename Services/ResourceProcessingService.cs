@@ -28,6 +28,8 @@ namespace Piedone.Combinator.Services
         {
             if (!resource.IsCDNResource || settings.CombineCDNResources)
             {
+                var publicUrl = resource.PublicUrl.ToString();
+
                 if (!resource.IsCDNResource)
                 {
                     resource.Content = _resourceFileService.GetLocalResourceContent(resource);
@@ -37,7 +39,7 @@ namespace Piedone.Combinator.Services
                     resource.Content = _resourceFileService.GetRemoteResourceContent(resource);
                 }
 
-                if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(resource.PublicUrl.ToString(), settings.MinificationExcludeRegex)))
+                if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(publicUrl, settings.MinificationExcludeRegex)))
                 {
                     MinifyResourceContent(resource);
                 }
@@ -47,7 +49,7 @@ namespace Piedone.Combinator.Services
                 {
                     AdjustRelativePaths(resource);
 
-                    if (settings.EmbedCssImages)
+                    if (settings.EmbedCssImages && (String.IsNullOrEmpty(settings.EmbedCssImagesStylesheetExcludeRegex) || !Regex.IsMatch(publicUrl, settings.EmbedCssImagesStylesheetExcludeRegex)))
                     {
                         EmbedImages(resource, settings.EmbeddedImagesMaxSizeKB);
                     }

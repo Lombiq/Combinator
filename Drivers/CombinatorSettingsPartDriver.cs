@@ -35,22 +35,25 @@ namespace Piedone.Combinator.Drivers
         // POST
         protected override DriverResult Editor(CombinatorSettingsPart part, IUpdateModel updater, dynamic shapeHelper)
         {
-            var combinationExcludeRegexFormer = part.CombinationExcludeRegex;
-            var combineCDNResourcesFormer = part.CombineCDNResources;
-            var minifyResourcesFormer = part.MinifyResources;
-            var minificationExcludeRegexFormer = part.MinificationExcludeRegex;
-            var embedCssImagesFormer = part.EmbedCssImages;
-            var EmbeddedImagesMaxSizeKBFormer = part.EmbeddedImagesMaxSizeKB;
+            var formerSettings = new CombinatorSettings();
+            formerSettings.CombinationExcludeRegex = part.CombinationExcludeRegex;
+            formerSettings.CombineCDNResources = part.CombineCDNResources;
+            formerSettings.MinifyResources = part.MinifyResources;
+            formerSettings.MinificationExcludeRegex = part.MinificationExcludeRegex;
+            formerSettings.EmbedCssImages = part.EmbedCssImages;
+            formerSettings.EmbeddedImagesMaxSizeKB = part.EmbeddedImagesMaxSizeKB;
+            formerSettings.EmbedCssImagesStylesheetExcludeRegex = part.EmbedCssImagesStylesheetExcludeRegex;
 
             updater.TryUpdateModel(part, Prefix, null, null);
 
             // Not emptying the cache would cause inconsistencies
-            if (part.CombinationExcludeRegex != combinationExcludeRegexFormer
-                || part.CombineCDNResources != combineCDNResourcesFormer 
-                || part.MinifyResources != minifyResourcesFormer
-                || (part.MinifyResources && part.MinificationExcludeRegex != minificationExcludeRegexFormer)
-                || part.EmbedCssImages != embedCssImagesFormer
-                || (part.EmbedCssImages && part.EmbeddedImagesMaxSizeKB != EmbeddedImagesMaxSizeKBFormer))
+            if (part.CombinationExcludeRegex != formerSettings.CombinationExcludeRegex
+                || part.CombineCDNResources != formerSettings.CombineCDNResources
+                || part.MinifyResources != formerSettings.MinifyResources
+                || (part.MinifyResources && part.MinificationExcludeRegex != formerSettings.MinificationExcludeRegex)
+                || part.EmbedCssImages != formerSettings.EmbedCssImages
+                || (part.EmbedCssImages && part.EmbeddedImagesMaxSizeKB != formerSettings.EmbeddedImagesMaxSizeKB)
+                || (part.EmbedCssImages && part.EmbedCssImagesStylesheetExcludeRegex != formerSettings.EmbedCssImagesStylesheetExcludeRegex))
             {
                 _cacheFileService.Empty();
             }

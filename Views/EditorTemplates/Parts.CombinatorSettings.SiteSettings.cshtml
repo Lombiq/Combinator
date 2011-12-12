@@ -61,7 +61,7 @@
             </span>
             <span class="hint">
                 @T("If checked, images referenced in stylesheets (e.g. as background with an url()) that are smaller than the specified size will be embedded as data urls in the css.")<br>
-                @T("Note that Internet explorer fully supports data urls only since version 9. Prior to version 8 it doesn't support data urls at all and version 8 has a limitation of 32KB per url. Since data urls are ~1/3 bigger than the original images this feature is advised only if you have many small images and if none of your images is bigger than ~24KB if you want to support IE 8.")
+                @T("Note that Internet explorer fully supports data urls only since version 9. Prior to version 8 it doesn't support data urls at all and version 8 has a limitation of 32KB per url. Since data urls are ~1/3 bigger than the original images this feature is advised only if you have many small images and if none of your images is bigger than ~24KB if you want to support IE 8. Also keep in mind that the bigger the stylesheet, the longer the client has to wait before seeing styled content.")
             </span></li>
     </ol>
     <button type="button" id="button.EmptyCache" name="button.EmptyCache" value="EmptyCache"

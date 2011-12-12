@@ -22,8 +22,12 @@
         })(jQuery);
     </script>
 }
+<h1>
+    @T("Combinator Settings")
+</h1>
+<span class="hint">@T("There are currently {0} combined resource files cached.", Model.CacheFileCount)</span>
 <fieldset>
-    <legend>@T("Combinator Settings")</legend><span class="hint">@T("There are currently {0} combined resource files cached.", Model.CacheFileCount)</span>
+    <legend>@T("Combination Settings")</legend>
     <ol>
         <li>
             @Html.LabelFor(m => m.CombinationExcludeRegex, T("Exclude from combination"))
@@ -37,6 +41,11 @@
             @Html.ValidationMessageFor(m => m.CombineCDNResources)
             <span class="hint">@T("If checked, remote resources from CDNs will be also combined. Most of the time this defeats the purpose of CDNs but if the site fetches resources from many sources, for your targeted visitors it may be faster to serve them all combined from your site. Always measure the difference!")</span>
         </li>
+    </ol>
+</fieldset>
+<fieldset>
+    <legend>@T("Minification Settings")</legend>
+    <ol>
         <li>
             @Html.EditorFor(m => m.MinifyResources)
             <label for="@Html.FieldIdFor(m => m.MinifyResources)" class="forcheckbox">@T("Minify resources")</label>
@@ -48,6 +57,11 @@
             @Html.ValidationMessageFor(m => m.MinificationExcludeRegex)
             <span class="hint">@T("The same rules apply as with the combination exclusion regex. Note that the two filters are independent, thus if a resource is excluded from combination it will still be minified by default.")</span>
         </li>
+    </ol>
+</fieldset>
+<fieldset>
+    <legend>@T("Image Embedding Settings")</legend>
+    <ol>
         <li>
             <span class="checkbox-and-label">
                 @Html.EditorFor(m => m.EmbedCssImages)
@@ -64,6 +78,9 @@
                 @T("Note that Internet explorer fully supports data urls only since version 9. Prior to version 8 it doesn't support data urls at all and version 8 has a limitation of 32KB per url. Since data urls are ~1/3 bigger than the original images this feature is advised only if you have many small images and if none of your images is bigger than ~24KB if you want to support IE 8. Also keep in mind that the bigger the stylesheet, the longer the client has to wait before seeing styled content.")
             </span></li>
     </ol>
+</fieldset>
+<fieldset>
+    <legend>@T("Cache Control")</legend>
     <button type="button" id="button.EmptyCache" name="button.EmptyCache" value="EmptyCache"
         onclick="$.combinator.emptyCache(); return false;">@T("Empty cache")</button>
 </fieldset>

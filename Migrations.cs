@@ -31,6 +31,7 @@ namespace Piedone.Combinator.Migrations
                     .Column<bool>("MinifyResources")
                     .Column<string>("MinificationExcludeRegex")
                     .Column<bool>("EmbedCssImages")
+                    .Column<int>("EmbeddedImagesMaxSizeKB")
             );
 
 
@@ -72,6 +73,11 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
                 table => table
                     .AddColumn<bool>("EmbedCssImages")
+            );
+
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+                table => table
+                    .AddColumn<int>("EmbeddedImagesMaxSizeKB")
             );
 
             return 4;

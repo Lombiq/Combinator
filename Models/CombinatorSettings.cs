@@ -8,5 +8,6 @@ namespace Piedone.Combinator.Models
         public bool MinifyResources { get; set; }
         public string MinificationExcludeRegex { get; set; }
         public bool EmbedCssImages { get; set; }
+        public int EmbeddedImagesMaxSizeKB { get; set; }
     }
 }

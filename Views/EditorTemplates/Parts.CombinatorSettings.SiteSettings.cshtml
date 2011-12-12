@@ -49,11 +49,18 @@
             <span class="hint">@T("The same rules apply as with the combination exclusion regex. Note that the two filters are independent, thus if a resource is excluded from combination it will still be minified by default.")</span>
         </li>
         <li>
-            @Html.EditorFor(m => m.EmbedCssImages)
-            <label for="@Html.FieldIdFor(m => m.EmbedCssImages)" class="forcheckbox">@T("Embed images in stylesheets")</label>
-            @Html.ValidationMessageFor(m => m.EmbedCssImages)
+            <span class="checkbox-and-label">
+                @Html.EditorFor(m => m.EmbedCssImages)
+                <label for="@Html.FieldIdFor(m => m.EmbedCssImages)" class="forcheckbox">@T("Embed images in stylesheets")</label>
+                @Html.ValidationMessageFor(m => m.EmbedCssImages)
+            </span>
+            <span>
+                @Html.LabelFor(m => m.EmbeddedImagesMaxSizeKB, T("Maximal size of images to embed (in KBs)"))
+                @Html.TextBoxFor(m => m.EmbeddedImagesMaxSizeKB, new { @class = "text text-small" })
+                @Html.ValidationMessageFor(m => m.EmbeddedImagesMaxSizeKB)
+            </span>
             <span class="hint">
-                @T("If checked, images referenced in stylesheets (e.g. as background with an url()) will be embedded as data urls in the css.")<br>
+                @T("If checked, images referenced in stylesheets (e.g. as background with an url()) that are smaller than the specified size will be embedded as data urls in the css.")<br>
                 @T("Note that Internet explorer fully supports data urls only since version 9. Prior to version 8 it doesn't support data urls at all and version 8 has a limitation of 32KB per url. Since data urls are ~1/3 bigger than the original images this feature is advised only if you have many small images and if none of your images is bigger than ~24KB if you want to support IE 8.")
             </span></li>
     </ol>

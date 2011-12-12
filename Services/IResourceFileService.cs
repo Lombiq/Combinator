@@ -8,6 +8,6 @@ namespace Piedone.Combinator.Services
     {
         string GetLocalResourceContent(ISmartResource resource);
         string GetRemoteResourceContent(ISmartResource resource);
-        string GetImageBase64Data(Uri imageUrl);
+        string GetImageBase64Data(Uri imageUrl, int maxSizeKB);
     }
 }

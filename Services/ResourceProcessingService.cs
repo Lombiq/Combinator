@@ -49,7 +49,7 @@ namespace Piedone.Combinator.Services
 
                     if (settings.EmbedCssImages)
                     {
-                        EmbedImages(resource);
+                        EmbedImages(resource, settings.EmbeddedImagesMaxSizeKB);
                     }
                 }
 
@@ -61,7 +61,7 @@ namespace Piedone.Combinator.Services
             }
         }
 
-        private void EmbedImages(ISmartResource resource)
+        private void EmbedImages(ISmartResource resource, int maxSizeKB)
         {
             ProcessUrlSettings(resource,
                 (match) =>
@@ -72,13 +72,18 @@ namespace Piedone.Combinator.Services
                     // This is a dumb check but otherwise we'd have to inspect the file thoroughly
                     if (!String.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
                     {
-                       var dataUrl =
-                                "data:image/"
-                                    + Path.GetExtension(url).Replace(".", "")
-                                    + ";base64,"
-                                    + _resourceFileService.GetImageBase64Data(new Uri(url));
+                        var imageData = _resourceFileService.GetImageBase64Data(new Uri(url), maxSizeKB);
 
-                        return "url(\"" +  dataUrl + "\")";
+                        if (!String.IsNullOrEmpty(imageData))
+                        {
+                            var dataUrl =
+                            "data:image/"
+                                + Path.GetExtension(url).Replace(".", "")
+                                + ";base64,"
+                                + imageData;
+
+                            return "url(\"" + dataUrl + "\")"; 
+                        }
                     }
 
                     return match.Groups[0].Value;

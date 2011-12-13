@@ -82,7 +82,7 @@
             @Html.LabelFor(m => m.EmbedCssImagesStylesheetExcludeRegex, T("Exclude from embedding"))
             @Html.TextBoxFor(m => m.EmbedCssImagesStylesheetExcludeRegex, new { @class = "textMedium" })
             @Html.ValidationMessageFor(m => m.EmbedCssImagesStylesheetExcludeRegex)
-            <span class="hint">@T("You can specifiy which stylesheets to exclude. The same rules apply as with the combination exclusion regex. You can use this feature to exclude conditional stylesheets that are only for browsers prior to IE 8, so that for those clients the original images are presented.")</span>
+            <span class="hint">@T("You can specifiy which stylesheets to exclude from processing. The same rules apply as with the combination exclusion regex. You can use this feature to exclude conditional stylesheets that are only for browsers prior to IE 8, so that for those clients the original images are presented.")</span>
         </li>
     </ol>
 </fieldset>

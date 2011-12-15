@@ -112,7 +112,7 @@
     <Content Include="Views\EditorTemplates\Parts.CombinatorSettings.SiteSettings.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Placement.info" />
+    <Content Include="Placement.info" />
     <Content Include="Styles\Web.config" />
     <Content Include="Scripts\Web.config" />
   </ItemGroup>

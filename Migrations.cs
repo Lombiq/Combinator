@@ -32,12 +32,11 @@ namespace Piedone.Combinator.Migrations
                     .Column<string>("MinificationExcludeRegex")
                     .Column<bool>("EmbedCssImages")
                     .Column<int>("EmbeddedImagesMaxSizeKB")
-                    .Column<string>("EmbedCssImagesExcludeRegex")
                     .Column<string>("EmbedCssImagesStylesheetExcludeRegex")
             );
 
 
-            return 3;
+            return 4;
         }
 
         public int UpdateFrom1()

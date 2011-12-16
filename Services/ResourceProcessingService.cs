@@ -39,9 +39,12 @@ namespace Piedone.Combinator.Services
                     resource.Content = _resourceFileService.GetRemoteResourceContent(resource);
                 }
 
+                if (String.IsNullOrEmpty(resource.Content)) return;
+
                 if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(publicUrl, settings.MinificationExcludeRegex)))
                 {
                     MinifyResourceContent(resource);
+                    if (String.IsNullOrEmpty(resource.Content)) return;
                 }
 
                 // Better to do after minification, as then urls commented out are removed

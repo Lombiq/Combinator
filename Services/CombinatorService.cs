@@ -161,7 +161,7 @@ namespace Piedone.Combinator.Services
                     else
                     {
                         if (previousResource != null) saveCombination(previousResource);
-                        _resourceProcessingService.ProcessResource(resource, combinedContent, settings);
+                        resource.OverrideCombinedUrl(resource.PublicUrl);
                         saveCombination(resource);
                         smartResources[i] = null;
                     }

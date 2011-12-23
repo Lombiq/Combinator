@@ -190,7 +190,7 @@ namespace Piedone.Combinator.Models
 
         public string GetSerializedSettings()
         {
-            return _serializerWork.Value.Serialize(
+            return _serializerWork.Value.XmlSerialize(
                 new SerializableSettings()
                     {
                         UrlOverride = CombinedUrlIsOverridden ? new Uri(Resource.Url) : null,
@@ -206,7 +206,7 @@ namespace Piedone.Combinator.Models
 
             if (Settings == null) Settings = new RequireSettings();
 
-            var settings = _serializerWork.Value.Deserialize<SerializableSettings>(serialization);
+            var settings = _serializerWork.Value.XmlDeserialize<SerializableSettings>(serialization);
 
             if (settings.UrlOverride != null) OverrideCombinedUrl(settings.UrlOverride);
             Settings.Culture = settings.Culture;

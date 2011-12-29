@@ -12,6 +12,7 @@ using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
+using Piedone.HelpfulLibraries.DependencyInjection;
 
 namespace Piedone.Combinator.Services
 {
@@ -20,7 +21,7 @@ namespace Piedone.Combinator.Services
     {
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceProcessingService _resourceProcessingService;
-        private readonly IWorkContextAccessor _workContextAccessor;
+        private readonly IResolve<ISmartResource> _smartResourceResolve;
         private readonly ICacheManager _cacheManager;
 
         public ILogger Logger { get; set; }
@@ -29,11 +30,12 @@ namespace Piedone.Combinator.Services
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
             IWorkContextAccessor workContextAccessor,
+            IResolve<ISmartResource> smartResourceLazy,
             ICacheManager cacheManager)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
-            _workContextAccessor = workContextAccessor;
+            _smartResourceResolve = smartResourceLazy;
             _cacheManager = cacheManager;
 
             Logger = NullLogger.Instance;
@@ -118,7 +120,7 @@ namespace Piedone.Combinator.Services
             var smartResources = new List<ISmartResource>(resources.Count);
             foreach (var resource in resources)
             {
-                var smartResource = NewResource();
+                var smartResource = _smartResourceResolve.Value;
                 smartResource.Type = resourceType;
                 smartResource.FillRequiredContext(resource); // Copying the context so the original one won't be touched
                 smartResources.Add(smartResource);
@@ -179,13 +181,6 @@ namespace Piedone.Combinator.Services
         private IList<ResourceRequiredContext> ProcessCombinedResources(IList<ISmartResource> combinedResources)
         {
             return (from r in combinedResources select r.RequiredContext).ToList();
-        }
-
-        private ISmartResource NewResource()
-        {
-            // Work<ISmartResource>.Value would be better, but gives the same instance every time
-            // See issue: http://orchard.codeplex.com/workitem/18271
-            return _workContextAccessor.GetContext().Resolve<ISmartResource>();
         }
     }
 }

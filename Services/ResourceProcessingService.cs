@@ -12,16 +12,13 @@ namespace Piedone.Combinator.Services
     {
         private readonly IResourceFileService _resourceFileService;
         private readonly IMinificationService _minificationService;
-        private readonly IDetachedDelegateBuilder _taskFactory;
 
         public ResourceProcessingService(
             IResourceFileService resourceFileService,
-            IMinificationService minificationService,
-            IDetachedDelegateBuilder taskFactory)
+            IMinificationService minificationService)
         {
             _resourceFileService = resourceFileService;
             _minificationService = minificationService;
-            _taskFactory = taskFactory;
         }
 
         public void ProcessResource(ISmartResource resource, StringBuilder combinedContent, ICombinatorSettings settings)

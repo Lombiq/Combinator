@@ -9,5 +9,5 @@ Features:
     Piedone.Combinator:
 		Name: Combinator
         Description: Combines and minifies external stylesheets and javascript files
-		Category: Optimization
+		Category: Performance
 		Dependencies: Orchard.jQuery, Piedone.HelpfulLibraries.Serialization, Piedone.HelpfulLibraries.DependencyInjection

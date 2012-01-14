@@ -29,13 +29,12 @@ namespace Piedone.Combinator.Services
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
-            IWorkContextAccessor workContextAccessor,
-            IResolve<ISmartResource> smartResourceLazy,
+            IResolve<ISmartResource> smartResourceResolve,
             ICacheManager cacheManager)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
-            _smartResourceResolve = smartResourceLazy;
+            _smartResourceResolve = smartResourceResolve;
             _cacheManager = cacheManager;
 
             Logger = NullLogger.Instance;

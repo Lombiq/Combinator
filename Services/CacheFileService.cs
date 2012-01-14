@@ -99,6 +99,7 @@ namespace Piedone.Combinator.Services
                     var resource = _smartResourceResolve.Value;
                     resource.Type = file.Type;
                     resource.FillRequiredContext(_storageProvider.GetPublicUrl(MakePath(file)), file.Settings);
+                    resource.LastUpdatedUtc = file.LastUpdatedUtc ?? _clock.UtcNow;
                     resources.Add(resource);
                 }
 

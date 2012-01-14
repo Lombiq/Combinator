@@ -179,7 +179,20 @@ namespace Piedone.Combinator.Services
 
         private IList<ResourceRequiredContext> ProcessCombinedResources(IList<ISmartResource> combinedResources)
         {
-            return (from r in combinedResources select r.RequiredContext).ToList();
+            IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count);
+
+            foreach (var resource in combinedResources)
+            {
+                if (!resource.IsCDNResource)
+                {
+                    var uriBuilder = new UriBuilder(resource.PublicUrl);
+                    uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
+                    resource.RequiredContext.Resource.SetUrl(uriBuilder.ToString()); 
+                }
+                resources.Add(resource.RequiredContext);
+            }
+
+            return resources;
         }
     }
 }

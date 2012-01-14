@@ -106,6 +106,7 @@ namespace Piedone.Combinator.Models
 
         public bool CombinedUrlIsOverridden { get; private set; }
         public ResourceType Type { get; set; }
+        public DateTime LastUpdatedUtc { get; set; }
         public string Content { get; set; }
         #endregion
 

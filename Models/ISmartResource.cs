@@ -16,6 +16,7 @@ namespace Piedone.Combinator.Models
         bool IsConditional { get; }
         bool CombinedUrlIsOverridden { get; }
         ResourceType Type { get; set; }
+        DateTime LastUpdatedUtc { get; set; }
         string Content { get; set; }
         void OverrideCombinedUrl(Uri url);
         void FillRequiredContext(string url, string serializedSettings = "");

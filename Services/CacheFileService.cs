@@ -12,6 +12,7 @@ using Orchard.Services;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
+using Piedone.HelpfulLibraries.DependencyInjection;
 
 namespace Piedone.Combinator.Services
 {
@@ -21,7 +22,7 @@ namespace Piedone.Combinator.Services
         private readonly IStorageProvider _storageProvider;
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly IClock _clock;
-        private readonly IWorkContextAccessor _workContextAccessor;
+        private readonly IResolve<ISmartResource> _smartResourceResolve;
 
         #region In-memory caching fields
         private readonly ICacheManager _cacheManager;
@@ -40,14 +41,14 @@ namespace Piedone.Combinator.Services
             IStorageProvider storageProvider,
             IRepository<CombinedFileRecord> fileRepository,
             IClock clock,
-            IWorkContextAccessor workContextAccessor,
+            IResolve<ISmartResource> smartResourceResolve,
             ICacheManager cacheManager,
             ISignals signals)
         {
             _fileRepository = fileRepository;
             _storageProvider = storageProvider;
             _clock = clock;
-            _workContextAccessor = workContextAccessor;
+            _smartResourceResolve = smartResourceResolve;
 
             _cacheManager = cacheManager;
             _signals = signals;
@@ -95,7 +96,7 @@ namespace Piedone.Combinator.Services
 
                 foreach (var file in files)
                 {
-                    var resource = _workContextAccessor.GetContext().Resolve<ISmartResource>();
+                    var resource = _smartResourceResolve.Value;
                     resource.Type = file.Type;
                     resource.FillRequiredContext(_storageProvider.GetPublicUrl(MakePath(file)), file.Settings);
                     resources.Add(resource);

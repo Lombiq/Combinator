@@ -74,7 +74,7 @@ namespace Piedone.Combinator.Services
                     // This is a dumb check but otherwise we'd have to inspect the file thoroughly
                     if (!String.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
                     {
-                        var imageData = _resourceFileService.GetImageBase64Data(new Uri(url), maxSizeKB);
+                        var imageData = _resourceFileService.GetImageBase64Data(MakeInlineUri(resource, url), maxSizeKB);
 
                         if (!String.IsNullOrEmpty(imageData))
                         {
@@ -99,7 +99,14 @@ namespace Piedone.Combinator.Services
                 {
                     var url = match.Groups[1].ToString();
 
-                    return "url(\"" + new Uri(resource.PublicUrl, url) + "\")";
+                    var uri = MakeInlineUri(resource, url);
+
+                    // Remote paths are preserved as full urls, local paths become uniformed relative ones.
+                    string uriString = "";
+                    if (resource.IsCDNResource || resource.PublicUrl.Host != uri.Host) uriString = uri.ToString();
+                    else uriString = uri.PathAndQuery;
+
+                    return "url(\"" + uriString + "\")";
                 });
         }
 
@@ -114,6 +121,11 @@ namespace Piedone.Combinator.Services
                                     RegexOptions.IgnoreCase);
 
             resource.Content = content;
+        }
+
+        private static Uri MakeInlineUri(ISmartResource resource, string url)
+        {
+            return Uri.IsWellFormedUriString(url, UriKind.Absolute) ? new Uri(url) : new Uri(resource.PublicUrl, url);
         }
 
         private void MinifyResourceContent(ISmartResource resource)

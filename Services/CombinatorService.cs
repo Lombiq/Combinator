@@ -187,7 +187,7 @@ namespace Piedone.Combinator.Services
                 {
                     var uriBuilder = new UriBuilder(resource.PublicUrl);
                     uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
-                    resource.RequiredContext.Resource.SetUrl(uriBuilder.ToString()); 
+                    resource.RequiredContext.Resource.SetUrl(uriBuilder.Uri.PathAndQuery.ToString()); // Using relative urls
                 }
                 resources.Add(resource.RequiredContext);
             }

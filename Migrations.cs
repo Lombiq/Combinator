@@ -33,10 +33,11 @@ namespace Piedone.Combinator.Migrations
                     .Column<bool>("EmbedCssImages")
                     .Column<int>("EmbeddedImagesMaxSizeKB")
                     .Column<string>("EmbedCssImagesStylesheetExcludeRegex")
+                    .Column<string>("ResourceSetRegexes")
             );
 
 
-            return 4;
+            return 5;
         }
 
         public int UpdateFrom1()
@@ -87,6 +88,16 @@ namespace Piedone.Combinator.Migrations
             );
 
             return 4;
+        }
+
+        public int UpdateFrom4()
+        {
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+                table => table
+                    .AddColumn<string>("ResourceSetRegexes")
+            );
+
+            return 5;
         }
     }
 }

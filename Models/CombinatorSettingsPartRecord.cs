@@ -4,7 +4,7 @@ using Orchard.Environment.Extensions;
 namespace Piedone.Combinator.Models
 {
     [OrchardFeature("Piedone.Combinator")]
-    public class CombinatorSettingsPartRecord : ContentPartRecord, ICombinatorSettings
+    public class CombinatorSettingsPartRecord : ContentPartRecord
     {
         public virtual string CombinationExcludeRegex { get; set; }
         public virtual bool CombineCDNResources { get; set; }
@@ -13,6 +13,7 @@ namespace Piedone.Combinator.Models
         public virtual bool EmbedCssImages { get; set; }
         public virtual int EmbeddedImagesMaxSizeKB { get; set; }
         public virtual string EmbedCssImagesStylesheetExcludeRegex { get; set; }
+        public virtual string ResourceSetRegexes { get; set; }
 
         public CombinatorSettingsPartRecord()
         {
@@ -23,6 +24,7 @@ namespace Piedone.Combinator.Models
             EmbedCssImages = false;
             EmbeddedImagesMaxSizeKB = 15;
             EmbedCssImagesStylesheetExcludeRegex = "";
+            ResourceSetRegexes = "";
         }
     }
 }

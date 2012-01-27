@@ -1,14 +1,16 @@
-﻿
+﻿using System.Text.RegularExpressions;
+
 namespace Piedone.Combinator.Models
 {
     public interface ICombinatorSettings
     {
-        string CombinationExcludeRegex { get; }
+        Regex CombinationExcludeFilter { get; }
         bool CombineCDNResources { get; }
         bool MinifyResources { get; }
-        string MinificationExcludeRegex { get; }
+        Regex MinificationExcludeFilter { get; }
         bool EmbedCssImages { get; }
         int EmbeddedImagesMaxSizeKB { get; }
-        string EmbedCssImagesStylesheetExcludeRegex { get; }
+        Regex EmbedCssImagesStylesheetExcludeFilter { get; }
+        Regex[] ResourceSetFilters { get; }
     }
 }

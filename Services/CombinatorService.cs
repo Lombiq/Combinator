@@ -130,6 +130,9 @@ namespace Piedone.Combinator.Services
             Action<ISmartResource> saveCombination =
                 (combinedResource) =>
                 {
+                    // Don't save emtpy resources
+                    if (combinedContent.Length == 0 && !combinedResource.CombinedUrlIsOverridden) return;
+
                     combinedResource.Content = combinedContent.ToString();
                     combinedResource.Type = resourceType;
                     _cacheFileService.Save(hashCode, combinedResource);
@@ -138,23 +141,49 @@ namespace Piedone.Combinator.Services
                 };
 
 
+            Regex currentSetRegex = null;
+
             for (int i = 0; i < smartResources.Count; i++)
             {
                 var resource = smartResources[i];
                 var previousResource = (i != 0) ? smartResources[i - 1] : null;
-                var publicUrl = "";
+                var publicUrlString = "";
 
                 try
                 {
-                    publicUrl = resource.PublicUrl.ToString();
+                    publicUrlString = resource.PublicUrl.ToString();
 
-                    if ((String.IsNullOrEmpty(settings.CombinationExcludeRegex) || !Regex.IsMatch(publicUrl, settings.CombinationExcludeRegex)))
+                    if (settings.CombinationExcludeFilter == null || !settings.CombinationExcludeFilter.IsMatch(publicUrlString))
                     {
-                        // If this resource differs from the previous one in terms of settings or CDN, they can't be combined
-                        if (previousResource != null &&
-                            (!previousResource.SettingsEqual(resource) || (previousResource.IsCDNResource != resource.IsCDNResource && !settings.CombineCDNResources)))
+                        // If this resource differs from the previous one in terms of settings or CDN they can't be combined
+                        if (previousResource != null
+                            && (!previousResource.SettingsEqual(resource) || (previousResource.IsCDNResource != resource.IsCDNResource && !settings.CombineCDNResources)))
                         {
                             saveCombination(previousResource);
+                        }
+
+                        // If this resource is in a different set than the previous, they can't be combined
+                        if (currentSetRegex != null && !currentSetRegex.IsMatch(publicUrlString))
+                        {
+                            currentSetRegex = null;
+                            saveCombination(previousResource);
+                        }
+
+                        // Calculate if this resource is in a set
+                        if (currentSetRegex == null && settings.ResourceSetFilters != null && settings.ResourceSetFilters.Length > 0)
+                        {
+                            int r = 0;
+                            while (currentSetRegex == null && r < settings.ResourceSetFilters.Length)
+                            {
+                                if (settings.ResourceSetFilters[r].IsMatch(publicUrlString)) currentSetRegex = settings.ResourceSetFilters[r];
+                                r++;
+                            }
+
+                            // The previous resource is in a different set or in no set so it can't be combined with this resource
+                            if (currentSetRegex != null && previousResource != null)
+                            {
+                                saveCombination(previousResource);
+                            }
                         }
 
                         _resourceProcessingService.ProcessResource(resource, combinedContent, settings);
@@ -164,12 +193,12 @@ namespace Piedone.Combinator.Services
                         if (previousResource != null) saveCombination(previousResource);
                         resource.OverrideCombinedUrl(resource.PublicUrl);
                         saveCombination(resource);
-                        smartResources[i] = null;
+                        smartResources[i] = null; // So previous resource detection works correctly
                     }
                 }
                 catch (Exception ex)
                 {
-                    throw new ApplicationException("Processing of resource " + publicUrl + " failed", ex);
+                    throw new ApplicationException("Processing of resource " + publicUrlString + " failed", ex);
                 }
             }
 

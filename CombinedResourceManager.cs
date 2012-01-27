@@ -14,6 +14,8 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace Piedone.Combinator
 {
@@ -61,10 +63,32 @@ namespace Piedone.Combinator
             if (resources.Count == 0 || IsDisabled) return resources;
 
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
-            var settings = _siteService.GetSiteSettings().As<CombinatorSettingsPart>();
+            var settingsPart = _siteService.GetSiteSettings().As<CombinatorSettingsPart>();
 
             try
             {
+                var settings = new CombinatorSettings
+                {
+                    CombineCDNResources = settingsPart.CombineCDNResources,
+                    EmbedCssImages = settingsPart.EmbedCssImages,
+                    EmbeddedImagesMaxSizeKB = settingsPart.EmbeddedImagesMaxSizeKB,
+                    MinifyResources = settingsPart.MinifyResources
+                };
+
+                if (!String.IsNullOrEmpty(settingsPart.CombinationExcludeRegex)) settings.CombinationExcludeFilter = new Regex(settingsPart.CombinationExcludeRegex);
+                if (!String.IsNullOrEmpty(settingsPart.EmbedCssImagesStylesheetExcludeRegex)) settings.EmbedCssImagesStylesheetExcludeFilter = new Regex(settingsPart.EmbedCssImagesStylesheetExcludeRegex);
+                if (!String.IsNullOrEmpty(settingsPart.MinificationExcludeRegex)) settings.MinificationExcludeFilter = new Regex(settingsPart.MinificationExcludeRegex);
+
+                if (!String.IsNullOrEmpty(settingsPart.ResourceSetRegexes))
+                {
+                    var setRegexes = new List<Regex>();
+                    foreach (var regex in settingsPart.ResourceSetRegexes.Trim().Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (!String.IsNullOrEmpty(regex)) setRegexes.Add(new Regex(regex));
+                    }
+                    settings.ResourceSetFilters = setRegexes.ToArray(); 
+                }
+
                 if (resourceType == ResourceType.Style)
                 {
                     // Checking for overridden stylesheets

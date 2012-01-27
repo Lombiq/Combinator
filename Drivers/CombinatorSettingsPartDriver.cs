@@ -35,7 +35,7 @@ namespace Piedone.Combinator.Drivers
         // POST
         protected override DriverResult Editor(CombinatorSettingsPart part, IUpdateModel updater, dynamic shapeHelper)
         {
-            var formerSettings = new CombinatorSettings();
+            var formerSettings = new CombinatorSettingsPartRecord();
             formerSettings.CombinationExcludeRegex = part.CombinationExcludeRegex;
             formerSettings.CombineCDNResources = part.CombineCDNResources;
             formerSettings.MinifyResources = part.MinifyResources;
@@ -43,6 +43,7 @@ namespace Piedone.Combinator.Drivers
             formerSettings.EmbedCssImages = part.EmbedCssImages;
             formerSettings.EmbeddedImagesMaxSizeKB = part.EmbeddedImagesMaxSizeKB;
             formerSettings.EmbedCssImagesStylesheetExcludeRegex = part.EmbedCssImagesStylesheetExcludeRegex;
+            formerSettings.ResourceSetRegexes = part.ResourceSetRegexes;
 
             updater.TryUpdateModel(part, Prefix, null, null);
 
@@ -53,7 +54,8 @@ namespace Piedone.Combinator.Drivers
                 || (part.MinifyResources && part.MinificationExcludeRegex != formerSettings.MinificationExcludeRegex)
                 || part.EmbedCssImages != formerSettings.EmbedCssImages
                 || (part.EmbedCssImages && part.EmbeddedImagesMaxSizeKB != formerSettings.EmbeddedImagesMaxSizeKB)
-                || (part.EmbedCssImages && part.EmbedCssImagesStylesheetExcludeRegex != formerSettings.EmbedCssImagesStylesheetExcludeRegex))
+                || (part.EmbedCssImages && part.EmbedCssImagesStylesheetExcludeRegex != formerSettings.EmbedCssImagesStylesheetExcludeRegex)
+                || (part.ResourceSetRegexes != formerSettings.ResourceSetRegexes))
             {
                 _cacheFileService.Empty();
             }

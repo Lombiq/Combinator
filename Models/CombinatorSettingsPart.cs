@@ -5,7 +5,7 @@ using Orchard.Environment.Extensions;
 namespace Piedone.Combinator.Models
 {
     [OrchardFeature("Piedone.Combinator")]
-    public class CombinatorSettingsPart : ContentPart<CombinatorSettingsPartRecord>, ICombinatorSettings
+    public class CombinatorSettingsPart : ContentPart<CombinatorSettingsPartRecord>
     {
         public string CombinationExcludeRegex
         {
@@ -47,6 +47,12 @@ namespace Piedone.Combinator.Models
         {
             get { return Record.EmbedCssImagesStylesheetExcludeRegex; }
             set { Record.EmbedCssImagesStylesheetExcludeRegex = value; }
+        }
+
+        public string ResourceSetRegexes
+        {
+            get { return Record.ResourceSetRegexes; }
+            set { Record.ResourceSetRegexes = value; }
         }
 
         private readonly LazyField<int> _cacheFileCount = new LazyField<int>();

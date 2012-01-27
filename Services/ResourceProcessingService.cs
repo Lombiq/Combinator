@@ -38,7 +38,7 @@ namespace Piedone.Combinator.Services
 
                 if (String.IsNullOrEmpty(resource.Content)) return;
 
-                if (settings.MinifyResources && (String.IsNullOrEmpty(settings.MinificationExcludeRegex) || !Regex.IsMatch(publicUrl, settings.MinificationExcludeRegex)))
+                if (settings.MinifyResources && (settings.MinificationExcludeFilter == null || !settings.MinificationExcludeFilter.IsMatch(publicUrl)))
                 {
                     MinifyResourceContent(resource);
                     if (String.IsNullOrEmpty(resource.Content)) return;
@@ -49,7 +49,7 @@ namespace Piedone.Combinator.Services
                 {
                     AdjustRelativePaths(resource);
 
-                    if (settings.EmbedCssImages && (String.IsNullOrEmpty(settings.EmbedCssImagesStylesheetExcludeRegex) || !Regex.IsMatch(publicUrl, settings.EmbedCssImagesStylesheetExcludeRegex)))
+                    if (settings.EmbedCssImages && (settings.EmbedCssImagesStylesheetExcludeFilter == null || !settings.EmbedCssImagesStylesheetExcludeFilter.IsMatch(publicUrl)))
                     {
                         EmbedImages(resource, settings.EmbeddedImagesMaxSizeKB);
                     }

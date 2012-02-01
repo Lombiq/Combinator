@@ -2,12 +2,20 @@ using System;
 using Orchard.Data.Migration;
 using Orchard.Environment.Extensions;
 using Piedone.Combinator.Models;
+using Piedone.Combinator.Services;
 
 namespace Piedone.Combinator.Migrations
 {
     [OrchardFeature("Piedone.Combinator")]
     public class Migrations : DataMigrationImpl
     {
+        private readonly ICacheFileService _cacheFileService;
+
+        public Migrations(ICacheFileService cacheFileService)
+        {
+            _cacheFileService = cacheFileService;
+        }
+
         public int Create()
         {
             SchemaBuilder.CreateTable(typeof(CombinedFileRecord).Name, 
@@ -98,6 +106,11 @@ namespace Piedone.Combinator.Migrations
             );
 
             return 5;
+        }
+
+        public void Uninstall()
+        {
+            _cacheFileService.Empty();
         }
     }
 }

@@ -1,5 +1,4 @@
 syntax: glob
 bin/
 obj/
-CombinedCache/
 *.user

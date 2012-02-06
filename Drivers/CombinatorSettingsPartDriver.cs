@@ -3,6 +3,7 @@ using Orchard.ContentManagement.Drivers;
 using Orchard.Environment.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using System;
 
 namespace Piedone.Combinator.Drivers
 {
@@ -61,6 +62,32 @@ namespace Piedone.Combinator.Drivers
             }
 
             return Editor(part, shapeHelper);
+        }
+
+        protected override void Exporting(CombinatorSettingsPart part, Orchard.ContentManagement.Handlers.ExportContentContext context)
+        {
+            var element = context.Element(part.PartDefinition.Name);
+
+            element.SetAttributeValue("CombinationExcludeRegex", part.CombinationExcludeRegex);
+            element.SetAttributeValue("CombineCDNResources", part.CombineCDNResources);
+            element.SetAttributeValue("EmbedCssImages", part.EmbedCssImages);
+            element.SetAttributeValue("EmbedCssImagesStylesheetExcludeRegex", part.EmbedCssImagesStylesheetExcludeRegex);
+            element.SetAttributeValue("EmbeddedImagesMaxSizeKB", part.EmbeddedImagesMaxSizeKB);
+            element.SetAttributeValue("MinificationExcludeRegex", part.MinificationExcludeRegex);
+            element.SetAttributeValue("MinifyResources", part.MinifyResources);
+            element.SetAttributeValue("ResourceSetRegexes", part.ResourceSetRegexes);
+        }
+
+        protected override void Importing(CombinatorSettingsPart part, Orchard.ContentManagement.Handlers.ImportContentContext context)
+        {
+            part.CombinationExcludeRegex = context.Attribute(part.PartDefinition.Name, "CombinationExcludeRegex");
+            part.CombineCDNResources = bool.Parse(context.Attribute(part.PartDefinition.Name, "CombineCDNResources"));
+            part.EmbedCssImages = bool.Parse(context.Attribute(part.PartDefinition.Name, "EmbedCssImages"));
+            part.EmbedCssImagesStylesheetExcludeRegex = context.Attribute(part.PartDefinition.Name, "EmbedCssImagesStylesheetExcludeRegex");
+            part.EmbeddedImagesMaxSizeKB = int.Parse(context.Attribute(part.PartDefinition.Name, "EmbeddedImagesMaxSizeKB"));
+            part.MinificationExcludeRegex = context.Attribute(part.PartDefinition.Name, "MinificationExcludeRegex");
+            part.MinifyResources = bool.Parse(context.Attribute(part.PartDefinition.Name, "MinifyResources"));
+            part.ResourceSetRegexes = context.Attribute(part.PartDefinition.Name, "ResourceSetRegexes");
         }
     }
 }

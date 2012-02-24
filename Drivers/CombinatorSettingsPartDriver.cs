@@ -3,6 +3,7 @@ using Orchard.ContentManagement.Drivers;
 using Orchard.Environment.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using Orchard.ContentManagement.Handlers;
 
 namespace Piedone.Combinator.Drivers
 {
@@ -63,7 +64,7 @@ namespace Piedone.Combinator.Drivers
             return Editor(part, shapeHelper);
         }
 
-        protected override void Exporting(CombinatorSettingsPart part, Orchard.ContentManagement.Handlers.ExportContentContext context)
+        protected override void Exporting(CombinatorSettingsPart part, ExportContentContext context)
         {
             var element = context.Element(part.PartDefinition.Name);
 
@@ -77,7 +78,7 @@ namespace Piedone.Combinator.Drivers
             element.SetAttributeValue("ResourceSetRegexes", part.ResourceSetRegexes);
         }
 
-        protected override void Importing(CombinatorSettingsPart part, Orchard.ContentManagement.Handlers.ImportContentContext context)
+        protected override void Importing(CombinatorSettingsPart part, ImportContentContext context)
         {
             part.CombinationExcludeRegex = context.Attribute(part.PartDefinition.Name, "CombinationExcludeRegex");
             part.CombineCDNResources = bool.Parse(context.Attribute(part.PartDefinition.Name, "CombineCDNResources"));

@@ -3,7 +3,6 @@ using Orchard.ContentManagement.Drivers;
 using Orchard.Environment.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
-using System;
 
 namespace Piedone.Combinator.Drivers
 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Autofac.Features.Metadata;
 using Orchard;
 using Orchard.ContentManagement; // For generic ContentManager methods
@@ -14,8 +15,6 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
-using System.Text.RegularExpressions;
-using System.Linq;
 
 namespace Piedone.Combinator
 {

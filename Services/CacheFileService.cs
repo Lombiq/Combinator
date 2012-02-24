@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using Orchard;
 using Orchard.Caching;
 using Orchard.Data;
 using Orchard.Environment.Extensions;

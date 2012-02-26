@@ -98,6 +98,13 @@
     </ol>
 </fieldset>
 <fieldset>
+    <legend>@T("Usage on the admin site")</legend>
+    @Html.EditorFor(m => m.EnableForAdmin)
+    <label for="@Html.FieldIdFor(m => m.EnableForAdmin)" class="forcheckbox">@T("Enable for the admin site")</label>
+    @Html.ValidationMessageFor(m => m.EnableForAdmin)
+    <span class="hint">@T("Warning: WYSISWYG editors typically can't be combined, so exclude them from combination. The exclude filter \"tiny_mce|slugify\" is usually enough.")</span>
+</fieldset>
+<fieldset>
     <legend>@T("Cache Control")</legend>
     <button type="button" id="button.EmptyCache" name="button.EmptyCache" value="EmptyCache"
         onclick="$.combinator.emptyCache(); return false;">@T("Empty cache")</button>

@@ -33,8 +33,6 @@ namespace Piedone.Combinator
 
         public ILogger Logger { get; set; }
 
-        public bool IsDisabled { get; set; }
-
         public CombinedResourceManager(
             IEnumerable<Meta<IResourceManifestProvider>> resourceProviders,
             ISiteService siteService,
@@ -58,11 +56,12 @@ namespace Piedone.Combinator
         {
             // It's necessary to make a copy since making a change to the local variable also changes the private one.
             var resources = new List<ResourceRequiredContext>(base.BuildRequiredResources(stringResourceType));
+            var settingsPart = _siteService.GetSiteSettings().As<CombinatorSettingsPart>();
 
-            if (resources.Count == 0 || IsDisabled) return resources;
+            if (resources.Count == 0 
+                || Orchard.UI.Admin.AdminFilter.IsApplied(_workContextAccessor.GetContext().HttpContext.Request.RequestContext) && !settingsPart.EnableForAdmin) return resources;
 
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
-            var settingsPart = _siteService.GetSiteSettings().As<CombinatorSettingsPart>();
 
             try
             {

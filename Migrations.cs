@@ -42,10 +42,11 @@ namespace Piedone.Combinator.Migrations
                     .Column<int>("EmbeddedImagesMaxSizeKB")
                     .Column<string>("EmbedCssImagesStylesheetExcludeRegex")
                     .Column<string>("ResourceSetRegexes")
+                    .Column<bool>("EnableForAdmin")
             );
 
 
-            return 5;
+            return 6;
         }
 
         public int UpdateFrom1()
@@ -106,6 +107,16 @@ namespace Piedone.Combinator.Migrations
             );
 
             return 5;
+        }
+
+        public int UpdateFrom5()
+        {
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+                table => table
+                    .AddColumn<bool>("EnableForAdmin")
+            );
+
+            return 6;
         }
 
         public void Uninstall()

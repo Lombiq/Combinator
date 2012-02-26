@@ -14,6 +14,7 @@ namespace Piedone.Combinator.Models
         public virtual int EmbeddedImagesMaxSizeKB { get; set; }
         public virtual string EmbedCssImagesStylesheetExcludeRegex { get; set; }
         public virtual string ResourceSetRegexes { get; set; }
+        public virtual bool EnableForAdmin { get; set; }
 
         public CombinatorSettingsPartRecord()
         {
@@ -25,6 +26,7 @@ namespace Piedone.Combinator.Models
             EmbeddedImagesMaxSizeKB = 15;
             EmbedCssImagesStylesheetExcludeRegex = "";
             ResourceSetRegexes = "";
+            EnableForAdmin = false;
         }
     }
 }

@@ -55,6 +55,12 @@ namespace Piedone.Combinator.Models
             set { Record.ResourceSetRegexes = value; }
         }
 
+        public bool EnableForAdmin
+        {
+            get { return Record.EnableForAdmin; }
+            set { Record.EnableForAdmin = value; }
+        }
+
         private readonly LazyField<int> _cacheFileCount = new LazyField<int>();
         public LazyField<int> CacheFileCountField { get { return _cacheFileCount; } }
         public int CacheFileCount

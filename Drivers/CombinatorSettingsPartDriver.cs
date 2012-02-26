@@ -76,6 +76,7 @@ namespace Piedone.Combinator.Drivers
             element.SetAttributeValue("MinificationExcludeRegex", part.MinificationExcludeRegex);
             element.SetAttributeValue("MinifyResources", part.MinifyResources);
             element.SetAttributeValue("ResourceSetRegexes", part.ResourceSetRegexes);
+            element.SetAttributeValue("EnableForAdmin", part.EnableForAdmin);
         }
 
         protected override void Importing(CombinatorSettingsPart part, ImportContentContext context)
@@ -88,6 +89,7 @@ namespace Piedone.Combinator.Drivers
             part.MinificationExcludeRegex = context.Attribute(part.PartDefinition.Name, "MinificationExcludeRegex");
             part.MinifyResources = bool.Parse(context.Attribute(part.PartDefinition.Name, "MinifyResources"));
             part.ResourceSetRegexes = context.Attribute(part.PartDefinition.Name, "ResourceSetRegexes");
+            part.EnableForAdmin = bool.Parse(context.Attribute(part.PartDefinition.Name, "EnableForAdmin"));
         }
     }
 }

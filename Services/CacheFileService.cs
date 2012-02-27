@@ -75,12 +75,20 @@ namespace Piedone.Combinator.Services
 
             if (!String.IsNullOrEmpty(resource.Content))
             {
-                var path = MakePath(fileRecord);
-
-                using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                try
                 {
-                    var bytes = Encoding.UTF8.GetBytes(resource.Content);
-                    stream.Write(bytes, 0, bytes.Length);
+                    var path = MakePath(fileRecord);
+
+                    using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                    {
+                        var bytes = Encoding.UTF8.GetBytes(resource.Content);
+                        stream.Write(bytes, 0, bytes.Length);
+                    }
+                }
+                catch (Exception)
+                {
+                    // This could happen if we tried to overwrite the file because a simultaneous request saved it too. Currently there is
+                    // no existence check for IStorageProvider to prevent throwing an exception.
                 }
             }
 

@@ -88,8 +88,6 @@ namespace Piedone.Combinator.Services
                 _fileRepository.Create(fileRecord);
 
                 TriggerCacheChangedSignal(hashCode);
-
-                Thread.Sleep(5000); 
             }
         }
 

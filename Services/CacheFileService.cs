@@ -55,16 +55,23 @@ namespace Piedone.Combinator.Services
 
         public void Save(int hashCode, ISmartResource resource)
         {
-            var scliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
+            var sliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
+            var nextSlice = sliceCount + 1;
+
+            // So we don't overwrite
+            if (Exists(hashCode, nextSlice)) return;
 
             var fileRecord = new CombinedFileRecord()
             {
                 HashCode = hashCode,
-                Slice = ++scliceCount,
+                Slice = nextSlice,
                 Type = resource.Type,
                 LastUpdatedUtc = _clock.UtcNow,
                 Settings = resource.GetSerializedSettings()
             };
+
+            _fileRepository.Create(fileRecord);
+            _fileRepository.Flush();
 
             if (!String.IsNullOrEmpty(resource.Content))
             {
@@ -76,8 +83,6 @@ namespace Piedone.Combinator.Services
                     stream.Write(bytes, 0, bytes.Length);
                 }
             }
-            
-            _fileRepository.Create(fileRecord);
 
             TriggerCacheChangedSignal(hashCode);
         }
@@ -152,6 +157,11 @@ namespace Piedone.Combinator.Services
             }
 
             TriggerCacheChangedSignal();
+        }
+
+        private bool Exists(int hashCode, int slice)
+        {
+            return _fileRepository.Count(file => file.HashCode == hashCode && file.Slice == slice) == 1;
         }
 
         private List<CombinedFileRecord> GetRecords(int hashCode)

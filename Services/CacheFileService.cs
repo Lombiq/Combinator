@@ -22,6 +22,8 @@ namespace Piedone.Combinator.Services
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly IClock _clock;
         private readonly IResolve<ISmartResource> _smartResourceResolve;
+        
+        private static readonly object saveLocker = new object();
 
         #region In-memory caching fields
         private readonly ICacheManager _cacheManager;
@@ -55,31 +57,40 @@ namespace Piedone.Combinator.Services
 
         public void Save(int hashCode, ISmartResource resource)
         {
-            var scliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
-
-            var fileRecord = new CombinedFileRecord()
+            lock (saveLocker)
             {
-                HashCode = hashCode,
-                Slice = ++scliceCount,
-                Type = resource.Type,
-                LastUpdatedUtc = _clock.UtcNow,
-                Settings = resource.GetSerializedSettings()
-            };
+                var sliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
+                var nextSlice = sliceCount + 1;
 
-            if (!String.IsNullOrEmpty(resource.Content))
-            {
-                var path = MakePath(fileRecord);
+                // So we don't overwrite
+                if (Exists(hashCode, nextSlice)) return;
 
-                using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                var fileRecord = new CombinedFileRecord()
                 {
-                    var bytes = Encoding.UTF8.GetBytes(resource.Content);
-                    stream.Write(bytes, 0, bytes.Length);
-                }
-            }
-            
-            _fileRepository.Create(fileRecord);
+                    HashCode = hashCode,
+                    Slice = nextSlice,
+                    Type = resource.Type,
+                    LastUpdatedUtc = _clock.UtcNow,
+                    Settings = resource.GetSerializedSettings()
+                };
 
-            TriggerCacheChangedSignal(hashCode);
+                if (!String.IsNullOrEmpty(resource.Content))
+                {
+                    var path = MakePath(fileRecord);
+
+                    using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                    {
+                        var bytes = Encoding.UTF8.GetBytes(resource.Content);
+                        stream.Write(bytes, 0, bytes.Length);
+                    }
+                }
+
+                _fileRepository.Create(fileRecord);
+
+                TriggerCacheChangedSignal(hashCode);
+
+                Thread.Sleep(5000); 
+            }
         }
 
         public IList<ISmartResource> GetCombinedResources(int hashCode)
@@ -152,6 +163,11 @@ namespace Piedone.Combinator.Services
             }
 
             TriggerCacheChangedSignal();
+        }
+
+        private bool Exists(int hashCode, int slice)
+        {
+            return _fileRepository.Count(file => file.HashCode == hashCode && file.Slice == slice) == 1;
         }
 
         private List<CombinedFileRecord> GetRecords(int hashCode)

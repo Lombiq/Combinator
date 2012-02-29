@@ -12,6 +12,7 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.HelpfulLibraries.DependencyInjection;
+using Piedone.Combinator.EventHandlers;
 
 namespace Piedone.Combinator.Services
 {
@@ -22,6 +23,7 @@ namespace Piedone.Combinator.Services
         private readonly IResourceProcessingService _resourceProcessingService;
         private readonly IResolve<ISmartResource> _smartResourceResolve;
         private readonly ICacheManager _cacheManager;
+        private readonly ICombinatorEventMonitor _combinatorEventMonitor;
 
         public ILogger Logger { get; set; }
 
@@ -29,12 +31,14 @@ namespace Piedone.Combinator.Services
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
             IResolve<ISmartResource> smartResourceResolve,
-            ICacheManager cacheManager)
+            ICacheManager cacheManager,
+            ICombinatorEventMonitor combinatorEventMonitor)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
             _smartResourceResolve = smartResourceResolve;
             _cacheManager = cacheManager;
+            _combinatorEventMonitor = combinatorEventMonitor;
 
             Logger = NullLogger.Instance;
         }
@@ -52,7 +56,7 @@ namespace Piedone.Combinator.Services
                     Combine(resources, hashCode, ResourceType.Style, settings);
                 }
 
-                _cacheFileService.MonitorCacheChangedSignal(ctx, hashCode);
+                _combinatorEventMonitor.MonitorCacheEmptied(ctx);
 
                 return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode));
             });
@@ -83,7 +87,7 @@ namespace Piedone.Combinator.Services
                             Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
                         }
 
-                        _cacheFileService.MonitorCacheChangedSignal(ctx, locationHashCode);
+                        _combinatorEventMonitor.MonitorCacheEmptied(ctx);
 
                         var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode));
                         combinedResources.SetLocation(location);

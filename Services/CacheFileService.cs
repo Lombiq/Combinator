@@ -12,6 +12,7 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.HelpfulLibraries.DependencyInjection;
+using Piedone.Combinator.EventHandlers;
 
 namespace Piedone.Combinator.Services
 {
@@ -22,12 +23,12 @@ namespace Piedone.Combinator.Services
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly IClock _clock;
         private readonly IResolve<ISmartResource> _smartResourceResolve;
+        private readonly ICombinatorEventHandler _combinatorEventHandler;
 
         #region In-memory caching fields
         private readonly ICacheManager _cacheManager;
-        private readonly ISignals _signals;
+        private readonly ICombinatorEventMonitor _combinatorEventMonitor;
         private const string CachePrefix = "Piedone.Combinator.";
-        private const string CacheChangedSignal = "Associativy.Combinator.CacheChanged";
         #endregion
 
         #region Static file caching fields
@@ -41,16 +42,18 @@ namespace Piedone.Combinator.Services
             IRepository<CombinedFileRecord> fileRepository,
             IClock clock,
             IResolve<ISmartResource> smartResourceResolve,
+            ICombinatorEventHandler combinatorEventHandler,
             ICacheManager cacheManager,
-            ISignals signals)
+            ICombinatorEventMonitor combinatorEventMonitor)
         {
             _fileRepository = fileRepository;
             _storageProvider = storageProvider;
             _clock = clock;
             _smartResourceResolve = smartResourceResolve;
+            _combinatorEventHandler = combinatorEventHandler;
 
             _cacheManager = cacheManager;
-            _signals = signals;
+            _combinatorEventMonitor = combinatorEventMonitor;
         }
 
         public void Save(int hashCode, ISmartResource resource)
@@ -78,15 +81,13 @@ namespace Piedone.Combinator.Services
             }
             
             _fileRepository.Create(fileRecord);
-
-            TriggerCacheChangedSignal(hashCode);
         }
 
         public IList<ISmartResource> GetCombinedResources(int hashCode)
         {
             return _cacheManager.Get(MakeCacheKey("GetPublicUrls." + hashCode.ToString()), ctx =>
             {
-                MonitorCacheChangedSignal(ctx, hashCode);
+                _combinatorEventMonitor.MonitorCacheEmptied(ctx);
 
                 var files = GetRecords(hashCode);
                 var fileCount = files.Count;
@@ -110,7 +111,7 @@ namespace Piedone.Combinator.Services
         {
             return _cacheManager.Get(MakeCacheKey("Exists." + hashCode.ToString()), ctx =>
             {
-                MonitorCacheChangedSignal(ctx, hashCode);
+                _combinatorEventMonitor.MonitorCacheEmptied(ctx);
                 // Maybe also check if the file exists?
                 return _fileRepository.Count(file => file.HashCode == hashCode) != 0;
             });
@@ -121,12 +122,12 @@ namespace Piedone.Combinator.Services
             return _fileRepository.Table.Count();
         }
 
-        public void Delete(int hashCode)
-        {
-            DeleteFiles(GetRecords(hashCode));
+        //public void Delete(int hashCode)
+        //{
+        //    DeleteFiles(GetRecords(hashCode));
 
-            TriggerCacheChangedSignal(hashCode);
-        }
+        //    TriggerCacheChangedSignal(hashCode);
+        //}
 
         public void Empty()
         {
@@ -151,7 +152,7 @@ namespace Piedone.Combinator.Services
                 _storageProvider.DeleteFolder(_rootPath);
             }
 
-            TriggerCacheChangedSignal();
+            _combinatorEventHandler.CacheEmptied();
         }
 
         private List<CombinedFileRecord> GetRecords(int hashCode)
@@ -195,39 +196,9 @@ namespace Piedone.Combinator.Services
             return folderPath + file.GetFileName() + "." + extension;
         }
 
-        #region In-memory caching methods
-        public void MonitorCacheChangedSignal(AcquireContext<string> ctx, int hashCode)
-        {
-            ctx.Monitor(_signals.When(MakeCacheChangedSignal(hashCode)));
-            ctx.Monitor(_signals.When(CacheChangedSignal));
-        }
-
-        /// <summary>
-        /// Trigger for the whole cache
-        /// </summary>
-        private void TriggerCacheChangedSignal()
-        {
-            _signals.Trigger(CacheChangedSignal);
-        }
-
-        /// <summary>
-        /// Trigger for parts of the cache corresponding to set of resources
-        /// </summary>
-        /// <param name="hashCode">Hash of the resources set</param>
-        private void TriggerCacheChangedSignal(int hashCode)
-        {
-            _signals.Trigger(MakeCacheChangedSignal(hashCode));
-        }
-
         private static string MakeCacheKey(string name)
         {
             return CachePrefix + name;
         }
-
-        private static string MakeCacheChangedSignal(int hashCode)
-        {
-            return CacheChangedSignal + "." + hashCode.ToString();
-        }
-        #endregion
     }
 }

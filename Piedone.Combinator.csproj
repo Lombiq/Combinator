@@ -125,6 +125,10 @@
       <Project>{9916839C-39FC-4CEB-A5AF-89CA7E87119F}</Project>
       <Name>Orchard.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Orchard.TaskLease\Orchard.TaskLease.csproj">
+      <Project>{3F72A4E9-7B72-4260-B010-C16EC54F9BAF}</Project>
+      <Name>Orchard.TaskLease</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Piedone.HelpfulLibraries\Piedone.HelpfulLibraries.csproj">
       <Project>{EA61AD10-39D6-41A9-B12B-227F50C54158}</Project>
       <Name>Piedone.HelpfulLibraries</Name>

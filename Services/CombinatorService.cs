@@ -12,6 +12,9 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.HelpfulLibraries.DependencyInjection;
+using Orchard.TaskLease.Services;
+using Orchard.Services;
+using System.Threading;
 
 namespace Piedone.Combinator.Services
 {
@@ -22,6 +25,8 @@ namespace Piedone.Combinator.Services
         private readonly IResourceProcessingService _resourceProcessingService;
         private readonly IResolve<ISmartResource> _smartResourceResolve;
         private readonly ICacheManager _cacheManager;
+        private readonly ITaskLeaseService _taskLeaseService;
+        private readonly IClock _clock;
 
         public ILogger Logger { get; set; }
 
@@ -29,12 +34,16 @@ namespace Piedone.Combinator.Services
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
             IResolve<ISmartResource> smartResourceResolve,
-            ICacheManager cacheManager)
+            ICacheManager cacheManager,
+            ITaskLeaseService taskLeaseService,
+            IClock clock)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
             _smartResourceResolve = smartResourceResolve;
             _cacheManager = cacheManager;
+            _taskLeaseService = taskLeaseService;
+            _clock = clock;
 
             Logger = NullLogger.Instance;
         }
@@ -44,12 +53,21 @@ namespace Piedone.Combinator.Services
             ICombinatorSettings settings)
         {
             var hashCode = resources.GetResourceListHashCode();
+            var taskName = MakeTaskName(hashCode);
 
-            return _cacheManager.Get("Piedone.Combinator.CombinedResources." + hashCode.ToString(), ctx =>
+            return _cacheManager.Get(taskName, ctx =>
             {
                 if (!_cacheFileService.Exists(hashCode))
                 {
-                    Combine(resources, hashCode, ResourceType.Style, settings);
+                    if (!TryAcquireTask(taskName)) return resources;
+                    try
+                    {
+                        Combine(resources, hashCode, ResourceType.Style, settings);
+                    }
+                    finally
+                    {
+                        FreeTask(taskName);
+                    }
                 }
 
                 _cacheFileService.MonitorCacheChangedSignal(ctx, hashCode);
@@ -70,7 +88,8 @@ namespace Piedone.Combinator.Services
                 {
                     var locationHashCode = hashCode + (int)location;
 
-                    var combinedResourcesAtLocation = _cacheManager.Get("Piedone.Combinator.CombinedResources." + locationHashCode.ToString(), ctx =>
+                    var taskName = MakeTaskName(locationHashCode);
+                    var combinedResourcesAtLocation = _cacheManager.Get(taskName, ctx =>
                     {
                         if (!_cacheFileService.Exists(locationHashCode))
                         {
@@ -80,7 +99,15 @@ namespace Piedone.Combinator.Services
 
                             if (scripts.Count == 0) return new List<ResourceRequiredContext>();
 
-                            Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
+                            if (!TryAcquireTask(taskName)) return scripts;
+                            try
+                            {
+                                Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
+                            }
+                            finally
+                            {
+                                FreeTask(taskName);
+                            }
                         }
 
                         _cacheFileService.MonitorCacheChangedSignal(ctx, locationHashCode);
@@ -221,6 +248,30 @@ namespace Piedone.Combinator.Services
             }
 
             return resources;
+        }
+
+        private bool TryAcquireTask(string taskName)
+        {
+            // Trying to acquire task so no interference with other requests performing the same one happens
+            int waitSeconds = 1;
+            int maxRunSeconds = 4;
+            while (_taskLeaseService.Acquire(taskName, _clock.UtcNow.AddSeconds(maxRunSeconds)) == null && waitSeconds < maxRunSeconds)
+            {
+                Thread.Sleep(waitSeconds * 1000);
+                waitSeconds *= 2;
+            }
+
+            return waitSeconds != maxRunSeconds;
+        }
+
+        private void FreeTask(string taskName)
+        {
+            //_taskLeaseService.Update(taskName, "", _clock.UtcNow.Subtract(new TimeSpan(1, 0, 0)));
+        }
+
+        private static string MakeTaskName(int hashCode)
+        {
+            return "Piedone.Combinator.CombinedResources." + hashCode.ToString();
         }
     }
 }

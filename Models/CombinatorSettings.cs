@@ -1,7 +1,9 @@
 ﻿using System.Text.RegularExpressions;
+using Orchard.Environment.Extensions;
 
 namespace Piedone.Combinator.Models
 {
+    [OrchardFeature("Piedone.Combinator")]
     public class CombinatorSettings : ICombinatorSettings
     {
         public Regex CombinationExcludeFilter { get; set; }

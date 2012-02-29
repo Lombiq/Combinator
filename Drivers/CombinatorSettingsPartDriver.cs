@@ -4,6 +4,7 @@ using Orchard.Environment.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
 using Orchard.ContentManagement.Handlers;
+using Piedone.Combinator.EventHandlers;
 
 namespace Piedone.Combinator.Drivers
 {
@@ -11,15 +12,19 @@ namespace Piedone.Combinator.Drivers
     public class CombinatorSettingsPartDriver : ContentPartDriver<CombinatorSettingsPart>
     {
         private readonly ICacheFileService _cacheFileService;
+        private readonly ICombinatorEventHandler _combinatorEventHandler;
 
         protected override string Prefix
         {
             get { return "Combinator"; }
         }
 
-        public CombinatorSettingsPartDriver(ICacheFileService cacheFileService)
+        public CombinatorSettingsPartDriver(
+            ICacheFileService cacheFileService,
+            ICombinatorEventHandler combinatorEventHandler)
         {
             _cacheFileService = cacheFileService;
+            _combinatorEventHandler = combinatorEventHandler;
         }
 
         // GET
@@ -60,6 +65,8 @@ namespace Piedone.Combinator.Drivers
             {
                 _cacheFileService.Empty();
             }
+
+            _combinatorEventHandler.ConfigurationChanged();
 
             return Editor(part, shapeHelper);
         }

@@ -15,6 +15,8 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using Piedone.Combinator.EventHandlers;
+using Orchard.Caching;
 
 namespace Piedone.Combinator
 {
@@ -30,6 +32,8 @@ namespace Piedone.Combinator
         private readonly IShapeTableLocator _shapeTableLocator;
         private readonly IThemeManager _themeManager;
         private readonly IWorkContextAccessor _workContextAccessor;
+        private readonly ICacheManager _cacheManager;
+        private readonly ICombinatorEventMonitor _combinatorEventMonitor;
 
         public ILogger Logger { get; set; }
 
@@ -39,8 +43,9 @@ namespace Piedone.Combinator
             ICombinatorService combinatorService,
             IShapeTableLocator shapeTableLocator,
             IThemeManager themeManager,
-            IWorkContextAccessor workContextAccessor
-            )
+            IWorkContextAccessor workContextAccessor,
+            ICacheManager cacheManager,
+            ICombinatorEventMonitor combinatorEventMonitor)
             : base(resourceProviders)
         {
             _siteService = siteService;
@@ -48,6 +53,8 @@ namespace Piedone.Combinator
             _shapeTableLocator = shapeTableLocator;
             _themeManager = themeManager;
             _workContextAccessor = workContextAccessor;
+            _cacheManager = cacheManager;
+            _combinatorEventMonitor = combinatorEventMonitor;
 
             Logger = NullLogger.Instance;
         }
@@ -56,7 +63,13 @@ namespace Piedone.Combinator
         {
             // It's necessary to make a copy since making a change to the local variable also changes the private one.
             var resources = new List<ResourceRequiredContext>(base.BuildRequiredResources(stringResourceType));
-            var settingsPart = _siteService.GetSiteSettings().As<CombinatorSettingsPart>();
+
+            var settingsPart = _cacheManager.Get("Piedone.Combinator.CombinatorSettingsPart", ctx =>
+            {
+                _combinatorEventMonitor.MonitorConfigurationChanged(ctx);
+
+                return _siteService.GetSiteSettings().As<CombinatorSettingsPart>();
+            });
 
             if (resources.Count == 0 
                 || Orchard.UI.Admin.AdminFilter.IsApplied(_workContextAccessor.GetContext().HttpContext.Request.RequestContext) && !settingsPart.EnableForAdmin) return resources;

@@ -22,7 +22,7 @@ namespace Piedone.Combinator.Services
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceProcessingService _resourceProcessingService;
         private readonly IResolve<ISmartResource> _smartResourceResolve;
-        private readonly ICacheManager _cacheManager;
+        private readonly ILockingCacheManager _lockingCacheManager;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
         private readonly ILockFileManager _lockFileManager;
 
@@ -32,14 +32,14 @@ namespace Piedone.Combinator.Services
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
             IResolve<ISmartResource> smartResourceResolve,
-            ICacheManager cacheManager,
+            ILockingCacheManager lockingCacheManager,
             ICombinatorEventMonitor combinatorEventMonitor,
             ILockFileManager lockFileManager)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
             _smartResourceResolve = smartResourceResolve;
-            _cacheManager = cacheManager;
+            _lockingCacheManager = lockingCacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
             _lockFileManager = lockFileManager;
 
@@ -53,24 +53,17 @@ namespace Piedone.Combinator.Services
             var hashCode = resources.GetResourceListHashCode();
             var lockName = MakeLockName(hashCode);
 
-            return _cacheManager.Get(lockName, ctx =>
+            return _lockingCacheManager.Get(lockName, ctx =>
             {
                 if (!_cacheFileService.Exists(hashCode))
                 {
-                    using (var lockFile = _lockFileManager.TryAcquireLock(lockName))
-                    {
-                        if (lockFile != null && !_cacheFileService.Exists(hashCode))
-                        {
-                            Combine(resources, hashCode, ResourceType.Style, settings);
-                        }
-                        else return resources; // Lock couldn't be acquired in a sane time
-                    }
+                    Combine(resources, hashCode, ResourceType.Style, settings);
                 }
 
                 _combinatorEventMonitor.MonitorCacheEmptied(ctx);
 
                 return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode));
-            });
+            }, () => resources);
         }
 
         public IList<ResourceRequiredContext> CombineScripts(
@@ -80,30 +73,29 @@ namespace Piedone.Combinator.Services
             var hashCode = resources.GetResourceListHashCode();
             var combinedScripts = new List<ResourceRequiredContext>(2);
 
+            Func<ResourceLocation, List<ResourceRequiredContext>> filterScripts =
+                (location) =>
+                {
+                    return (from r in resources
+                            where r.Settings.Location == location
+                            select r).ToList();
+                };
+
             Action<ResourceLocation> combineScriptsAtLocation =
                 (location) =>
                 {
                     var locationHashCode = hashCode + (int)location;
                     var lockName = MakeLockName(locationHashCode);
 
-                    var combinedResourcesAtLocation = _cacheManager.Get(lockName, ctx =>
+                    var combinedResourcesAtLocation = _lockingCacheManager.Get(lockName, ctx =>
                     {
                         if (!_cacheFileService.Exists(locationHashCode))
                         {
-                            var scripts = (from r in resources
-                                           where r.Settings.Location == location
-                                           select r).ToList();
+                            var scripts = filterScripts(location);
 
                             if (scripts.Count == 0) return new List<ResourceRequiredContext>();
 
-                            using (var lockFile = _lockFileManager.TryAcquireLock(lockName))
-                            {
-                                if (lockFile != null && !_cacheFileService.Exists(locationHashCode))
-                                {
-                                    Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
-                                }
-                                else return resources; // Lock couldn't be acquired in a sane time
-                            }
+                            Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
                         }
 
                         _combinatorEventMonitor.MonitorCacheEmptied(ctx);
@@ -112,7 +104,7 @@ namespace Piedone.Combinator.Services
                         combinedResources.SetLocation(location);
 
                         return combinedResources;
-                    });
+                    }, () => filterScripts(location));
 
                     combinedScripts = combinedScripts.Union(combinedResourcesAtLocation).ToList();
                 };

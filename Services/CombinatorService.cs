@@ -7,12 +7,12 @@ using Orchard.Caching;
 using Orchard.Environment.Extensions;
 using Orchard.Logging;
 using Orchard.UI.Resources;
-// For generic ContentManager methods
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.HelpfulLibraries.DependencyInjection;
 using Piedone.Combinator.EventHandlers;
+using Piedone.HelpfulLibraries.Tasks;
 
 namespace Piedone.Combinator.Services
 {
@@ -24,6 +24,7 @@ namespace Piedone.Combinator.Services
         private readonly IResolve<ISmartResource> _smartResourceResolve;
         private readonly ICacheManager _cacheManager;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
+        private readonly ILockFileManager _lockFileManager;
 
         public ILogger Logger { get; set; }
 
@@ -32,13 +33,15 @@ namespace Piedone.Combinator.Services
             IResourceProcessingService resourceProcessingService,
             IResolve<ISmartResource> smartResourceResolve,
             ICacheManager cacheManager,
-            ICombinatorEventMonitor combinatorEventMonitor)
+            ICombinatorEventMonitor combinatorEventMonitor,
+            ILockFileManager lockFileManager)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
             _smartResourceResolve = smartResourceResolve;
             _cacheManager = cacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
+            _lockFileManager = lockFileManager;
 
             Logger = NullLogger.Instance;
         }
@@ -48,12 +51,20 @@ namespace Piedone.Combinator.Services
             ICombinatorSettings settings)
         {
             var hashCode = resources.GetResourceListHashCode();
+            var lockName = MakeLockName(hashCode);
 
-            return _cacheManager.Get("Piedone.Combinator.CombinedResources." + hashCode.ToString(), ctx =>
+            return _cacheManager.Get(lockName, ctx =>
             {
                 if (!_cacheFileService.Exists(hashCode))
                 {
-                    Combine(resources, hashCode, ResourceType.Style, settings);
+                    using (var lockFile = _lockFileManager.TryAcquireLock(lockName))
+                    {
+                        if (lockFile != null)
+                        {
+                            Combine(resources, hashCode, ResourceType.Style, settings);
+                        }
+                        else return resources; // Lock couldn't be acquired in a sane time
+                    }
                 }
 
                 _combinatorEventMonitor.MonitorCacheEmptied(ctx);
@@ -73,8 +84,9 @@ namespace Piedone.Combinator.Services
                 (location) =>
                 {
                     var locationHashCode = hashCode + (int)location;
+                    var lockName = MakeLockName(locationHashCode);
 
-                    var combinedResourcesAtLocation = _cacheManager.Get("Piedone.Combinator.CombinedResources." + locationHashCode.ToString(), ctx =>
+                    var combinedResourcesAtLocation = _cacheManager.Get(lockName, ctx =>
                     {
                         if (!_cacheFileService.Exists(locationHashCode))
                         {
@@ -84,7 +96,14 @@ namespace Piedone.Combinator.Services
 
                             if (scripts.Count == 0) return new List<ResourceRequiredContext>();
 
-                            Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
+                            using (var lockFile = _lockFileManager.TryAcquireLock(lockName))
+                            {
+                                if (lockFile != null)
+                                {
+                                    Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
+                                }
+                                else return resources; // Lock couldn't be acquired in a sane time
+                            }
                         }
 
                         _combinatorEventMonitor.MonitorCacheEmptied(ctx);
@@ -225,6 +244,11 @@ namespace Piedone.Combinator.Services
             }
 
             return resources;
+        }
+
+        private static string MakeLockName(int hashCode)
+        {
+            return "Piedone.Combinator.CombinedResources." + hashCode.ToString();
         }
     }
 }

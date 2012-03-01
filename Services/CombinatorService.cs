@@ -12,7 +12,7 @@ using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.HelpfulLibraries.DependencyInjection;
 using Piedone.Combinator.EventHandlers;
-using Piedone.HelpfulLibraries.Tasks;
+using Piedone.HelpfulLibraries.Caching;
 
 namespace Piedone.Combinator.Services
 {
@@ -59,7 +59,7 @@ namespace Piedone.Combinator.Services
                 {
                     using (var lockFile = _lockFileManager.TryAcquireLock(lockName))
                     {
-                        if (lockFile != null)
+                        if (lockFile != null && !_cacheFileService.Exists(hashCode))
                         {
                             Combine(resources, hashCode, ResourceType.Style, settings);
                         }
@@ -98,7 +98,7 @@ namespace Piedone.Combinator.Services
 
                             using (var lockFile = _lockFileManager.TryAcquireLock(lockName))
                             {
-                                if (lockFile != null)
+                                if (lockFile != null && !_cacheFileService.Exists(locationHashCode))
                                 {
                                     Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
                                 }

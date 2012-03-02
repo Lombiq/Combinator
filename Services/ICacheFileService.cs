@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Orchard;
-using Orchard.Caching;
 using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator.Services

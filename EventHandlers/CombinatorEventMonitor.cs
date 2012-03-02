@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using Orchard.Caching;
 using Orchard.Environment.Extensions;
-using Orchard.Caching;
-using System.Collections.Concurrent;
 
 namespace Piedone.Combinator.EventHandlers
 {

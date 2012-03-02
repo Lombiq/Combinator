@@ -1,10 +1,10 @@
 ﻿using Orchard.ContentManagement;
 using Orchard.ContentManagement.Drivers;
+using Orchard.ContentManagement.Handlers;
 using Orchard.Environment.Extensions;
+using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
-using Orchard.ContentManagement.Handlers;
-using Piedone.Combinator.EventHandlers;
 
 namespace Piedone.Combinator.Drivers
 {

@@ -8,11 +8,11 @@ using Orchard.Data;
 using Orchard.Environment.Extensions;
 using Orchard.FileSystems.Media;
 using Orchard.Services;
+using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.HelpfulLibraries.DependencyInjection;
-using Piedone.Combinator.EventHandlers;
 
 namespace Piedone.Combinator.Services
 {

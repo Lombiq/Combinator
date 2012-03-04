@@ -12,6 +12,8 @@ using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.HelpfulLibraries.DependencyInjection;
 using Piedone.HelpfulLibraries.Tasks;
+using Orchard.Localization;
+using Orchard;
 
 namespace Piedone.Combinator.Services
 {
@@ -26,6 +28,7 @@ namespace Piedone.Combinator.Services
         private readonly ILockFileManager _lockFileManager;
 
         public ILogger Logger { get; set; }
+        public Localizer T { get; set; }
 
         public CombinatorService(
             ICacheFileService cacheFileService,
@@ -43,6 +46,7 @@ namespace Piedone.Combinator.Services
             _lockFileManager = lockFileManager;
 
             Logger = NullLogger.Instance;
+            T = NullLocalizer.Instance;
         }
 
         public IList<ResourceRequiredContext> CombineStylesheets(
@@ -211,7 +215,7 @@ namespace Piedone.Combinator.Services
                 }
                 catch (Exception ex)
                 {
-                    throw new ApplicationException("Processing of resource " + publicUrlString + " failed", ex);
+                    throw new OrchardException(T("Processing of resource {0} failed.", publicUrlString), ex);
                 }
             }
 

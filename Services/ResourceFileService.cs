@@ -4,6 +4,8 @@ using System.Net;
 using System.Text;
 using Orchard.FileSystems.VirtualPath;
 using Piedone.Combinator.Models;
+using Orchard.Localization;
+using Orchard;
 
 namespace Piedone.Combinator.Services
 {
@@ -11,10 +13,14 @@ namespace Piedone.Combinator.Services
     {
         private readonly IVirtualPathProvider _virtualPathProvider;
 
+        public Localizer T { get; set; }
+        
         public ResourceFileService(
             IVirtualPathProvider virtualPathProvider)
         {
             _virtualPathProvider = virtualPathProvider;
+
+            T = NullLocalizer.Instance;
         }
 
 
@@ -23,7 +29,7 @@ namespace Piedone.Combinator.Services
             var relativeVirtualPath = resource.RelativeVirtualPath;
 
             // Maybe TryFileExists would be better?
-            if (!_virtualPathProvider.FileExists(relativeVirtualPath)) throw new ApplicationException("Local resource file not found under " + relativeVirtualPath);
+            if (!_virtualPathProvider.FileExists(relativeVirtualPath)) throw new OrchardException(T("Local resource file not found under {0}", relativeVirtualPath));
 
             string content;
             using (var stream = _virtualPathProvider.OpenFile(relativeVirtualPath))

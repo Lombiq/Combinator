@@ -147,6 +147,7 @@ namespace Piedone.Combinator.Services
             Action<ISmartResource> saveCombination =
                 (combinedResource) =>
                 {
+                    if (combinedResource == null) return;
                     // Don't save emtpy resources
                     if (combinedContent.Length == 0 && !combinedResource.CombinedUrlIsOverridden) return;
 

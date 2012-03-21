@@ -85,7 +85,7 @@ namespace Piedone.Combinator.Services
 
         public IList<ISmartResource> GetCombinedResources(int hashCode)
         {
-            return _cacheManager.Get(MakeCacheKey("GetPublicUrls." + hashCode.ToString()), ctx =>
+            return _cacheManager.Get(MakeCacheKey("GetCombinedResources." + hashCode.ToString()), ctx =>
             {
                 _combinatorEventMonitor.MonitorCacheEmptied(ctx);
 
@@ -97,8 +97,11 @@ namespace Piedone.Combinator.Services
                 foreach (var file in files)
                 {
                     var resource = _smartResourceResolve.Value;
-                    resource.Type = file.Type;
-                    resource.FillRequiredContext(_storageProvider.GetPublicUrl(MakePath(file)), file.Settings);
+                    resource.FillRequiredContext(
+                        "CombinedResource" + file.Id.ToString(),
+                        file.Type,
+                        _storageProvider.GetPublicUrl(MakePath(file)),
+                        file.Settings);
                     resource.LastUpdatedUtc = file.LastUpdatedUtc ?? _clock.UtcNow;
                     resources.Add(resource);
                 }

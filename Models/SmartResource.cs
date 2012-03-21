@@ -126,30 +126,26 @@ namespace Piedone.Combinator.Models
             CombinedUrlIsOverridden = true;
         }
 
-        public void FillRequiredContext(string url, string serializedSettings = "")
+        public void FillRequiredContext(string name, ResourceType resourceType, string url, string serializedSettings = "")
         {
+            Type = resourceType;
             var stringResourceType = ResourceTypeHelper.EnumToStringType(Type);
 
-            var resourceManifest = new ResourceManifest();
-            resourceManifest.DefineResource(stringResourceType, url); // SetUrl() doesn't work here for some reason
-
             RequiredContext = new ResourceRequiredContext();
-            Resource = new ResourceDefinition(resourceManifest, stringResourceType, url);
+            var resourceManifest = new ResourceManifest();
+            Resource = resourceManifest.DefineResource(stringResourceType, name);
             Resource.SetUrl(url);
             Settings = new RequireSettings();
 
             if (!String.IsNullOrEmpty(serializedSettings)) FillSettingsFromSerialization(serializedSettings);
         }
 
-        public void FillRequiredContext(string name, string url, string serializedSettings = "")
-        {
-            FillRequiredContext(name, serializedSettings);
-            Resource.SetUrl(url);
-        }
-
         public void FillRequiredContext(ResourceRequiredContext requiredContext)
         {
-            FillRequiredContext(requiredContext.Resource.GetFullPath());
+            FillRequiredContext(
+                requiredContext.Resource.Name, 
+                ResourceTypeHelper.StringTypeToEnum(requiredContext.Resource.Type), 
+                requiredContext.Resource.GetFullPath());
 
             var settings = requiredContext.Settings;
             Settings.Culture = settings.Culture;

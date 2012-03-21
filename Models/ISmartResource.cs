@@ -19,11 +19,18 @@ namespace Piedone.Combinator.Models
         DateTime LastUpdatedUtc { get; set; }
         string Content { get; set; }
         void OverrideCombinedUrl(Uri url);
-        void FillRequiredContext(string url, string serializedSettings = "");
-        void FillRequiredContext(string name, string url, string serializedSettings = "");
+        void FillRequiredContext(string name, ResourceType resourceType, string url, string serializedSettings = "");
         void FillRequiredContext(ResourceRequiredContext requiredContext);
         bool SettingsEqual(ISmartResource other);
         string GetSerializedSettings();
         void FillSettingsFromSerialization(string settings);
+    }
+
+    public static class SmartResourceExtensions
+    {
+        public static void FillRequiredContext(this ISmartResource resource, string url, ResourceType resourceType, string serializedSettings = "")
+        {
+            resource.FillRequiredContext(url, resourceType, url, serializedSettings);
+        }
     }
 }

@@ -137,7 +137,6 @@ namespace Piedone.Combinator.Services
             foreach (var resource in resources)
             {
                 var smartResource = _smartResourceResolve.Value;
-                smartResource.Type = resourceType;
                 smartResource.FillRequiredContext(resource); // Copying the context so the original one won't be touched
                 smartResources.Add(smartResource);
             }

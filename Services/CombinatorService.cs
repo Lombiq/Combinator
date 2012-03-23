@@ -223,7 +223,7 @@ namespace Piedone.Combinator.Services
             saveCombination(smartResources[smartResources.Count - 1]);
         }
 
-        private IList<ResourceRequiredContext> ProcessCombinedResources(IList<ISmartResource> combinedResources)
+        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<ISmartResource> combinedResources)
         {
             IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count);
 

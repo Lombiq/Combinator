@@ -79,7 +79,7 @@ namespace Piedone.Combinator.Services
                     stream.Write(bytes, 0, bytes.Length);
                 }
             }
-            
+
             _fileRepository.Create(fileRecord);
         }
 
@@ -137,22 +137,35 @@ namespace Piedone.Combinator.Services
             var files = _fileRepository.Table.ToList();
             DeleteFiles(files);
 
-            if (files.Count() != 0)
+            // These will throw an exception if a folder doesn't exist. Since currently there is no method
+            // in IStorageProvider to check the existence of a file/folder (see: http://orchard.codeplex.com/discussions/275146)
+            // this is the only way to deal with it.
+            // We don't check if there were any files in a DB here, we try to delete even if there weren't. This adds robustness: with emptying the cache
+            // everything can be reset, even if the user or a deploy process manipulated the DB or the file system.
+            try
             {
-                try
-                {
-                    // These will throw an exception if a folder doesn't exist. Since currently there is no method
-                    // in IStorageProvider to check the existence of a file/folder (see: http://orchard.codeplex.com/discussions/275146)
-                    // this is the only way to deal with it.
-                    _storageProvider.DeleteFolder(_scriptsPath);
-                    Thread.Sleep(300); // This is to ensure we don't get an "access denied" when deleting the root folder
-                    _storageProvider.DeleteFolder(_stylesPath);
-                    Thread.Sleep(300);
-                }
-                catch (Exception)
-                {
-                }
+                _storageProvider.DeleteFolder(_scriptsPath);
+                Thread.Sleep(300); // This is to ensure we don't get an "access denied" when deleting the root folder
+            }
+            catch (Exception)
+            {
+            }
+
+            try
+            {
+                _storageProvider.DeleteFolder(_stylesPath);
+                Thread.Sleep(300);
+            }
+            catch (Exception)
+            {
+            }
+
+            try
+            {
                 _storageProvider.DeleteFolder(_rootPath);
+            }
+            catch (Exception)
+            {
             }
 
             _combinatorEventHandler.CacheEmptied();

@@ -182,7 +182,7 @@ namespace Piedone.Combinator.Services
             {
                 _fileRepository.Delete(file);
                 // Try-catch for the case that someone deleted the file.
-                // Currently there is no way to check the existance of a file.
+                // Currently there is no way to check the existence of a file.
                 try
                 {
                     _storageProvider.DeleteFile(MakePath(file));

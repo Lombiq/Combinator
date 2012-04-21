@@ -18,7 +18,7 @@ namespace Piedone.Combinator.Migrations
 
         public int Create()
         {
-            SchemaBuilder.CreateTable(typeof(CombinedFileRecord).Name, 
+            SchemaBuilder.CreateTable(typeof(CombinedFileRecord).Name,
                 table => table
                     .Column<int>("Id", column => column.PrimaryKey().Identity())
                     .Column<int>("HashCode", column => column.NotNull())
@@ -31,32 +31,32 @@ namespace Piedone.Combinator.Migrations
                     .CreateIndex("File", new string[] { "HashCode" })
             );
 
-            SchemaBuilder.CreateTable(typeof(CombinatorSettingsPartRecord).Name, 
+            SchemaBuilder.CreateTable(typeof(CombinatorSettingsPartRecord).Name,
                 table => table
                     .ContentPartRecord()
-                    .Column<string>("CombinationExcludeRegex")
+                    .Column<string>("CombinationExcludeRegex", column => column.Unlimited())
                     .Column<bool>("CombineCDNResources")
                     .Column<bool>("MinifyResources")
-                    .Column<string>("MinificationExcludeRegex")
+                    .Column<string>("MinificationExcludeRegex", column => column.Unlimited())
                     .Column<bool>("EmbedCssImages")
                     .Column<int>("EmbeddedImagesMaxSizeKB")
-                    .Column<string>("EmbedCssImagesStylesheetExcludeRegex")
-                    .Column<string>("ResourceSetRegexes")
+                    .Column<string>("EmbedCssImagesStylesheetExcludeRegex", column => column.Unlimited())
+                    .Column<string>("ResourceSetRegexes", column => column.Unlimited())
                     .Column<bool>("EnableForAdmin")
             );
 
 
-            return 6;
+            return 7;
         }
 
         public int UpdateFrom1()
         {
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name, 
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
                 table => table
                     .AddColumn<bool>("MinifyResources")
             );
 
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name, 
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
                 table => table
                     .AddColumn<string>("MinificationExcludeRegex")
             );
@@ -117,6 +117,22 @@ namespace Piedone.Combinator.Migrations
             );
 
             return 6;
+        }
+
+        public int UpdateFrom6()
+        {
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+                table =>
+                {
+                    table.AlterColumn("CombinationExcludeRegex", column => column.Unlimited());
+                    table.AlterColumn("MinificationExcludeRegex", column => column.Unlimited());
+                    table.AlterColumn("EmbedCssImagesStylesheetExcludeRegex", column => column.Unlimited());
+                    table.AlterColumn("ResourceSetRegexes", column => column.Unlimited());
+                }
+            );
+
+
+            return 7;
         }
 
         public void Uninstall()

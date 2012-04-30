@@ -26,7 +26,7 @@ namespace Piedone.Combinator.Migrations
                     .Column<string>("Type")
                     .Column<DateTime>("LastUpdatedUtc")
                     .Column<string>("Settings", column => column.Unlimited())
-            ).AlterTable("CombinedFileRecord",
+            ).AlterTable(typeof(CombinedFileRecord).Name,
                 table => table
                     .CreateIndex("File", new string[] { "HashCode" })
             );

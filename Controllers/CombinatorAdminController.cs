@@ -7,8 +7,7 @@ using Piedone.Combinator.Services;
 
 namespace Piedone.Combinator.Controllers
 {
-    [OrchardFeature("Piedone.Combinator")]
-    [Admin]
+    [Admin, OrchardFeature("Piedone.Combinator")]
     public class CombinatorAdminController : Controller
     {
         private readonly IOrchardServices _orchardServices;

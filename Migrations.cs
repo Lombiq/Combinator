@@ -52,14 +52,13 @@ namespace Piedone.Combinator.Migrations
         public int UpdateFrom1()
         {
             SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
-                table => table
-                    .AddColumn<bool>("MinifyResources")
+                table =>
+                {
+                    table.AddColumn<bool>("MinifyResources");
+                    table.AddColumn<string>("MinificationExcludeRegex");
+                }
             );
 
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
-                table => table
-                    .AddColumn<string>("MinificationExcludeRegex")
-            );
 
             return 2;
         }
@@ -82,19 +81,14 @@ namespace Piedone.Combinator.Migrations
         public int UpdateFrom3()
         {
             SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
-                table => table
-                    .AddColumn<bool>("EmbedCssImages")
+                table =>
+                {
+                    table.AddColumn<bool>("EmbedCssImages");
+                    table.AddColumn<int>("EmbeddedImagesMaxSizeKB");
+                    table.AddColumn<string>("EmbedCssImagesStylesheetExcludeRegex");
+                }
             );
 
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
-                table => table
-                    .AddColumn<int>("EmbeddedImagesMaxSizeKB")
-            );
-
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
-                table => table
-                    .AddColumn<string>("EmbedCssImagesStylesheetExcludeRegex")
-            );
 
             return 4;
         }

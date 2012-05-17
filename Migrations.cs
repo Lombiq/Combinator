@@ -3,6 +3,7 @@ using Orchard.Data.Migration;
 using Orchard.Environment.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using System.Data;
 
 namespace Piedone.Combinator.Migrations
 {
@@ -118,10 +119,10 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
                 table =>
                 {
-                    table.AlterColumn("CombinationExcludeRegex", column => column.Unlimited());
-                    table.AlterColumn("MinificationExcludeRegex", column => column.Unlimited());
-                    table.AlterColumn("EmbedCssImagesStylesheetExcludeRegex", column => column.Unlimited());
-                    table.AlterColumn("ResourceSetRegexes", column => column.Unlimited());
+                    table.AlterColumn("CombinationExcludeRegex", column => column.WithType(DbType.String).Unlimited());
+                    table.AlterColumn("MinificationExcludeRegex", column => column.WithType(DbType.String).Unlimited());
+                    table.AlterColumn("EmbedCssImagesStylesheetExcludeRegex", column => column.WithType(DbType.String).Unlimited());
+                    table.AlterColumn("ResourceSetRegexes", column => column.WithType(DbType.String).Unlimited());
                 }
             );
 

@@ -207,6 +207,7 @@ namespace Piedone.Combinator.Services
                     }
                     else
                     {
+                        // This is a fully excluded resource
                         if (previousResource != null) saveCombination(previousResource);
                         resource.OverrideCombinedUrl(resource.PublicUrl);
                         saveCombination(resource);

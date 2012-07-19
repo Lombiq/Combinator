@@ -43,7 +43,7 @@ namespace Piedone.Combinator.Drivers
         {
             var formerSettings = new CombinatorSettingsPartRecord();
             formerSettings.CombinationExcludeRegex = part.CombinationExcludeRegex;
-            formerSettings.CombineCDNResources = part.CombineCDNResources;
+            formerSettings.CombineCdnResources = part.CombineCDNResources;
             formerSettings.MinifyResources = part.MinifyResources;
             formerSettings.MinificationExcludeRegex = part.MinificationExcludeRegex;
             formerSettings.EmbedCssImages = part.EmbedCssImages;
@@ -55,7 +55,7 @@ namespace Piedone.Combinator.Drivers
 
             // Not emptying the cache would cause inconsistencies
             if (part.CombinationExcludeRegex != formerSettings.CombinationExcludeRegex
-                || part.CombineCDNResources != formerSettings.CombineCDNResources
+                || part.CombineCDNResources != formerSettings.CombineCdnResources
                 || part.MinifyResources != formerSettings.MinifyResources
                 || (part.MinifyResources && part.MinificationExcludeRegex != formerSettings.MinificationExcludeRegex)
                 || part.EmbedCssImages != formerSettings.EmbedCssImages

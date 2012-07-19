@@ -8,13 +8,12 @@ using Orchard.Logging;
 using Orchard.UI.Resources;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
-using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
-using Piedone.HelpfulLibraries.DependencyInjection;
 using Piedone.HelpfulLibraries.Tasks;
 using Orchard.Localization;
 using Orchard;
 using Orchard.Exceptions;
+using Orchard.Mvc;
 
 namespace Piedone.Combinator.Services
 {
@@ -23,10 +22,10 @@ namespace Piedone.Combinator.Services
     {
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceProcessingService _resourceProcessingService;
-        private readonly IResolve<ISmartResource> _smartResourceResolve;
         private readonly ILockingCacheManager _lockingCacheManager;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
         private readonly ILockFileManager _lockFileManager;
+        private readonly ICombinatorResourceManager _combinatorResourceManager;
 
         public ILogger Logger { get; set; }
         public Localizer T { get; set; }
@@ -34,17 +33,17 @@ namespace Piedone.Combinator.Services
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
-            IResolve<ISmartResource> smartResourceResolve,
             ILockingCacheManager lockingCacheManager,
             ICombinatorEventMonitor combinatorEventMonitor,
-            ILockFileManager lockFileManager)
+            ILockFileManager lockFileManager,
+            ICombinatorResourceManager combinatorResourceManager)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
-            _smartResourceResolve = smartResourceResolve;
             _lockingCacheManager = lockingCacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
             _lockFileManager = lockFileManager;
+            _combinatorResourceManager = combinatorResourceManager;
 
             Logger = NullLogger.Instance;
             T = NullLocalizer.Instance;
@@ -134,25 +133,42 @@ namespace Piedone.Combinator.Services
         {
             if (resources.Count == 0) return;
 
-            var smartResources = new List<ISmartResource>(resources.Count);
+            var combinatorResources = new List<CombinatorResource>(resources.Count);
             foreach (var resource in resources)
             {
-                var smartResource = _smartResourceResolve.Value;
-                smartResource.FillRequiredContext(resource); // Copying the context so the original one won't be touched
-                smartResources.Add(smartResource);
+                var combinatorResource = _combinatorResourceManager.ResourceFactory(resourceType);
+                
+                // Copying the context so the original one won't be touched
+                combinatorResource.FillRequiredContext(
+                    resource.Resource.Name,
+                    resource.Resource.GetFullPath(),
+                    resource.Settings.Culture,
+                    resource.Settings.Condition,
+                    resource.Settings.Attributes);
+
+                //var requiredContext = new ResourceRequiredContext();
+                //var resourceManifest = new ResourceManifest();
+                //requiredContext.Resource = resourceManifest.DefineResource(ResourceTypeHelper.EnumToStringType(resourceType), resource.Resource.Name);
+                //requiredContext.Resource.SetUrl(resource.Resource.GetFullPath());
+                //requiredContext.Settings = new RequireSettings();
+                //requiredContext.Settings.Culture = resource.Settings.Culture;
+                //requiredContext.Settings.Condition = resource.Settings.Condition;
+                //requiredContext.Settings.Attributes = new Dictionary<string, string>(resource.Settings.Attributes);
+                //combinatorResource.RequiredContext = requiredContext;
+
+                combinatorResources.Add(combinatorResource);
             }
 
             var combinedContent = new StringBuilder(1000);
 
-            Action<ISmartResource> saveCombination =
+            Action<CombinatorResource> saveCombination =
                 (combinedResource) =>
                 {
                     if (combinedResource == null) return;
                     // Don't save emtpy resources
-                    if (combinedContent.Length == 0 && !combinedResource.CombinedUrlIsOverridden) return;
+                    if (combinedContent.Length == 0 && !combinedResource.IsOriginal) return;
 
                     combinedResource.Content = combinedContent.ToString();
-                    combinedResource.Type = resourceType;
                     _cacheFileService.Save(hashCode, combinedResource);
 
                     combinedContent.Clear();
@@ -161,27 +177,27 @@ namespace Piedone.Combinator.Services
 
             Regex currentSetRegex = null;
 
-            for (int i = 0; i < smartResources.Count; i++)
+            for (int i = 0; i < combinatorResources.Count; i++)
             {
-                var resource = smartResources[i];
-                var previousResource = (i != 0) ? smartResources[i - 1] : null;
-                var publicUrlString = "";
+                var resource = combinatorResources[i];
+                var previousResource = (i != 0) ? combinatorResources[i - 1] : null;
+                var absoluteUrlString = "";
 
                 try
                 {
-                    publicUrlString = resource.PublicUrl.ToString();
+                    absoluteUrlString = resource.AbsoluteUrl.ToString();
 
-                    if (settings.CombinationExcludeFilter == null || !settings.CombinationExcludeFilter.IsMatch(publicUrlString))
+                    if (settings.CombinationExcludeFilter == null || !settings.CombinationExcludeFilter.IsMatch(absoluteUrlString))
                     {
                         // If this resource differs from the previous one in terms of settings or CDN they can't be combined
                         if (previousResource != null
-                            && (!previousResource.SettingsEqual(resource) || (previousResource.IsCDNResource != resource.IsCDNResource && !settings.CombineCDNResources)))
+                            && (!previousResource.SettingsEqual(resource) || (previousResource.IsCdnResource != resource.IsCdnResource && !settings.CombineCDNResources)))
                         {
                             saveCombination(previousResource);
                         }
 
                         // If this resource is in a different set than the previous, they can't be combined
-                        if (currentSetRegex != null && !currentSetRegex.IsMatch(publicUrlString))
+                        if (currentSetRegex != null && !currentSetRegex.IsMatch(absoluteUrlString))
                         {
                             currentSetRegex = null;
                             saveCombination(previousResource);
@@ -193,7 +209,7 @@ namespace Piedone.Combinator.Services
                             int r = 0;
                             while (currentSetRegex == null && r < settings.ResourceSetFilters.Length)
                             {
-                                if (settings.ResourceSetFilters[r].IsMatch(publicUrlString)) currentSetRegex = settings.ResourceSetFilters[r];
+                                if (settings.ResourceSetFilters[r].IsMatch(absoluteUrlString)) currentSetRegex = settings.ResourceSetFilters[r];
                                 r++;
                             }
 
@@ -210,31 +226,31 @@ namespace Piedone.Combinator.Services
                     {
                         // This is a fully excluded resource
                         if (previousResource != null) saveCombination(previousResource);
-                        resource.OverrideCombinedUrl(resource.PublicUrl);
+                        resource.IsOriginal = true;
                         saveCombination(resource);
-                        smartResources[i] = null; // So previous resource detection works correctly
+                        combinatorResources[i] = null; // So previous resource detection works correctly
                     }
                 }
                 catch (Exception ex)
                 {
                     if (ex.IsFatal()) throw;
-                    throw new OrchardException(T("Processing of resource {0} failed.", publicUrlString), ex);
+                    throw new OrchardException(T("Processing of resource {0} failed.", absoluteUrlString), ex);
                 }
             }
 
 
-            saveCombination(smartResources[smartResources.Count - 1]);
+            saveCombination(combinatorResources[combinatorResources.Count - 1]);
         }
 
-        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<ISmartResource> combinedResources)
+        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources)
         {
             IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count);
 
             foreach (var resource in combinedResources)
             {
-                if (!resource.IsCDNResource)
+                if (!resource.IsCdnResource && !resource.IsOriginal)
                 {
-                    var uriBuilder = new UriBuilder(resource.PublicUrl);
+                    var uriBuilder = new UriBuilder(resource.AbsoluteUrl);
                     uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
                     resource.RequiredContext.Resource.SetUrl(uriBuilder.Uri.PathAndQuery.ToString()); // Using relative urls
                 }

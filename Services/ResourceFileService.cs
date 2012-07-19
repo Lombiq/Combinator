@@ -24,7 +24,7 @@ namespace Piedone.Combinator.Services
         }
 
 
-        public string GetLocalResourceContent(ISmartResource resource)
+        public string GetLocalResourceContent(CombinatorResource resource)
         {
             var relativeVirtualPath = resource.RelativeVirtualPath;
 
@@ -40,12 +40,12 @@ namespace Piedone.Combinator.Services
             return content;
         }
 
-        public string GetRemoteResourceContent(ISmartResource resource)
+        public string GetRemoteResourceContent(CombinatorResource resource)
         {
             using (var wc = new WebClient())
             {
                 var byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
-                var content = new UTF8Encoding(false).GetString(wc.DownloadData(resource.PublicUrl));
+                var content = new UTF8Encoding(false).GetString(wc.DownloadData(resource.AbsoluteUrl));
                 if (content.StartsWith(byteOrderMarkUtf8)) // Stripping "?"s from the beginning of css commments "/*"
                 {
                     content = content.Remove(0, byteOrderMarkUtf8.Length);

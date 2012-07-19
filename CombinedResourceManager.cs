@@ -14,7 +14,6 @@ using Orchard.Themes;
 using Orchard.UI.Resources;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
-using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
 using Orchard.Exceptions;

@@ -15,8 +15,8 @@ namespace Piedone.Combinator.Models
 
         public bool CombineCDNResources
         {
-            get { return Record.CombineCDNResources; }
-            set { Record.CombineCDNResources = value; }
+            get { return Record.CombineCdnResources; }
+            set { Record.CombineCdnResources = value; }
         }
 
         public bool MinifyResources

@@ -36,7 +36,7 @@ namespace Piedone.Combinator.Migrations
                 table => table
                     .ContentPartRecord()
                     .Column<string>("CombinationExcludeRegex", column => column.Unlimited())
-                    .Column<bool>("CombineCDNResources")
+                    .Column<bool>("CombineCdnResources")
                     .Column<bool>("MinifyResources")
                     .Column<string>("MinificationExcludeRegex", column => column.Unlimited())
                     .Column<bool>("EmbedCssImages")
@@ -47,7 +47,7 @@ namespace Piedone.Combinator.Migrations
             );
 
 
-            return 7;
+            return 8;
         }
 
         public int UpdateFrom1()
@@ -129,6 +129,22 @@ namespace Piedone.Combinator.Migrations
 
             return 7;
         }
+
+        public int UpdateFrom7()
+        {
+            _cacheFileService.Empty();
+
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+                table =>
+                {
+                    table.DropColumn("CombineCDNResources");
+                    table.AddColumn<bool>("CombineCdnResources");
+                }
+            );
+
+            return 8;
+        }
+
 
         public void Uninstall()
         {

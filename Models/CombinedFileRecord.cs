@@ -1,6 +1,5 @@
 ﻿using System;
 using Orchard.Environment.Extensions;
-using Piedone.Combinator.Helpers;
 
 namespace Piedone.Combinator.Models
 {

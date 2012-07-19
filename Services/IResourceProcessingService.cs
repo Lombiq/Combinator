@@ -6,6 +6,6 @@ namespace Piedone.Combinator.Services
 {
     public interface IResourceProcessingService : IDependency
     {
-        void ProcessResource(ISmartResource resource, StringBuilder combinedContent, ICombinatorSettings settings);
+        void ProcessResource(CombinatorResource resource, StringBuilder combinedContent, ICombinatorSettings settings);
     }
 }

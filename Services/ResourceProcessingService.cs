@@ -2,8 +2,8 @@
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
+using Piedone.Combinator.Extensions;
 
 namespace Piedone.Combinator.Services
 {
@@ -20,13 +20,13 @@ namespace Piedone.Combinator.Services
             _minificationService = minificationService;
         }
 
-        public void ProcessResource(ISmartResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
+        public void ProcessResource(CombinatorResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
         {
-            if (!resource.IsCDNResource || settings.CombineCDNResources)
+            if (!resource.IsCdnResource || settings.CombineCDNResources)
             {
-                var publicUrl = resource.PublicUrl.ToString();
+                var absoluteUrlString = resource.AbsoluteUrl.ToString();
 
-                if (!resource.IsCDNResource)
+                if (!resource.IsCdnResource)
                 {
                     resource.Content = _resourceFileService.GetLocalResourceContent(resource);
                 }
@@ -37,7 +37,7 @@ namespace Piedone.Combinator.Services
 
                 if (String.IsNullOrEmpty(resource.Content)) return;
 
-                if (settings.MinifyResources && (settings.MinificationExcludeFilter == null || !settings.MinificationExcludeFilter.IsMatch(publicUrl)))
+                if (settings.MinifyResources && (settings.MinificationExcludeFilter == null || !settings.MinificationExcludeFilter.IsMatch(absoluteUrlString)))
                 {
                     MinifyResourceContent(resource);
                     if (String.IsNullOrEmpty(resource.Content)) return;
@@ -48,7 +48,7 @@ namespace Piedone.Combinator.Services
                 {
                     AdjustRelativePaths(resource);
 
-                    if (settings.EmbedCssImages && (settings.EmbedCssImagesStylesheetExcludeFilter == null || !settings.EmbedCssImagesStylesheetExcludeFilter.IsMatch(publicUrl)))
+                    if (settings.EmbedCssImages && (settings.EmbedCssImagesStylesheetExcludeFilter == null || !settings.EmbedCssImagesStylesheetExcludeFilter.IsMatch(absoluteUrlString)))
                     {
                         EmbedImages(resource, settings.EmbeddedImagesMaxSizeKB);
                     }
@@ -58,11 +58,11 @@ namespace Piedone.Combinator.Services
             }
             else
             {
-                resource.OverrideCombinedUrl(resource.PublicUrl);
+                resource.IsOriginal = true;
             }
         }
 
-        private void EmbedImages(ISmartResource resource, int maxSizeKB)
+        private void EmbedImages(CombinatorResource resource, int maxSizeKB)
         {
             ProcessUrlSettings(resource,
                 (match) =>
@@ -83,7 +83,7 @@ namespace Piedone.Combinator.Services
                                 + ";base64,"
                                 + imageData;
 
-                            return "url(\"" + dataUrl + "\")"; 
+                            return "url(\"" + dataUrl + "\")";
                         }
                     }
 
@@ -91,7 +91,7 @@ namespace Piedone.Combinator.Services
                 });
         }
 
-        private static void AdjustRelativePaths(ISmartResource resource)
+        private static void AdjustRelativePaths(CombinatorResource resource)
         {
             ProcessUrlSettings(resource,
                 (match) =>
@@ -102,14 +102,14 @@ namespace Piedone.Combinator.Services
 
                     // Remote paths are preserved as full urls, local paths become uniformed relative ones.
                     string uriString = "";
-                    if (resource.IsCDNResource || resource.PublicUrl.Host != uri.Host) uriString = uri.ToString();
+                    if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToStringWithoutScheme();
                     else uriString = uri.PathAndQuery;
 
                     return "url(\"" + uriString + "\")";
                 });
         }
 
-        private static void ProcessUrlSettings(ISmartResource resource, MatchEvaluator evaluator)
+        private static void ProcessUrlSettings(CombinatorResource resource, MatchEvaluator evaluator)
         {
             string content = resource.Content;
 
@@ -122,12 +122,12 @@ namespace Piedone.Combinator.Services
             resource.Content = content;
         }
 
-        private static Uri MakeInlineUri(ISmartResource resource, string url)
+        private static Uri MakeInlineUri(CombinatorResource resource, string url)
         {
-            return Uri.IsWellFormedUriString(url, UriKind.Absolute) ? new Uri(url) : new Uri(resource.PublicUrl, url);
+            return Uri.IsWellFormedUriString(url, UriKind.Absolute) ? new Uri(url) : new Uri(resource.AbsoluteUrl, url);
         }
 
-        private void MinifyResourceContent(ISmartResource resource)
+        private void MinifyResourceContent(CombinatorResource resource)
         {
             if (resource.Type == ResourceType.Style)
             {

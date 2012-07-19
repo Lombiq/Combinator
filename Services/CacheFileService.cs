@@ -10,7 +10,6 @@ using Orchard.FileSystems.Media;
 using Orchard.Services;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
-using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.HelpfulLibraries.DependencyInjection;
 using Orchard.Exceptions;
@@ -22,8 +21,8 @@ namespace Piedone.Combinator.Services
     {
         private readonly IStorageProvider _storageProvider;
         private readonly IRepository<CombinedFileRecord> _fileRepository;
+        private readonly ICombinatorResourceManager _combinatorResourceManager;
         private readonly IClock _clock;
-        private readonly IResolve<ISmartResource> _smartResourceResolve;
         private readonly ICombinatorEventHandler _combinatorEventHandler;
 
         #region In-memory caching fields
@@ -41,23 +40,23 @@ namespace Piedone.Combinator.Services
         public CacheFileService(
             IStorageProvider storageProvider,
             IRepository<CombinedFileRecord> fileRepository,
+            ICombinatorResourceManager combinatorResourceManager,
             IClock clock,
-            IResolve<ISmartResource> smartResourceResolve,
             ICombinatorEventHandler combinatorEventHandler,
             ICacheManager cacheManager,
             ICombinatorEventMonitor combinatorEventMonitor)
         {
-            _fileRepository = fileRepository;
             _storageProvider = storageProvider;
+            _fileRepository = fileRepository;
+            _combinatorResourceManager = combinatorResourceManager;
             _clock = clock;
-            _smartResourceResolve = smartResourceResolve;
             _combinatorEventHandler = combinatorEventHandler;
 
             _cacheManager = cacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
         }
 
-        public void Save(int hashCode, ISmartResource resource)
+        public void Save(int hashCode, CombinatorResource resource)
         {
             var scliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
 
@@ -67,7 +66,7 @@ namespace Piedone.Combinator.Services
                 Slice = ++scliceCount,
                 Type = resource.Type,
                 LastUpdatedUtc = _clock.UtcNow,
-                Settings = resource.GetSerializedSettings()
+                Settings = _combinatorResourceManager.SerializeResourceSettings(resource)
             };
 
             if (!String.IsNullOrEmpty(resource.Content))
@@ -84,7 +83,7 @@ namespace Piedone.Combinator.Services
             _fileRepository.Create(fileRecord);
         }
 
-        public IList<ISmartResource> GetCombinedResources(int hashCode)
+        public IList<CombinatorResource> GetCombinedResources(int hashCode)
         {
             return _cacheManager.Get(MakeCacheKey("GetCombinedResources." + hashCode.ToString()), ctx =>
             {
@@ -93,16 +92,15 @@ namespace Piedone.Combinator.Services
                 var files = GetRecords(hashCode);
                 var fileCount = files.Count;
 
-                var resources = new List<ISmartResource>(fileCount);
+                var resources = new List<CombinatorResource>(fileCount);
 
                 foreach (var file in files)
                 {
-                    var resource = _smartResourceResolve.Value;
+                    var resource = _combinatorResourceManager.ResourceFactory(file.Type);
                     resource.FillRequiredContext(
                         "CombinedResource" + file.Id.ToString(),
-                        file.Type,
-                        _storageProvider.GetPublicUrl(MakePath(file)),
-                        file.Settings);
+                        _storageProvider.GetPublicUrl(MakePath(file)));
+                    _combinatorResourceManager.DeserializeSettings(file.Settings, resource);
                     resource.LastUpdatedUtc = file.LastUpdatedUtc ?? _clock.UtcNow;
                     resources.Add(resource);
                 }

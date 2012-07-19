@@ -1,15 +1,9 @@
 ﻿using Orchard.Environment.Extensions;
 
-namespace Piedone.Combinator.Helpers
+namespace Piedone.Combinator
 {
-    public enum ResourceType
-    {
-        Style,
-        JavaScript
-    }
-
     [OrchardFeature("Piedone.Combinator")]
-    public class ResourceTypeHelper
+    public static class ResourceTypeHelper
     {
         public static ResourceType StringTypeToEnum(string resourceType)
         {
@@ -19,6 +13,11 @@ namespace Piedone.Combinator.Helpers
             }
 
             return ResourceType.JavaScript;
+        }
+
+        public static string ToStringType(this ResourceType resourceType)
+        {
+            return EnumToStringType(resourceType);
         }
 
         public static string EnumToStringType(ResourceType resourceType)

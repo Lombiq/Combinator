@@ -9,12 +9,12 @@ namespace Piedone.Combinator.Services
     {
         public string MinifyCss(string css)
         {
-            return CssCompressor.Compress(css);
+            return new CssCompressor().Compress(css);
         }
 
         public string MinifyJavaScript(string javaScript)
         {
-            return JavaScriptCompressor.Compress(javaScript);
+            return new JavaScriptCompressor().Compress(javaScript);
         }
     }
 }

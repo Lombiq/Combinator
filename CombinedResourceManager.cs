@@ -17,6 +17,7 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using Orchard.Exceptions;
 
 namespace Piedone.Combinator
 {
@@ -129,6 +130,7 @@ namespace Piedone.Combinator
             }
             catch (Exception ex)
             {
+                if (ex.IsFatal()) throw;
                 Logger.Error(ex, "Error when combining " + resourceType + " files");
                 return base.BuildRequiredResources(stringResourceType);
             }

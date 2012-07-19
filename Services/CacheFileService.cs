@@ -13,6 +13,7 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Helpers;
 using Piedone.Combinator.Models;
 using Piedone.HelpfulLibraries.DependencyInjection;
+using Orchard.Exceptions;
 
 namespace Piedone.Combinator.Services
 {
@@ -147,8 +148,9 @@ namespace Piedone.Combinator.Services
                 _storageProvider.DeleteFolder(_scriptsPath);
                 Thread.Sleep(300); // This is to ensure we don't get an "access denied" when deleting the root folder
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                if (ex.IsFatal()) throw;
             }
 
             try
@@ -156,16 +158,18 @@ namespace Piedone.Combinator.Services
                 _storageProvider.DeleteFolder(_stylesPath);
                 Thread.Sleep(300);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                if (ex.IsFatal()) throw;
             }
 
             try
             {
                 _storageProvider.DeleteFolder(_rootPath);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                if (ex.IsFatal()) throw;
             }
 
             _combinatorEventHandler.CacheEmptied();
@@ -187,8 +191,9 @@ namespace Piedone.Combinator.Services
                 {
                     _storageProvider.DeleteFile(MakePath(file));
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    if (ex.IsFatal()) throw;
                 }
             }
         }

@@ -14,6 +14,7 @@ using Piedone.HelpfulLibraries.DependencyInjection;
 using Piedone.HelpfulLibraries.Tasks;
 using Orchard.Localization;
 using Orchard;
+using Orchard.Exceptions;
 
 namespace Piedone.Combinator.Services
 {
@@ -216,6 +217,7 @@ namespace Piedone.Combinator.Services
                 }
                 catch (Exception ex)
                 {
+                    if (ex.IsFatal()) throw;
                     throw new OrchardException(T("Processing of resource {0} failed.", publicUrlString), ex);
                 }
             }

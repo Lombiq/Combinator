@@ -3,7 +3,7 @@ AntiForgery: enabled
 Author: Piedone
 Website: http://combinator.codeplex.com
 Version: 1.3.3
-OrchardVersion: 1.4.1
+OrchardVersion: 1.5
 Description: Combines and minifies (with YUI Compressor) external stylesheets and javascript files
 Features:
     Piedone.Combinator:

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Web;
+using Orchard.Mvc;
 using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
-using Orchard.Mvc;
 
 namespace Piedone.Combinator.Models
 {

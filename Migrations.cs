@@ -1,9 +1,9 @@
 using System;
+using System.Data;
 using Orchard.Data.Migration;
 using Orchard.Environment.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
-using System.Data;
 
 namespace Piedone.Combinator.Migrations
 {

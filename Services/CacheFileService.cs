@@ -6,13 +6,12 @@ using System.Threading;
 using Orchard.Caching;
 using Orchard.Data;
 using Orchard.Environment.Extensions;
+using Orchard.Exceptions;
 using Orchard.FileSystems.Media;
 using Orchard.Services;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
-using Piedone.HelpfulLibraries.DependencyInjection;
-using Orchard.Exceptions;
 
 namespace Piedone.Combinator.Services
 {

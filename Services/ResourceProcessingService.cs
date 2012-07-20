@@ -2,8 +2,8 @@
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using Piedone.Combinator.Models;
 using Piedone.Combinator.Extensions;
+using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator.Services
 {

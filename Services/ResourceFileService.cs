@@ -2,10 +2,10 @@
 using System.IO;
 using System.Net;
 using System.Text;
-using Orchard.FileSystems.VirtualPath;
-using Piedone.Combinator.Models;
-using Orchard.Localization;
 using Orchard;
+using Orchard.FileSystems.VirtualPath;
+using Orchard.Localization;
+using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator.Services
 {

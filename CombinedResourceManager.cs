@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Autofac.Features.Metadata;
-using Orchard;
 using Orchard.Caching;
 using Orchard.ContentManagement; // For generic ContentManager methods
 using Orchard.DisplayManagement.Descriptors;
 using Orchard.DisplayManagement.Descriptors.ResourceBindingStrategy;
 using Orchard.Environment.Extensions;
+using Orchard.Exceptions;
 using Orchard.Logging;
+using Orchard.Mvc;
 using Orchard.Settings;
 using Orchard.Themes;
 using Orchard.UI.Resources;
@@ -16,8 +17,6 @@ using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
-using Orchard.Exceptions;
-using Orchard.Mvc;
 
 namespace Piedone.Combinator
 {

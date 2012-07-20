@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Orchard;
 using Orchard.Environment.Extensions;
+using Orchard.Exceptions;
+using Orchard.Localization;
 using Orchard.Logging;
 using Orchard.UI.Resources;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.HelpfulLibraries.Tasks;
-using Orchard.Localization;
-using Orchard;
-using Orchard.Exceptions;
-using Orchard.Mvc;
 
 namespace Piedone.Combinator.Services
 {

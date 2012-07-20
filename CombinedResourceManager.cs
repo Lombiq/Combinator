@@ -17,6 +17,7 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
 using Orchard.Exceptions;
+using Orchard.Mvc;
 
 namespace Piedone.Combinator
 {
@@ -31,7 +32,7 @@ namespace Piedone.Combinator
         private readonly ICombinatorService _combinatorService;
         private readonly IShapeTableLocator _shapeTableLocator;
         private readonly IThemeManager _themeManager;
-        private readonly IWorkContextAccessor _workContextAccessor;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ICacheManager _cacheManager;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
 
@@ -43,7 +44,7 @@ namespace Piedone.Combinator
             ICombinatorService combinatorService,
             IShapeTableLocator shapeTableLocator,
             IThemeManager themeManager,
-            IWorkContextAccessor workContextAccessor,
+            IHttpContextAccessor httpContextAccessor,
             ICacheManager cacheManager,
             ICombinatorEventMonitor combinatorEventMonitor)
             : base(resourceProviders)
@@ -52,7 +53,7 @@ namespace Piedone.Combinator
             _combinatorService = combinatorService;
             _shapeTableLocator = shapeTableLocator;
             _themeManager = themeManager;
-            _workContextAccessor = workContextAccessor;
+            _httpContextAccessor = httpContextAccessor;
             _cacheManager = cacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
 
@@ -72,7 +73,7 @@ namespace Piedone.Combinator
             });
 
             if (resources.Count == 0 
-                || Orchard.UI.Admin.AdminFilter.IsApplied(_workContextAccessor.GetContext().HttpContext.Request.RequestContext) && !settingsPart.EnableForAdmin) return resources;
+                || Orchard.UI.Admin.AdminFilter.IsApplied(_httpContextAccessor.Current().Request.RequestContext) && !settingsPart.EnableForAdmin) return resources;
 
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
 
@@ -103,7 +104,7 @@ namespace Piedone.Combinator
                 if (resourceType == ResourceType.Style)
                 {
                     // Checking for overridden stylesheets
-                    var currentTheme = _themeManager.GetRequestTheme(_workContextAccessor.GetContext().HttpContext.Request.RequestContext);
+                    var currentTheme = _themeManager.GetRequestTheme(_httpContextAccessor.Current().Request.RequestContext);
                     var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
 
                     foreach (var resource in resources)

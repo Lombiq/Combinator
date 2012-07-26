@@ -86,6 +86,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Libs\YUICompressor\EcmaScript.NET.dll" />
+    <Content Include="Libs\YUICompressor\Iesi.Collections.dll" />
+    <Content Include="Libs\YUICompressor\NAnt.Core.dll" />
+    <Content Include="Libs\YUICompressor\New BSD License.txt" />
+    <Content Include="Libs\YUICompressor\Yahoo.Yui.Compressor.Build.MsBuild.dll" />
+    <Content Include="Libs\YUICompressor\Yahoo.Yui.Compressor.Build.Nant.dll" />
+    <Content Include="Libs\YUICompressor\Yahoo.Yui.Compressor.dll" />
     <Content Include="Web.config" />
     <Content Include="Properties\AssemblyInfo.cs" />
     <Content Include="Module.txt" />

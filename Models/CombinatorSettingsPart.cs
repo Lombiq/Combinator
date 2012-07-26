@@ -49,6 +49,12 @@ namespace Piedone.Combinator.Models
             set { Record.EmbedCssImagesStylesheetExcludeRegex = value; }
         }
 
+        public bool GenerateImageSprites
+        {
+            get { return Record.GenerateImageSprites; }
+            set { Record.GenerateImageSprites = value; }
+        }
+
         public string ResourceSetRegexes
         {
             get { return Record.ResourceSetRegexes; }

@@ -12,6 +12,7 @@ namespace Piedone.Combinator.Models
         public Regex MinificationExcludeFilter { get; set; }
         public bool EmbedCssImages { get; set; }
         public int EmbeddedImagesMaxSizeKB { get; set; }
+        public bool GenerateImageSprites { get; set; }
         public Regex EmbedCssImagesStylesheetExcludeFilter { get; set; }
         public Regex[] ResourceSetFilters { get; set; }
     }

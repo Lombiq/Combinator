@@ -21,6 +21,7 @@ namespace Piedone.Combinator.Services
     {
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceProcessingService _resourceProcessingService;
+        private readonly ISpriteService _spriteService;
         private readonly ILockingCacheManager _lockingCacheManager;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
         private readonly ILockFileManager _lockFileManager;
@@ -32,6 +33,7 @@ namespace Piedone.Combinator.Services
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
+            ISpriteService spriteService,
             ILockingCacheManager lockingCacheManager,
             ICombinatorEventMonitor combinatorEventMonitor,
             ILockFileManager lockFileManager,
@@ -39,6 +41,7 @@ namespace Piedone.Combinator.Services
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
+            _spriteService = spriteService;
             _lockingCacheManager = lockingCacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
             _lockFileManager = lockFileManager;
@@ -168,6 +171,12 @@ namespace Piedone.Combinator.Services
                     if (combinedContent.Length == 0 && !combinedResource.IsOriginal) return;
 
                     combinedResource.Content = combinedContent.ToString();
+
+                    if (combinedResource.Type == ResourceType.Style && !String.IsNullOrEmpty(combinedResource.Content) && settings.GenerateImageSprites)
+                    {
+                        //_spriteService
+                    }
+
                     _cacheFileService.Save(hashCode, combinedResource);
 
                     combinedContent.Clear();

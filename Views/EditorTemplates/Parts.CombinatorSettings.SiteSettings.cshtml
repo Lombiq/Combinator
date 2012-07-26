@@ -60,7 +60,7 @@
     </ol>
 </fieldset>
 <fieldset>
-    <legend>@T("Image Embedding Settings")</legend>
+    <legend>@T("Image Processing Settings")</legend>
     <ol>
         <li>
             <span class="checkbox-and-label">
@@ -83,6 +83,16 @@
             @Html.TextBoxFor(m => m.EmbedCssImagesStylesheetExcludeRegex, new { @class = "textMedium" })
             @Html.ValidationMessageFor(m => m.EmbedCssImagesStylesheetExcludeRegex)
             <span class="hint">@T("Images of matched stylesheets won't be embedded. The same rules apply as with the combination exclusion regex. You can use this feature to exclude conditional stylesheets that are only for browsers prior to IE 8, so that for those clients the original images are presented.")</span>
+        </li>
+        <li>
+            <span class="checkbox-and-label">
+                @Html.EditorFor(m => m.GenerateImageSprites)
+                <label for="@Html.FieldIdFor(m => m.GenerateImageSprites)" class="forcheckbox">@T("Generate image sprites")</label>
+                @Html.ValidationMessageFor(m => m.GenerateImageSprites)
+            </span>
+            <span class="hint">
+                @T("Images not embedded will be processed.")
+            </span>
         </li>
     </ol>
 </fieldset>

@@ -83,6 +83,7 @@ namespace Piedone.Combinator
                     CombineCDNResources = settingsPart.CombineCDNResources,
                     EmbedCssImages = settingsPart.EmbedCssImages,
                     EmbeddedImagesMaxSizeKB = settingsPart.EmbeddedImagesMaxSizeKB,
+                    GenerateImageSprites = settingsPart.GenerateImageSprites,
                     MinifyResources = settingsPart.MinifyResources
                 };
 

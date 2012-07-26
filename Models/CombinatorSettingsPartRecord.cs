@@ -21,6 +21,8 @@ namespace Piedone.Combinator.Models
 
         public virtual int EmbeddedImagesMaxSizeKB { get; set; }
 
+        public virtual bool GenerateImageSprites { get; set; }
+
         [StringLengthMax]
         public virtual string EmbedCssImagesStylesheetExcludeRegex { get; set; }
 

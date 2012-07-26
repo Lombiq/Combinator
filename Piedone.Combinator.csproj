@@ -104,11 +104,9 @@
     <Compile Include="Services\IMinificationService.cs" />
     <Compile Include="Services\IResourceFileService.cs" />
     <Compile Include="Services\IResourceProcessingService.cs" />
-    <Compile Include="Services\ISpriteService.cs" />
     <Compile Include="Services\MinificationService.cs" />
     <Compile Include="Services\ResourceFileService.cs" />
     <Compile Include="Services\ResourceProcessingService.cs" />
-    <Compile Include="Services\SpriteService.cs" />
     <Compile Include="SpriteGenerator\Placement.cs" />
     <Compile Include="SpriteGenerator\Sprite.cs" />
     <Compile Include="SpriteGenerator\Utility\Algorithm.cs" />

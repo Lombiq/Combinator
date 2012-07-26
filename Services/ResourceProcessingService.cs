@@ -4,6 +4,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
+using Piedone.Combinator.SpriteGenerator;
+using System.Collections.Generic;
+using System.Drawing.Imaging;
 
 namespace Piedone.Combinator.Services
 {
@@ -11,13 +14,18 @@ namespace Piedone.Combinator.Services
     {
         private readonly IResourceFileService _resourceFileService;
         private readonly IMinificationService _minificationService;
+        private readonly ICacheFileService _cacheFileService;
+
+        private delegate string ImageMatchProcessor(string url, string extension, Match match);
 
         public ResourceProcessingService(
             IResourceFileService resourceFileService,
-            IMinificationService minificationService)
+            IMinificationService minificationService,
+            ICacheFileService cacheFileService)
         {
             _resourceFileService = resourceFileService;
             _minificationService = minificationService;
+            _cacheFileService = cacheFileService;
         }
 
         public void ProcessResource(CombinatorResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
@@ -62,9 +70,49 @@ namespace Piedone.Combinator.Services
             }
         }
 
-        public void ProcessImages(CombinatorResource resource, ImageMatchProcessor matchProcessor)
+        public void ReplaceCssImagesWithSprite(CombinatorResource resource)
         {
-            ProcessUrlSettings(resource,
+            var imageContents = new List<byte[]>();
+
+            ProcessImageUrls(resource,
+                (url, extension, match) =>
+                {
+                    var imageData = _resourceFileService.GetImageContent(MakeInlineUri(resource, url), 5000);
+
+                    if (imageData != null)
+                    {
+                        imageContents.Add(imageData);
+                    }
+
+                    return null;
+                });
+
+            IEnumerable<string> backgroundDeclarations = null;
+            _cacheFileService.WriteSpriteStream(
+                resource.Content.GetHashCode() + ".jpg",
+                (stream, publicUrl) =>
+                {
+                    using (var sprite = new Sprite(imageContents))
+                    {
+                        backgroundDeclarations = sprite.Generate(publicUrl, stream, ImageFormat.Jpeg);
+                    }
+                });
+
+            var backgroundDeclarationsEnumerator = backgroundDeclarations.GetEnumerator();
+            resource.Content = Regex.Replace(
+                resource.Content,
+                @"background-image:\s?url\(['|""]?(.+?)['|""]?\);?",
+                (match) =>
+                {
+                    backgroundDeclarationsEnumerator.MoveNext();
+                    return backgroundDeclarationsEnumerator.Current;
+                },
+                RegexOptions.IgnoreCase);
+        }
+
+        private void ProcessImageUrls(CombinatorResource resource, ImageMatchProcessor matchProcessor)
+        {
+            ProcessUrls(resource,
                 (match) =>
                 {
                     var url = match.Groups[1].Value;
@@ -83,10 +131,10 @@ namespace Piedone.Combinator.Services
 
         private void EmbedImages(CombinatorResource resource, int maxSizeKB)
         {
-            ProcessImages(resource, 
+            ProcessImageUrls(resource, 
                 (url, extenstion, match) =>
                 {
-                    var imageData = _resourceFileService.GetImageData(MakeInlineUri(resource, url), maxSizeKB);
+                    var imageData = _resourceFileService.GetImageContent(MakeInlineUri(resource, url), maxSizeKB);
 
                     if (imageData != null)
                     {
@@ -105,7 +153,7 @@ namespace Piedone.Combinator.Services
 
         private static void AdjustRelativePaths(CombinatorResource resource)
         {
-            ProcessUrlSettings(resource,
+            ProcessUrls(resource,
                 (match) =>
                 {
                     var url = match.Groups[1].ToString();
@@ -121,7 +169,7 @@ namespace Piedone.Combinator.Services
                 });
         }
 
-        private static void ProcessUrlSettings(CombinatorResource resource, MatchEvaluator evaluator)
+        private static void ProcessUrls(CombinatorResource resource, MatchEvaluator evaluator)
         {
             string content = resource.Content;
 

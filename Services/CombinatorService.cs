@@ -21,7 +21,6 @@ namespace Piedone.Combinator.Services
     {
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceProcessingService _resourceProcessingService;
-        private readonly ISpriteService _spriteService;
         private readonly ILockingCacheManager _lockingCacheManager;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
         private readonly ILockFileManager _lockFileManager;
@@ -33,7 +32,6 @@ namespace Piedone.Combinator.Services
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
-            ISpriteService spriteService,
             ILockingCacheManager lockingCacheManager,
             ICombinatorEventMonitor combinatorEventMonitor,
             ILockFileManager lockFileManager,
@@ -41,7 +39,6 @@ namespace Piedone.Combinator.Services
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
-            _spriteService = spriteService;
             _lockingCacheManager = lockingCacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
             _lockFileManager = lockFileManager;
@@ -148,16 +145,6 @@ namespace Piedone.Combinator.Services
                     resource.Settings.Condition,
                     resource.Settings.Attributes);
 
-                //var requiredContext = new ResourceRequiredContext();
-                //var resourceManifest = new ResourceManifest();
-                //requiredContext.Resource = resourceManifest.DefineResource(ResourceTypeHelper.EnumToStringType(resourceType), resource.Resource.Name);
-                //requiredContext.Resource.SetUrl(resource.Resource.GetFullPath());
-                //requiredContext.Settings = new RequireSettings();
-                //requiredContext.Settings.Culture = resource.Settings.Culture;
-                //requiredContext.Settings.Condition = resource.Settings.Condition;
-                //requiredContext.Settings.Attributes = new Dictionary<string, string>(resource.Settings.Attributes);
-                //combinatorResource.RequiredContext = requiredContext;
-
                 combinatorResources.Add(combinatorResource);
             }
 
@@ -167,6 +154,7 @@ namespace Piedone.Combinator.Services
                 (combinedResource) =>
                 {
                     if (combinedResource == null) return;
+
                     // Don't save emtpy resources
                     if (combinedContent.Length == 0 && !combinedResource.IsOriginal) return;
 
@@ -174,7 +162,7 @@ namespace Piedone.Combinator.Services
 
                     if (combinedResource.Type == ResourceType.Style && !String.IsNullOrEmpty(combinedResource.Content) && settings.GenerateImageSprites)
                     {
-                        combinedResource.Content = _spriteService.ReplaceImagesWithSprite(combinedResource.Content);
+                       _resourceProcessingService.ReplaceCssImagesWithSprite(combinedResource);
                     }
 
                     _cacheFileService.Save(hashCode, combinedResource);

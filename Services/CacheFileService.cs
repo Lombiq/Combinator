@@ -172,6 +172,17 @@ namespace Piedone.Combinator.Services
             _combinatorEventHandler.CacheEmptied();
         }
 
+        public void WriteSpriteStream(string fileName, SpriteStreamWriter streamWriter)
+        {
+            var path = _stylesPath + "Sprites/" + fileName;
+            var spriteFile = _storageProvider.CreateFile(path);
+            var publicUrl = _storageProvider.GetPublicUrl(path);
+            using (var stream = spriteFile.OpenWrite())
+            {
+                streamWriter(stream, publicUrl);
+            }
+        }
+
         private List<CombinedFileRecord> GetRecords(int hashCode)
         {
             return _fileRepository.Fetch(file => file.HashCode == hashCode).ToList();

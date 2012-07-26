@@ -23,11 +23,11 @@ namespace Piedone.Combinator.SpriteGenerator
             _imageContents = imageContents;
         }
 
-        public IEnumerable<string> Generate(Stream sprite)
+        public IEnumerable<string> Generate(string spritePublicUrl, Stream sprite, ImageFormat spriteFormat)
         {
             CreateModules();
-            GenerateLayout(sprite);
-            var backgroundDeclarations = GenerateBackgroundDeclarations();
+            GenerateLayout(sprite, spriteFormat);
+            var backgroundDeclarations = GenerateBackgroundDeclarations(spritePublicUrl);
             if (backgroundDeclarations.Count() != _imageContents.Count())
             {
                 throw new ApplicationException("Not every image was placed in the sprite. This really shouldn1t happen.");
@@ -51,7 +51,7 @@ namespace Piedone.Combinator.SpriteGenerator
             }
         }
 
-        private void GenerateLayout(Stream sprite)
+        private void GenerateLayout(Stream sprite, ImageFormat spriteFormat)
         {
             _placement = Algorithm.Greedy(_modules);
 
@@ -66,11 +66,11 @@ namespace Piedone.Combinator.SpriteGenerator
                     }
                 }
 
-                spriteImage.Save(sprite, ImageFormat.Png);
+                spriteImage.Save(sprite, spriteFormat);
             }
         }
 
-        private IEnumerable<string> GenerateBackgroundDeclarations()
+        private IEnumerable<string> GenerateBackgroundDeclarations(string spritePublicUrl)
         {
             var declarations = new List<string>();
 
@@ -79,10 +79,10 @@ namespace Piedone.Combinator.SpriteGenerator
                 var rectangle = new Rectangle(module.X, module.Y, module.Width, module.Height);
 
                 declarations.Add(
-                    "background-image:url('');background-repeat: no-repeat;" +
-                    "width:" + rectangle.Width.ToString() +
-                    "px;height:" + rectangle.Height.ToString() +
-                    "px;background-position:" + (-1 * rectangle.X).ToString() + "px " + (-1 * rectangle.Y).ToString() + "px;");
+                    "background-image: url('" + spritePublicUrl + "');" +
+                    //"width:" + rectangle.Width.ToString() +
+                    //"px;height:" + rectangle.Height.ToString() + "px;" +
+                    "background-position:" + (-1 * rectangle.X).ToString() + "px " + (-1 * rectangle.Y).ToString() + "px;");
             }
 
             return declarations;

@@ -62,7 +62,7 @@ namespace Piedone.Combinator.Services
             }
         }
 
-        private void EmbedImages(CombinatorResource resource, int maxSizeKB)
+        public void ProcessImages(CombinatorResource resource, ImageMatchProcessor matchProcessor)
         {
             ProcessUrlSettings(resource,
                 (match) =>
@@ -73,21 +73,33 @@ namespace Piedone.Combinator.Services
                     // This is a dumb check but otherwise we'd have to inspect the file thoroughly
                     if (!String.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
                     {
-                        var imageData = _resourceFileService.GetImageBase64Data(MakeInlineUri(resource, url), maxSizeKB);
-
-                        if (!String.IsNullOrEmpty(imageData))
-                        {
-                            var dataUrl =
-                            "data:image/"
-                                + Path.GetExtension(url).Replace(".", "")
-                                + ";base64,"
-                                + imageData;
-
-                            return "url(\"" + dataUrl + "\")";
-                        }
+                        var result = matchProcessor(url, extension, match);
+                        if (result != null) return result;
                     }
 
                     return match.Groups[0].Value;
+                });
+        }
+
+        private void EmbedImages(CombinatorResource resource, int maxSizeKB)
+        {
+            ProcessImages(resource, 
+                (url, extenstion, match) =>
+                {
+                    var imageData = _resourceFileService.GetImageBase64Data(MakeInlineUri(resource, url), maxSizeKB);
+
+                    if (!String.IsNullOrEmpty(imageData))
+                    {
+                        var dataUrl =
+                        "data:image/"
+                            + Path.GetExtension(url).Replace(".", "")
+                            + ";base64,"
+                            + imageData;
+
+                        return "url(\"" + dataUrl + "\")";
+                    }
+
+                    return null;
                 });
         }
 

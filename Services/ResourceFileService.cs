@@ -54,15 +54,15 @@ namespace Piedone.Combinator.Services
             }
         }
 
-        public string GetImageBase64Data(Uri imageUrl, int maxSizeKB)
+        public byte[] GetImageData(Uri imageUrl, int maxSizeKB)
         {
             // Since these are public urls referenced in stylesheets, there's no simple way to tell their local path.
             // That's why all images are downloaded with WebClient.
             using (var wc = new WebClient())
             {
                 var imageData = wc.DownloadData(imageUrl);
-                if (imageData.Length / 1024 > maxSizeKB) return "";
-                return Convert.ToBase64String(imageData);
+                if (imageData.Length / 1024 > maxSizeKB) return null;
+                return imageData;
             }
         }
     }

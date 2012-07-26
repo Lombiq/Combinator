@@ -86,15 +86,15 @@ namespace Piedone.Combinator.Services
             ProcessImages(resource, 
                 (url, extenstion, match) =>
                 {
-                    var imageData = _resourceFileService.GetImageBase64Data(MakeInlineUri(resource, url), maxSizeKB);
+                    var imageData = _resourceFileService.GetImageData(MakeInlineUri(resource, url), maxSizeKB);
 
-                    if (!String.IsNullOrEmpty(imageData))
+                    if (imageData != null)
                     {
                         var dataUrl =
                         "data:image/"
                             + Path.GetExtension(url).Replace(".", "")
                             + ";base64,"
-                            + imageData;
+                            + Convert.ToBase64String(imageData);
 
                         return "url(\"" + dataUrl + "\")";
                     }

@@ -108,6 +108,19 @@
     <Compile Include="Services\ResourceFileService.cs" />
     <Compile Include="Services\ResourceProcessingService.cs" />
     <Compile Include="Services\SpriteService.cs" />
+    <Compile Include="SpriteGenerator\LayoutProperties.cs" />
+    <Compile Include="SpriteGenerator\Placement.cs" />
+    <Compile Include="SpriteGenerator\Sprite.cs" />
+    <Compile Include="SpriteGenerator\Utility\Algorithm.cs" />
+    <Compile Include="SpriteGenerator\Utility\Bit.cs" />
+    <Compile Include="SpriteGenerator\Utility\Contour.cs" />
+    <Compile Include="SpriteGenerator\Utility\Graph.cs" />
+    <Compile Include="SpriteGenerator\Utility\GraphNode.cs" />
+    <Compile Include="SpriteGenerator\Utility\HorizontalContour.cs" />
+    <Compile Include="SpriteGenerator\Utility\Module.cs" />
+    <Compile Include="SpriteGenerator\Utility\OT.cs" />
+    <Compile Include="SpriteGenerator\Utility\OTree.cs" />
+    <Compile Include="SpriteGenerator\Utility\VerticalContour.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Web.config" />

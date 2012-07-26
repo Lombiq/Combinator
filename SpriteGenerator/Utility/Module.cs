@@ -1,8 +1,9 @@
 ﻿using System.Drawing;
+using System;
 
 namespace Piedone.Combinator.SpriteGenerator.Utility
 {
-    internal class Module
+    internal class Module : IDisposable
     {
         private int _name;
         private int _width;
@@ -102,6 +103,11 @@ namespace Piedone.Combinator.SpriteGenerator.Utility
         public void Draw(Graphics graphics)
         {
             graphics.DrawImage(_image, _xCoordinate, _yCoordinate, _image.Width, _image.Height);
+        }
+
+        public void Dispose()
+        {
+            _image.Dispose();
         }
     }
 }

@@ -57,12 +57,12 @@ namespace Piedone.Combinator.Services
 
         public void Save(int hashCode, CombinatorResource resource)
         {
-            var scliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
+            var sliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
 
             var fileRecord = new CombinedFileRecord()
             {
                 HashCode = hashCode,
-                Slice = ++scliceCount,
+                Slice = ++sliceCount,
                 Type = resource.Type,
                 LastUpdatedUtc = _clock.UtcNow,
                 Settings = _combinatorResourceManager.SerializeResourceSettings(resource)

@@ -21,10 +21,10 @@ namespace Piedone.Combinator.Models
 
         public virtual int EmbeddedImagesMaxSizeKB { get; set; }
 
-        public virtual bool GenerateImageSprites { get; set; }
-
         [StringLengthMax]
         public virtual string EmbedCssImagesStylesheetExcludeRegex { get; set; }
+
+        public virtual bool GenerateImageSprites { get; set; }
 
         [StringLengthMax]
         public virtual string ResourceSetRegexes { get; set; }
@@ -40,6 +40,7 @@ namespace Piedone.Combinator.Models
             EmbedCssImages = false;
             EmbeddedImagesMaxSizeKB = 15;
             EmbedCssImagesStylesheetExcludeRegex = "";
+            GenerateImageSprites = true;
             ResourceSetRegexes = "";
             EnableForAdmin = false;
         }

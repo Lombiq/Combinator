@@ -12,13 +12,13 @@ namespace Piedone.Combinator.SpriteGenerator
     /// <remarks>
     /// The original version of this code is from the SpriteGenerator tool (http://spritegenerator.codeplex.com) by Csilla Karaffa
     /// </remarks>
-    internal class SpriteGenerator : IDisposable
+    internal class Sprite : IDisposable
     {
         private readonly IEnumerable<byte[]> _imageContents;
         private Placement _placement;
         private List<Module> _modules;
 
-        public SpriteGenerator(IEnumerable<byte[]> imageContents)
+        public Sprite(IEnumerable<byte[]> imageContents)
         {
             _imageContents = imageContents;
         }

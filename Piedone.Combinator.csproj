@@ -110,7 +110,7 @@
     <Compile Include="Services\ResourceProcessingService.cs" />
     <Compile Include="Services\SpriteService.cs" />
     <Compile Include="SpriteGenerator\Placement.cs" />
-    <Compile Include="SpriteGenerator\SpriteGenerator.cs" />
+    <Compile Include="SpriteGenerator\Sprite.cs" />
     <Compile Include="SpriteGenerator\Utility\Algorithm.cs" />
     <Compile Include="SpriteGenerator\Utility\Bit.cs" />
     <Compile Include="SpriteGenerator\Utility\Contour.cs" />

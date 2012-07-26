@@ -107,6 +107,7 @@
     <Compile Include="Services\MinificationService.cs" />
     <Compile Include="Services\ResourceFileService.cs" />
     <Compile Include="Services\ResourceProcessingService.cs" />
+    <Compile Include="Services\SpriteService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Web.config" />

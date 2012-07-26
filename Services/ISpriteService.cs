@@ -8,6 +8,6 @@ namespace Piedone.Combinator.Services
 {
     public interface ISpriteService : IDependency
     {
-
+        string ReplaceImagesWithSprite(string css);
     }
 }

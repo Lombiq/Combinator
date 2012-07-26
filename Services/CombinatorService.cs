@@ -174,7 +174,7 @@ namespace Piedone.Combinator.Services
 
                     if (combinedResource.Type == ResourceType.Style && !String.IsNullOrEmpty(combinedResource.Content) && settings.GenerateImageSprites)
                     {
-                        //_spriteService
+                        combinedResource.Content = _spriteService.ReplaceImagesWithSprite(combinedResource.Content);
                     }
 
                     _cacheFileService.Save(hashCode, combinedResource);

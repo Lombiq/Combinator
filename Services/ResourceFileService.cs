@@ -54,7 +54,7 @@ namespace Piedone.Combinator.Services
             }
         }
 
-        public byte[] GetImageData(Uri imageUrl, int maxSizeKB)
+        public byte[] GetImageContent(Uri imageUrl, int maxSizeKB)
         {
             // Since these are public urls referenced in stylesheets, there's no simple way to tell their local path.
             // That's why all images are downloaded with WebClient.

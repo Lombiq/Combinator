@@ -26,11 +26,14 @@ namespace Piedone.Combinator.SpriteGenerator
         public IEnumerable<string> Generate(string spritePublicUrl, Stream sprite, ImageFormat spriteFormat)
         {
             CreateModules();
+
+            if (_modules.Count == 0) return Enumerable.Empty<string>();
+
             GenerateLayout(sprite, spriteFormat);
             var backgroundDeclarations = GenerateBackgroundDeclarations(spritePublicUrl);
             if (backgroundDeclarations.Count() != _imageContents.Count())
             {
-                throw new ApplicationException("Not every image was placed in the sprite. This really shouldn1t happen.");
+                throw new ApplicationException("Not every image was placed in the sprite. This really shouldn't happen.");
             }
             return backgroundDeclarations;
         }

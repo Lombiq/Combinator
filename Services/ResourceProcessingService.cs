@@ -87,6 +87,8 @@ namespace Piedone.Combinator.Services
                     return null;
                 });
 
+            if (imageContents.Count == 0) return;
+
             IEnumerable<string> backgroundDeclarations = null;
             _cacheFileService.WriteSpriteStream(
                 resource.Content.GetHashCode() + ".jpg",

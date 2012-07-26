@@ -88,15 +88,32 @@ namespace Piedone.Combinator.Drivers
 
         protected override void Importing(CombinatorSettingsPart part, ImportContentContext context)
         {
-            part.CombinationExcludeRegex = context.Attribute(part.PartDefinition.Name, "CombinationExcludeRegex");
-            part.CombineCDNResources = bool.Parse(context.Attribute(part.PartDefinition.Name, "CombineCDNResources"));
-            part.EmbedCssImages = bool.Parse(context.Attribute(part.PartDefinition.Name, "EmbedCssImages"));
-            part.EmbedCssImagesStylesheetExcludeRegex = context.Attribute(part.PartDefinition.Name, "EmbedCssImagesStylesheetExcludeRegex");
-            part.EmbeddedImagesMaxSizeKB = int.Parse(context.Attribute(part.PartDefinition.Name, "EmbeddedImagesMaxSizeKB"));
-            part.MinificationExcludeRegex = context.Attribute(part.PartDefinition.Name, "MinificationExcludeRegex");
-            part.MinifyResources = bool.Parse(context.Attribute(part.PartDefinition.Name, "MinifyResources"));
-            part.ResourceSetRegexes = context.Attribute(part.PartDefinition.Name, "ResourceSetRegexes");
-            part.EnableForAdmin = bool.Parse(context.Attribute(part.PartDefinition.Name, "EnableForAdmin"));
+            var combinationExcludeRegex = context.Attribute(part.PartDefinition.Name, "CombinationExcludeRegex");
+            if (combinationExcludeRegex != null) part.CombinationExcludeRegex = combinationExcludeRegex;
+
+            var combineCDNResources = context.Attribute(part.PartDefinition.Name, "CombineCDNResources");
+            if (combineCDNResources != null) part.CombineCDNResources = bool.Parse(combineCDNResources);
+
+            var embedCssImages = context.Attribute(part.PartDefinition.Name, "EmbedCssImages");
+            if (embedCssImages != null) part.EmbedCssImages = bool.Parse(embedCssImages);
+
+            var embedCssImagesStylesheetExcludeRegex = context.Attribute(part.PartDefinition.Name, "EmbedCssImagesStylesheetExcludeRegex");
+            if (embedCssImagesStylesheetExcludeRegex != null) part.EmbedCssImagesStylesheetExcludeRegex = embedCssImagesStylesheetExcludeRegex;
+
+            var embeddedImagesMaxSizeKB = context.Attribute(part.PartDefinition.Name, "EmbeddedImagesMaxSizeKB");
+            if (embeddedImagesMaxSizeKB != null) part.EmbeddedImagesMaxSizeKB = int.Parse(embeddedImagesMaxSizeKB);
+
+            var minificationExcludeRegex = context.Attribute(part.PartDefinition.Name, "MinificationExcludeRegex");
+            if (minificationExcludeRegex != null) part.MinificationExcludeRegex = minificationExcludeRegex;
+
+            var minifyResources = context.Attribute(part.PartDefinition.Name, "MinifyResources");
+            if (minifyResources != null) part.MinifyResources = bool.Parse(minifyResources);
+
+            var resourceSetRegexes = context.Attribute(part.PartDefinition.Name, "ResourceSetRegexes");
+            if (resourceSetRegexes != null) part.ResourceSetRegexes = resourceSetRegexes;
+
+            var enableForAdmin = context.Attribute(part.PartDefinition.Name, "EnableForAdmin");
+            if (enableForAdmin != null) part.EnableForAdmin = bool.Parse(enableForAdmin);
         }
     }
 }

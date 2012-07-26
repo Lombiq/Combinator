@@ -42,12 +42,13 @@ namespace Piedone.Combinator.Migrations
                     .Column<bool>("EmbedCssImages")
                     .Column<int>("EmbeddedImagesMaxSizeKB")
                     .Column<string>("EmbedCssImagesStylesheetExcludeRegex", column => column.Unlimited())
+                    .Column<bool>("GenerateImageSprites")
                     .Column<string>("ResourceSetRegexes", column => column.Unlimited())
                     .Column<bool>("EnableForAdmin")
             );
 
 
-            return 8;
+            return 9;
         }
 
         public int UpdateFrom1()
@@ -143,6 +144,16 @@ namespace Piedone.Combinator.Migrations
             );
 
             return 8;
+        }
+
+        public int UpdateFrom8()
+        {
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+                table => table
+                    .AddColumn<bool>("GenerateImageSprites")
+            );
+
+            return 9;
         }
 
 

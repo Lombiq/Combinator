@@ -10,19 +10,15 @@ namespace Piedone.Combinator.Models
         [StringLengthMax]
         public virtual string CombinationExcludeRegex { get; set; }
 
-        [StringLengthMax]
         public virtual bool CombineCdnResources { get; set; }
 
-        [StringLengthMax]
         public virtual bool MinifyResources { get; set; }
 
         [StringLengthMax]
         public virtual string MinificationExcludeRegex { get; set; }
 
-        [StringLengthMax]
         public virtual bool EmbedCssImages { get; set; }
 
-        [StringLengthMax]
         public virtual int EmbeddedImagesMaxSizeKB { get; set; }
 
         [StringLengthMax]
@@ -31,7 +27,6 @@ namespace Piedone.Combinator.Models
         [StringLengthMax]
         public virtual string ResourceSetRegexes { get; set; }
 
-        [StringLengthMax]
         public virtual bool EnableForAdmin { get; set; }
 
         public CombinatorSettingsPartRecord()

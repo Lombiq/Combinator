@@ -12,8 +12,12 @@ namespace Piedone.Combinator.SpriteGenerator.Utility
         /// </summary>
         /// <param name="modules">List of modules that represent the images that need to be inserted into the sprite.</param>
         /// <returns>Near optimal placement.</returns>
-        public static Placement Greedy(List<Module> modules)
+        public static Placement Greedy(IEnumerable<Module> modules)
         {
+            var sortedByArea = from module in modules
+                               orderby module.Width * module.Height descending
+                               select module;
+
             //Empty O-Tree code.
             var oTree = new OTree();
             OT finalOT = null;
@@ -21,7 +25,7 @@ namespace Piedone.Combinator.SpriteGenerator.Utility
             var moduleList = new List<Module>();
 
             //For each module which needs to be inserted.
-            foreach (var module in modules)
+            foreach (var module in sortedByArea)
             {
                 OTree bestOTree = null;
                 //Add module to the list of already packed modules.
@@ -32,10 +36,10 @@ namespace Piedone.Combinator.SpriteGenerator.Utility
                 //Try all insertation point.
                 foreach (int insertationPoint in oTree.InsertationPoints())
                 {
-                    OTree ot = oTree.Copy();
+                    var ot = oTree.Copy();
                     ot.Insert(module.Name, insertationPoint);
-                    OT oT = new OT(ot, moduleList);
-                    Placement pm = oT.Placement;
+                    var oT = new OT(ot, moduleList);
+                    var pm = oT.Placement;
 
                     //Choose the one with the minimum perimeter.
                     if (pm.Perimeter < minPerimeter)

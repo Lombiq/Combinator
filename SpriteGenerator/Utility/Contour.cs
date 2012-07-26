@@ -3,23 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SpriteGenerator.Utility
+namespace Piedone.Combinator.SpriteGenerator.Utility
 {
     //Contour is the list of the modules on the top (horizontal contour) or on the right (vertical contour) of the 
     //placement. It is needed for linear time computation of the modules coordinates. It is easier to understand 
     //it from some figure. See reference.
-    abstract class Contour
+    internal abstract class Contour
     {
-        protected List<Module> moduleSequence;
-        protected int insertationIndex;
-        protected Module whereMax;
+        protected List<Module> _moduleSequence;
+        protected int _insertationIndex;
+        protected Module _whereMax;
 
-        protected void Construct(Module root)
+        protected Contour(Module root)
         {
-            moduleSequence = new List<Module>();
-            moduleSequence.Add(root);
-            whereMax = root;
-            insertationIndex = -1;
+            _moduleSequence = new List<Module>();
+            _moduleSequence.Add(root);
+            _whereMax = root;
+            _insertationIndex = -1;
         }
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace SpriteGenerator.Utility
         /// </summary>
         public int InsertationIndex
         {
-            set { insertationIndex = value; }
+            set { _insertationIndex = value; }
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace SpriteGenerator.Utility
         /// </summary>
         public List<Module> ModuleSequence
         {
-            get { return moduleSequence; }
+            get { return _moduleSequence; }
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace SpriteGenerator.Utility
         /// </summary>
         public Module WhereMax
         {
-            get { return whereMax; }
+            get { return _whereMax; }
         }
 
         public abstract int FindMax(int to);
@@ -55,8 +55,8 @@ namespace SpriteGenerator.Utility
         /// <param name="module"></param>
         public void Update(Module module)
         {
-            moduleSequence.Insert(++insertationIndex, module);
-            whereMax = new Module(-1, null);
+            _moduleSequence.Insert(++_insertationIndex, module);
+            _whereMax = new Module(-1, null);
         }
     }
 }

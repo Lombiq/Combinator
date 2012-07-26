@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SpriteGenerator.Utility
+namespace Piedone.Combinator.SpriteGenerator.Utility
 {
-    class GraphNode
+    internal class GraphNode
     {
-        public Dictionary<int, int> incomingEdges;
-        public Dictionary<int, int> outgoingEdges;
+        public Dictionary<int, int> IncomingEdges { get; set; }
+        public Dictionary<int, int> OutgoingEdges { get; set; }
 
         public void InitializeEdges()
         {
-            incomingEdges = new Dictionary<int, int>();
-            outgoingEdges = new Dictionary<int, int>();
+            IncomingEdges = new Dictionary<int, int>();
+            OutgoingEdges = new Dictionary<int, int>();
         }
     }
 }

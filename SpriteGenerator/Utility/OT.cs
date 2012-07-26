@@ -2,26 +2,25 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows;
 
-namespace SpriteGenerator.Utility
+namespace Piedone.Combinator.SpriteGenerator.Utility
 {
-    class OT
+    internal class OT
     {
-        private OTree oTree;
-        private Dictionary<int, Module> modules;
-        private Placement placement;
+        private OTree _oTree;
+        private Dictionary<int, Module> _modules;
+        private Placement _placement;
 
         /// <summary>
         /// Algoritms class for O-Tree representation.
         /// </summary>
         /// <param name="ot">The O-tree code which describes the placement.</param>
         /// <param name="_modules">Modules to be packed.</param>
-        public OT(OTree ot, List<Module> _modules)
+        public OT(OTree ot, List<Module> modules)
         {
-            oTree = ot;
-            modules = _modules.ToDictionary(item => item.Name, item => item);
-            placement = null;
+            _oTree = ot;
+            _modules = modules.ToDictionary(item => item.Name, item => item);
+            _placement = null;
         }
 
         /// <summary>
@@ -32,7 +31,7 @@ namespace SpriteGenerator.Utility
             get 
             {
                 ToCompact();
-                return placement; 
+                return _placement; 
             }
         }
 
@@ -44,15 +43,15 @@ namespace SpriteGenerator.Utility
         { 
             //Empty module representing the root of the tree
             Module root = new Module(-1, null);
-            modules.Add(-1, root);
-            oTree.ModuleSequence.Insert(0, -1);
+            _modules.Add(-1, root);
+            _oTree.ModuleSequence.Insert(0, -1);
 
             //Stack containing module labels for parent module calculation
             Stack<int> stack = new Stack<int>();
             stack.Push(-1);
 
             //Vertical contsraint graph
-            Graph constraintGraph = new Graph(oTree.ModuleSequence);
+            Graph constraintGraph = new Graph(_oTree.ModuleSequence);
 
             //Actual parent and child module
             Module parent = root;
@@ -64,12 +63,12 @@ namespace SpriteGenerator.Utility
             //Index of child module in ModuleSequence
             int childIndex = 0;
 
-            foreach (Bit bit in oTree.DfsSequence)
+            foreach (Bit bit in _oTree.DfsSequence)
             {
                 //Forth step in DFS traversing, coordinates need to be calcuted
                 if (bit == 0)
                 {
-                    child = modules[oTree.ModuleSequence[++childIndex]];
+                    child = _modules[_oTree.ModuleSequence[++childIndex]];
 
                     //In horizontal O-tree, child module is on the rigth side of the parent module and adjacent with it
                     child.X = parent.X + parent.Width;
@@ -92,15 +91,15 @@ namespace SpriteGenerator.Utility
                 {
                     //Updating parent module and the insertation index of the contour
                     stack.Pop();
-                    parent = modules[stack.Peek()];
+                    parent = _modules[stack.Peek()];
                     contour.InsertationIndex = contour.ModuleSequence.IndexOf(parent);
                 }
 
             }
 
             //Removing root module
-            modules.Remove(-1);
-            oTree.ModuleSequence.RemoveAt(0);
+            _modules.Remove(-1);
+            _oTree.ModuleSequence.RemoveAt(0);
 
             return constraintGraph;
         }
@@ -113,15 +112,15 @@ namespace SpriteGenerator.Utility
         {
             //Empty module representing the root of the tree
             Module root = new Module(-1, null);
-            modules.Add(-1, root);
-            oTree.ModuleSequence.Insert(0, -1);
+            _modules.Add(-1, root);
+            _oTree.ModuleSequence.Insert(0, -1);
 
             //Stack containing module labels for parent module calculation
             Stack<int> stack = new Stack<int>();
             stack.Push(-1);
 
             //Vertical contsraint graph
-            Graph constraintGraph = new Graph(oTree.ModuleSequence);
+            Graph constraintGraph = new Graph(_oTree.ModuleSequence);
 
             //Actual parent and child module
             Module parent = root;
@@ -133,12 +132,12 @@ namespace SpriteGenerator.Utility
             //Index of child module in ModuleSequence
             int childIndex = 0;
 
-            foreach (Bit bit in oTree.DfsSequence)
+            foreach (Bit bit in _oTree.DfsSequence)
             {
                 //Forth step in DFS traversing, coordinates need to be calcuted
                 if (bit == 0)
                 {
-                    child = modules[oTree.ModuleSequence[++childIndex]];
+                    child = _modules[_oTree.ModuleSequence[++childIndex]];
 
                     //In vertical O-tree, child module is on the top of parent module and adjacent with it
                     child.Y = parent.Y + parent.Height;
@@ -161,15 +160,15 @@ namespace SpriteGenerator.Utility
                 {
                     //Updating parent module and insertation index of the contour
                     stack.Pop();
-                    parent = modules[stack.Peek()];
+                    parent = _modules[stack.Peek()];
                     contour.InsertationIndex = contour.ModuleSequence.IndexOf(parent);
                 }
 
             }
 
             //Removing root module
-            modules.Remove(-1);
-            oTree.ModuleSequence.RemoveAt(0);
+            _modules.Remove(-1);
+            _oTree.ModuleSequence.RemoveAt(0);
             return constraintGraph;
         }
 
@@ -182,8 +181,8 @@ namespace SpriteGenerator.Utility
             bool changed = true;
 
             //Copy of components of the actual O-tree. If compaction steps does not change them, placement is compact.
-            List<Bit> DfsSequenceCopy = new List<Bit>(oTree.DfsSequence);
-            List<int> moduleSequenceCopy = new List<int>(oTree.ModuleSequence);
+            List<Bit> DfsSequenceCopy = new List<Bit>(_oTree.DfsSequence);
+            List<int> moduleSequenceCopy = new List<int>(_oTree.ModuleSequence);
 
             while (changed)
             {
@@ -192,26 +191,26 @@ namespace SpriteGenerator.Utility
                 //Vertical constraint graph from horizontal O-tree.
                 Graph gVertical = ToVerticalConstraintGraph();
                 //Vertical O-tree from vertical constraint graph.
-                oTree.ModuleSequence = gVertical.DepthFirstSearch(oTree.DfsSequence);
+                _oTree.ModuleSequence = gVertical.DepthFirstSearch(_oTree.DfsSequence);
 
                 //Horizontal constraint graph from vertical O-tree.
                 Graph gHorizontal = ToHorizontalConstraintGraph();
                 //Horizontal O-tree from horizontal constraint graph.
-                oTree.ModuleSequence = gHorizontal.DepthFirstSearch(oTree.DfsSequence);
+                _oTree.ModuleSequence = gHorizontal.DepthFirstSearch(_oTree.DfsSequence);
 
                 //Checking the changes of the O-Tree after compaction steps.
                 //If the O-tree has changed, more compaction steps could be needed on the changed tree.
-                if (!(oTree.DfsSequence.SequenceEqual(DfsSequenceCopy) &&
-                      oTree.ModuleSequence.SequenceEqual(moduleSequenceCopy)))
+                if (!(_oTree.DfsSequence.SequenceEqual(DfsSequenceCopy) &&
+                      _oTree.ModuleSequence.SequenceEqual(moduleSequenceCopy)))
                 {
-                    moduleSequenceCopy = new List<int>(oTree.ModuleSequence);
-                    DfsSequenceCopy = new List<Bit>(oTree.DfsSequence);
+                    moduleSequenceCopy = new List<int>(_oTree.ModuleSequence);
+                    DfsSequenceCopy = new List<Bit>(_oTree.DfsSequence);
                     changed = true;
                 }
             }
 
             //Compact placement.
-            placement = new Placement(modules.Values.ToList<Module>());
+            _placement = new Placement(_modules.Values.ToList());
         }
     }
 }

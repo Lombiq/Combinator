@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SpriteGenerator.Utility
+namespace Piedone.Combinator.SpriteGenerator.Utility
 {
-    static class Algorithm
+    internal static class Algorithm
     {
         /// <summary>
         /// Greedy algorithm.

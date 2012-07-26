@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SpriteGenerator.Utility
+namespace Piedone.Combinator.SpriteGenerator.Utility
 {
-    class HorizontalContour : Contour
+    internal class HorizontalContour : Contour
     {
         /// <summary>
         /// Contour class for quick computation of y-coordinates during working with horizontal O-Tree.
         /// </summary>
         /// <param name="root">First element of the contour.</param>
-        public HorizontalContour(Module root)
+        public HorizontalContour(Module root) : base(root)
         {
-            Construct(root);
         }
 
         /// <summary>
@@ -25,22 +24,22 @@ namespace SpriteGenerator.Utility
         {
             int max = 0;
             //Actual module does not need to be checked.
-            int indexFrom = insertationIndex + 1;
+            int indexFrom = _insertationIndex + 1;
 
             //Checking modules in contour.
-            while (indexFrom < moduleSequence.Count && moduleSequence[indexFrom].X < to)
+            while (indexFrom < _moduleSequence.Count && _moduleSequence[indexFrom].X < to)
             {
                 //Overwriting maximum.
-                if (max < moduleSequence[indexFrom].Y + moduleSequence[indexFrom].Height)
+                if (max < _moduleSequence[indexFrom].Y + _moduleSequence[indexFrom].Height)
                 {
-                    max = moduleSequence[indexFrom].Y + moduleSequence[indexFrom].Height;
-                    whereMax = moduleSequence[indexFrom];
+                    max = _moduleSequence[indexFrom].Y + _moduleSequence[indexFrom].Height;
+                    _whereMax = _moduleSequence[indexFrom];
                 }
 
                 //Removing modules, which are covered by the module will be isnserted.
-                if (moduleSequence[indexFrom].X + moduleSequence[indexFrom].Width <= to)
+                if (_moduleSequence[indexFrom].X + _moduleSequence[indexFrom].Width <= to)
                 {
-                    moduleSequence.RemoveAt(indexFrom);
+                    _moduleSequence.RemoveAt(indexFrom);
                 }
 
                 else

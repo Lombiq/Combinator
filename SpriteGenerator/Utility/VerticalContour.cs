@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SpriteGenerator.Utility
+namespace Piedone.Combinator.SpriteGenerator.Utility
 {
-    class VerticalContour : Contour
+    internal class VerticalContour : Contour
     {
         /// <summary>
         /// Contour class for quick computation of x-coordinates during working with vertical O-Tree.
         /// </summary>
         /// <param name="root">First element of the contour.</param>
-        public VerticalContour(Module root)
+        public VerticalContour(Module root) : base(root)
         {
-            Construct(root);
         }
 
         /// <summary>
@@ -25,22 +24,22 @@ namespace SpriteGenerator.Utility
         {
             int max = 0;
             //Actual module does not need to be checked.
-            int indexFrom = insertationIndex + 1;
+            int indexFrom = _insertationIndex + 1;
 
             //Checking modules in contour.
-            while (indexFrom < moduleSequence.Count && moduleSequence[indexFrom].Y < to)
+            while (indexFrom < _moduleSequence.Count && _moduleSequence[indexFrom].Y < to)
             {
                 //Overwriting maximum.
-                if (max < moduleSequence[indexFrom].X + moduleSequence[indexFrom].Width)
+                if (max < _moduleSequence[indexFrom].X + _moduleSequence[indexFrom].Width)
                 {
-                    max = moduleSequence[indexFrom].X + moduleSequence[indexFrom].Width;
-                    whereMax = moduleSequence[indexFrom];
+                    max = _moduleSequence[indexFrom].X + _moduleSequence[indexFrom].Width;
+                    _whereMax = _moduleSequence[indexFrom];
                 }
 
                 //Removing modules, which are covered by the module will be inserted.
-                if (moduleSequence[indexFrom].Y + moduleSequence[indexFrom].Height <= to)
+                if (_moduleSequence[indexFrom].Y + _moduleSequence[indexFrom].Height <= to)
                 {
-                    moduleSequence.RemoveAt(indexFrom);
+                    _moduleSequence.RemoveAt(indexFrom);
                 }
 
                 else

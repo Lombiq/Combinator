@@ -1,9 +1,8 @@
-﻿using System.Windows;
-using System.Drawing;
+﻿using System.Drawing;
 
-namespace SpriteGenerator.Utility
+namespace Piedone.Combinator.SpriteGenerator.Utility
 {
-    public class Module
+    internal class Module
     {
         private int _name;
         private int _width;

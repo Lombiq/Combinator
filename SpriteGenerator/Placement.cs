@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
-using SpriteGenerator.Utility;
+using Piedone.Combinator.SpriteGenerator.Utility;
 
-namespace SpriteGenerator
+namespace Piedone.Combinator.SpriteGenerator
 {
-    public class Placement
+    internal class Placement
     {
         private List<Module> _modules;
 

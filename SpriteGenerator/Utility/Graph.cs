@@ -3,27 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SpriteGenerator.Utility
+namespace Piedone.Combinator.SpriteGenerator.Utility
 {
-    class Graph
+    internal class Graph
     {
-        protected Dictionary<int, GraphNode> nodes;
+        private Dictionary<int, GraphNode> _nodes;
 
         /// <summary>
         /// Directed graph with weigted edges.
         /// </summary>
         /// <param name="_nodes">List of node labels.</param>
-        public Graph(List<int> _nodes)
+        public Graph(List<int> nodes)
         {
             //Nodes of the graph.
-            nodes = new Dictionary<int, GraphNode>();
+            _nodes = new Dictionary<int, GraphNode>();
 
             //Initializing list of edges for all nodes.
-            foreach (int node in _nodes)
+            foreach (int node in nodes)
             {
                 GraphNode gn = new GraphNode();
                 gn.InitializeEdges();
-                nodes.Add(node, gn);
+                _nodes.Add(node, gn);
             }
         }
 
@@ -35,8 +35,8 @@ namespace SpriteGenerator.Utility
         /// <param name="weight">Weight of the edge.</param>
         public void AddEdge(int from, int to, int weight)
         {
-            nodes[from].outgoingEdges.Add(to, weight);
-            nodes[to].incomingEdges.Add(from, weight);
+            _nodes[from].OutgoingEdges.Add(to, weight);
+            _nodes[to].IncomingEdges.Add(from, weight);
         }
 
         /// <summary>
@@ -62,8 +62,8 @@ namespace SpriteGenerator.Utility
                 DFSSequence.Add(0);
 
                 //Ordering neighbors by their weights
-                var orderedNeighbors = from neighbor in nodes[node].outgoingEdges.Keys
-                                       orderby nodes[node].outgoingEdges[neighbor]
+                var orderedNeighbors = from neighbor in _nodes[node].OutgoingEdges.Keys
+                                       orderby _nodes[node].OutgoingEdges[neighbor]
                                        select neighbor;
 
                 //Ordered list of neighbors
@@ -93,7 +93,7 @@ namespace SpriteGenerator.Utility
             DFSSequence.Clear();
             List<int> nodeOrder = new List<int>();
             //Every node is unvisited yet.
-            Dictionary<int, bool> visitedNodes = nodes.Keys.ToDictionary(item => item, item => false);
+            Dictionary<int, bool> visitedNodes = _nodes.Keys.ToDictionary(item => item, item => false);
 
             //Visit starts at root module representing by label -1.
             VisitNode(-1, visitedNodes, nodeOrder, DFSSequence);

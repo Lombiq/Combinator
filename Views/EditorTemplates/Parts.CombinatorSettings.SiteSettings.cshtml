@@ -36,9 +36,9 @@
             <span class="hint">@T("Files matched won't be processed in any way. Please provide a valid regular expression. Note that the full public urls of all resources will be checked against this regex. The match is case-sensitive. Regex.IsMatch() is used internally, so look at it for how to use. Example (without quotes): \"\\.min|jQuery\" will exclude all resources whose name contains \".min\" or \"jQuery\".")</span>
         </li>
         <li>
-            @Html.EditorFor(m => m.CombineCDNResources)
-            <label for="@Html.FieldIdFor(m => m.CombineCDNResources)" class="forcheckbox">@T("Combine CDN Resources")</label>
-            @Html.ValidationMessageFor(m => m.CombineCDNResources)
+            @Html.EditorFor(m => m.CombineCdnResources)
+            <label for="@Html.FieldIdFor(m => m.CombineCdnResources)" class="forcheckbox">@T("Combine CDN Resources")</label>
+            @Html.ValidationMessageFor(m => m.CombineCdnResources)
             <span class="hint">@T("If checked, remote resources from CDNs will be also combined. Most of the time this defeats the purpose of CDNs but if the site fetches resources from many sources, for your targeted visitors it may be faster to serve them all combined from your site. Always measure the difference!")</span>
         </li>
     </ol>

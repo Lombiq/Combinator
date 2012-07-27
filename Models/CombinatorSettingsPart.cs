@@ -13,7 +13,7 @@ namespace Piedone.Combinator.Models
             set { Record.CombinationExcludeRegex = value; }
         }
 
-        public bool CombineCDNResources
+        public bool CombineCdnResources
         {
             get { return Record.CombineCdnResources; }
             set { Record.CombineCdnResources = value; }

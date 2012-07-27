@@ -43,7 +43,7 @@ namespace Piedone.Combinator.Drivers
         {
             var formerSettings = new CombinatorSettingsPartRecord();
             formerSettings.CombinationExcludeRegex = part.CombinationExcludeRegex;
-            formerSettings.CombineCdnResources = part.CombineCDNResources;
+            formerSettings.CombineCdnResources = part.CombineCdnResources;
             formerSettings.MinifyResources = part.MinifyResources;
             formerSettings.MinificationExcludeRegex = part.MinificationExcludeRegex;
             formerSettings.EmbedCssImages = part.EmbedCssImages;
@@ -55,7 +55,7 @@ namespace Piedone.Combinator.Drivers
 
             // Not emptying the cache would cause inconsistencies
             if (part.CombinationExcludeRegex != formerSettings.CombinationExcludeRegex
-                || part.CombineCDNResources != formerSettings.CombineCdnResources
+                || part.CombineCdnResources != formerSettings.CombineCdnResources
                 || part.MinifyResources != formerSettings.MinifyResources
                 || (part.MinifyResources && part.MinificationExcludeRegex != formerSettings.MinificationExcludeRegex)
                 || part.EmbedCssImages != formerSettings.EmbedCssImages
@@ -76,44 +76,30 @@ namespace Piedone.Combinator.Drivers
             var element = context.Element(part.PartDefinition.Name);
 
             element.SetAttributeValue("CombinationExcludeRegex", part.CombinationExcludeRegex);
-            element.SetAttributeValue("CombineCDNResources", part.CombineCDNResources);
-            element.SetAttributeValue("EmbedCssImages", part.EmbedCssImages);
-            element.SetAttributeValue("EmbedCssImagesStylesheetExcludeRegex", part.EmbedCssImagesStylesheetExcludeRegex);
-            element.SetAttributeValue("EmbeddedImagesMaxSizeKB", part.EmbeddedImagesMaxSizeKB);
-            element.SetAttributeValue("MinificationExcludeRegex", part.MinificationExcludeRegex);
+            element.SetAttributeValue("CombineCdnResources", part.CombineCdnResources);
             element.SetAttributeValue("MinifyResources", part.MinifyResources);
+            element.SetAttributeValue("MinificationExcludeRegex", part.MinificationExcludeRegex);
+            element.SetAttributeValue("EmbedCssImages", part.EmbedCssImages);
+            element.SetAttributeValue("EmbeddedImagesMaxSizeKB", part.EmbeddedImagesMaxSizeKB);
+            element.SetAttributeValue("EmbedCssImagesStylesheetExcludeRegex", part.EmbedCssImagesStylesheetExcludeRegex);
+            element.SetAttributeValue("GenerateImageSprites", part.GenerateImageSprites);
             element.SetAttributeValue("ResourceSetRegexes", part.ResourceSetRegexes);
             element.SetAttributeValue("EnableForAdmin", part.EnableForAdmin);
         }
 
         protected override void Importing(CombinatorSettingsPart part, ImportContentContext context)
         {
-            var combinationExcludeRegex = context.Attribute(part.PartDefinition.Name, "CombinationExcludeRegex");
-            if (combinationExcludeRegex != null) part.CombinationExcludeRegex = combinationExcludeRegex;
-
-            var combineCDNResources = context.Attribute(part.PartDefinition.Name, "CombineCDNResources");
-            if (combineCDNResources != null) part.CombineCDNResources = bool.Parse(combineCDNResources);
-
-            var embedCssImages = context.Attribute(part.PartDefinition.Name, "EmbedCssImages");
-            if (embedCssImages != null) part.EmbedCssImages = bool.Parse(embedCssImages);
-
-            var embedCssImagesStylesheetExcludeRegex = context.Attribute(part.PartDefinition.Name, "EmbedCssImagesStylesheetExcludeRegex");
-            if (embedCssImagesStylesheetExcludeRegex != null) part.EmbedCssImagesStylesheetExcludeRegex = embedCssImagesStylesheetExcludeRegex;
-
-            var embeddedImagesMaxSizeKB = context.Attribute(part.PartDefinition.Name, "EmbeddedImagesMaxSizeKB");
-            if (embeddedImagesMaxSizeKB != null) part.EmbeddedImagesMaxSizeKB = int.Parse(embeddedImagesMaxSizeKB);
-
-            var minificationExcludeRegex = context.Attribute(part.PartDefinition.Name, "MinificationExcludeRegex");
-            if (minificationExcludeRegex != null) part.MinificationExcludeRegex = minificationExcludeRegex;
-
-            var minifyResources = context.Attribute(part.PartDefinition.Name, "MinifyResources");
-            if (minifyResources != null) part.MinifyResources = bool.Parse(minifyResources);
-
-            var resourceSetRegexes = context.Attribute(part.PartDefinition.Name, "ResourceSetRegexes");
-            if (resourceSetRegexes != null) part.ResourceSetRegexes = resourceSetRegexes;
-
-            var enableForAdmin = context.Attribute(part.PartDefinition.Name, "EnableForAdmin");
-            if (enableForAdmin != null) part.EnableForAdmin = bool.Parse(enableForAdmin);
+            var partName = part.PartDefinition.Name;
+            context.ImportAttribute(partName, "CombinationExcludeRegex", value => part.CombinationExcludeRegex = value);
+            context.ImportAttribute(partName, "CombineCdnResources", value => part.CombineCdnResources = bool.Parse(value));
+            context.ImportAttribute(partName, "MinifyResources", value => part.MinifyResources = bool.Parse(value));
+            context.ImportAttribute(partName, "MinificationExcludeRegex", value => part.MinificationExcludeRegex = value);
+            context.ImportAttribute(partName, "EmbedCssImages", value => part.EmbedCssImages = bool.Parse(value));
+            context.ImportAttribute(partName, "EmbeddedImagesMaxSizeKB", value => part.EmbeddedImagesMaxSizeKB = int.Parse(value));
+            context.ImportAttribute(partName, "EmbedCssImagesStylesheetExcludeRegex", value => part.EmbedCssImagesStylesheetExcludeRegex = value);
+            context.ImportAttribute(partName, "GenerateImageSprites", value => part.GenerateImageSprites = bool.Parse(value));
+            context.ImportAttribute(partName, "ResourceSetRegexes", value => part.ResourceSetRegexes = value);
+            context.ImportAttribute(partName, "EnableForAdmin", value => part.EnableForAdmin = bool.Parse(value));
         }
     }
 }

@@ -90,6 +90,7 @@ namespace Piedone.Combinator.Drivers
         protected override void Importing(CombinatorSettingsPart part, ImportContentContext context)
         {
             var partName = part.PartDefinition.Name;
+
             context.ImportAttribute(partName, "CombinationExcludeRegex", value => part.CombinationExcludeRegex = value);
             context.ImportAttribute(partName, "CombineCdnResources", value => part.CombineCdnResources = bool.Parse(value));
             context.ImportAttribute(partName, "MinifyResources", value => part.MinifyResources = bool.Parse(value));

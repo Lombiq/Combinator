@@ -34,13 +34,9 @@ namespace Piedone.Combinator.Services
             {
                 var absoluteUrlString = resource.AbsoluteUrl.ToString();
 
-                if (!resource.IsCdnResource)
+                if (!resource.IsCdnResource || settings.CombineCDNResources)
                 {
-                    resource.Content = _resourceFileService.GetLocalResourceContent(resource);
-                }
-                else if (settings.CombineCDNResources)
-                {
-                    resource.Content = _resourceFileService.GetRemoteResourceContent(resource);
+                    _resourceFileService.LoadResourceContent(resource);
                 }
 
                 if (String.IsNullOrEmpty(resource.Content)) return;

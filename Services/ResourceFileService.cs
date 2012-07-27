@@ -14,7 +14,7 @@ namespace Piedone.Combinator.Services
         private readonly IVirtualPathProvider _virtualPathProvider;
 
         public Localizer T { get; set; }
-        
+
         public ResourceFileService(
             IVirtualPathProvider virtualPathProvider)
         {
@@ -24,7 +24,31 @@ namespace Piedone.Combinator.Services
         }
 
 
-        public string GetLocalResourceContent(CombinatorResource resource)
+        public void LoadResourceContent(CombinatorResource resource)
+        {
+            if (!resource.IsCdnResource)
+            {
+                resource.Content = FetchLocalResourceContent(resource);
+            }
+            else
+            {
+                resource.Content = FetchRemoteResourceContent(resource);
+            }
+        }
+
+        public byte[] GetImageContent(Uri imageUrl, int maxSizeKB)
+        {
+            // Since these are public urls referenced in stylesheets, there's no simple way to tell their local path.
+            // That's why all images are downloaded with WebClient.
+            using (var wc = new WebClient())
+            {
+                var imageData = wc.DownloadData(imageUrl);
+                if (imageData.Length / 1024 > maxSizeKB) return null;
+                return imageData;
+            }
+        }
+
+        private string FetchLocalResourceContent(CombinatorResource resource)
         {
             var relativeVirtualPath = resource.RelativeVirtualPath;
 
@@ -40,7 +64,7 @@ namespace Piedone.Combinator.Services
             return content;
         }
 
-        public string GetRemoteResourceContent(CombinatorResource resource)
+        private string FetchRemoteResourceContent(CombinatorResource resource)
         {
             using (var wc = new WebClient())
             {
@@ -50,19 +74,7 @@ namespace Piedone.Combinator.Services
                 {
                     content = content.Remove(0, byteOrderMarkUtf8.Length);
                 }
-                return content; 
-            }
-        }
-
-        public byte[] GetImageContent(Uri imageUrl, int maxSizeKB)
-        {
-            // Since these are public urls referenced in stylesheets, there's no simple way to tell their local path.
-            // That's why all images are downloaded with WebClient.
-            using (var wc = new WebClient())
-            {
-                var imageData = wc.DownloadData(imageUrl);
-                if (imageData.Length / 1024 > maxSizeKB) return null;
-                return imageData;
+                return content;
             }
         }
     }

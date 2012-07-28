@@ -93,10 +93,11 @@ namespace Piedone.Combinator.Services
                     using (var sprite = new Sprite(images.Values.Select(image => image.Content)))
                     {
                         var imageEnumerator = images.Values.GetEnumerator();
-                        foreach (var backgroundDeclaration in sprite.Generate(publicUrl, stream, ImageFormat.Jpeg))
+                        foreach (var backgroundImage in sprite.Generate(stream, ImageFormat.Jpeg))
                         {
                             imageEnumerator.MoveNext();
-                            imageEnumerator.Current.BackgroundDeclaration = backgroundDeclaration;
+                            imageEnumerator.Current.BackgroundImage = backgroundImage;
+                            imageEnumerator.Current.BackgroundImage.ImageUrl = publicUrl;
                         }
                     }
                 });
@@ -106,7 +107,7 @@ namespace Piedone.Combinator.Services
                 @"background-image:\s?url\(['|""]?(.+?)['|""]?\);?",
                 (match) =>
                 {
-                    return images[match.Groups[1].Value].BackgroundDeclaration;
+                    return images[match.Groups[1].Value].BackgroundImage.ToString();
                 },
                 RegexOptions.IgnoreCase);
         }
@@ -114,7 +115,7 @@ namespace Piedone.Combinator.Services
         private class CssImage
         {
             public byte[] Content { get; set; }
-            public string BackgroundDeclaration { get; set; }
+            public BackgroundImage BackgroundImage { get; set; }
         }
 
         private void ProcessImageUrls(CombinatorResource resource, ImageMatchProcessor matchProcessor)

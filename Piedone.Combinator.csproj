@@ -131,6 +131,7 @@
     <Compile Include="Services\MinificationService.cs" />
     <Compile Include="Services\ResourceFileService.cs" />
     <Compile Include="Services\ResourceProcessingService.cs" />
+    <Compile Include="SpriteGenerator\BackgroundImage.cs" />
     <Compile Include="SpriteGenerator\Placement.cs" />
     <Compile Include="SpriteGenerator\Sprite.cs" />
     <Compile Include="SpriteGenerator\Utility\Algorithm.cs" />

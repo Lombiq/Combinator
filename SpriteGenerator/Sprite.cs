@@ -23,19 +23,19 @@ namespace Piedone.Combinator.SpriteGenerator
             _imageContents = imageContents;
         }
 
-        public IEnumerable<string> Generate(string spritePublicUrl, Stream sprite, ImageFormat spriteFormat)
+        public IEnumerable<BackgroundImage> Generate(Stream sprite, ImageFormat spriteFormat)
         {
             CreateModules();
 
-            if (_modules.Count == 0) return Enumerable.Empty<string>();
+            if (_modules.Count == 0) return Enumerable.Empty<BackgroundImage>();
 
             GenerateLayout(sprite, spriteFormat);
-            var backgroundDeclarations = GenerateBackgroundDeclarations(spritePublicUrl);
-            if (backgroundDeclarations.Count() != _imageContents.Count())
+            var backgroundImages = GenerateBackgroundImages();
+            if (backgroundImages.Count() != _imageContents.Count())
             {
                 throw new ApplicationException("Not every image was placed in the sprite. This really shouldn't happen.");
             }
-            return backgroundDeclarations;
+            return backgroundImages;
         }
 
         private void CreateModules()
@@ -62,7 +62,6 @@ namespace Piedone.Combinator.SpriteGenerator
             {
                 using (var graphics = Graphics.FromImage(spriteImage))
                 {
-                    //Drawing images into the result image in the original order and writing CSS lines.
                     foreach (var module in _placement.Modules)
                     {
                         module.Draw(graphics);
@@ -73,22 +72,21 @@ namespace Piedone.Combinator.SpriteGenerator
             }
         }
 
-        private IEnumerable<string> GenerateBackgroundDeclarations(string spritePublicUrl)
+        private IEnumerable<BackgroundImage> GenerateBackgroundImages()
         {
-            var declarations = new List<string>();
+            var images = new List<BackgroundImage>();
 
-            foreach (var module in _placement.Modules)
+            // We're using _modules, not _placement.Modules to have the original order of images
+            foreach (var module in _modules)
             {
-                var rectangle = new Rectangle(module.X, module.Y, module.Width, module.Height);
-
-                declarations.Add(
-                    "background-image: url('" + spritePublicUrl + "');" +
-                    //"width:" + rectangle.Width.ToString() +
-                    //"px;height:" + rectangle.Height.ToString() + "px;" +
-                    "background-position:" + (-1 * rectangle.X).ToString() + "px " + (-1 * rectangle.Y).ToString() + "px;");
+                images.Add(
+                    new BackgroundImage
+                    {
+                        Position = new Point(module.X * -1, module.Y * -1)
+                    });
             }
 
-            return declarations;
+            return images;
         }
 
         public void Dispose()

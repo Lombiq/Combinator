@@ -41,7 +41,7 @@ namespace Piedone.Combinator.SpriteGenerator
         }
 
         /// <summary>
-        /// Gets the modules in the placement.
+        /// Gets the modules in the placement. Modules are not necessarily in their original order!
         /// </summary>
         public List<Module> Modules
         {

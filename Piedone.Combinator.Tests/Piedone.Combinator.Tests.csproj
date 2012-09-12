@@ -149,31 +149,31 @@
     <Compile Include="TestHelpers\CombinatorResourceHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Orchard.Web\Modules\Piedone.HelpfulLibraries\Piedone.HelpfulLibraries.csproj">
+    <ProjectReference Include="..\..\Piedone.HelpfulLibraries\Piedone.HelpfulLibraries.csproj">
       <Project>{EA61AD10-39D6-41A9-B12B-227F50C54158}</Project>
       <Name>Piedone.HelpfulLibraries</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Orchard.Tests.Modules.csproj">
+    <ProjectReference Include="..\..\..\..\Orchard.Tests.Modules\Orchard.Tests.Modules.csproj">
       <Project>{6CB3EB30-F725-45C0-9742-42599BA8E8D2}</Project>
       <Name>Orchard.Tests.Modules</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Orchard.Tests\Orchard.Framework.Tests.csproj">
+    <ProjectReference Include="..\..\..\..\Orchard.Tests\Orchard.Framework.Tests.csproj">
       <Project>{ABC826D4-2FA1-4F2F-87DE-E6095F653810}</Project>
       <Name>Orchard.Framework.Tests</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Orchard.Web\Core\Orchard.Core.csproj">
+    <ProjectReference Include="..\..\..\Core\Orchard.Core.csproj">
       <Project>{9916839C-39FC-4CEB-A5AF-89CA7E87119F}</Project>
       <Name>Orchard.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Orchard.Web\Modules\Lucene\Lucene.csproj">
+    <ProjectReference Include="..\..\Lucene\Lucene.csproj">
       <Project>{D5D447D7-EF8E-43A6-B9A4-3B025DD9F45D}</Project>
       <Name>Lucene</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Orchard.Web\Modules\Piedone.Combinator\Piedone.Combinator.csproj">
+    <ProjectReference Include="..\Piedone.Combinator.csproj">
       <Project>{C2F88C61-ED65-400A-AAA3-12518108EB8D}</Project>
       <Name>Piedone.Combinator</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Orchard\Orchard.Framework.csproj">
+    <ProjectReference Include="..\..\..\..\Orchard\Orchard.Framework.csproj">
       <Project>{2D1D92BB-4555-4CBE-8D0E-63563D6CE4C6}</Project>
       <Name>Orchard.Framework</Name>
     </ProjectReference>

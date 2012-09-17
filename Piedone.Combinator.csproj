@@ -103,6 +103,8 @@
     <Compile Include="EventHandlers\CombinatorEventMonitor.cs" />
     <Compile Include="EventHandlers\ICombinatorEventHandler.cs" />
     <Compile Include="EventHandlers\ICombinatorEventMonitor.cs" />
+    <Compile Include="EventHandlers\ICombinatorResourceEventHandler.cs" />
+    <Compile Include="EventHandlers\Test.cs" />
     <Compile Include="Extensions\CombinedFileRecordExtensions.cs" />
     <Compile Include="Extensions\RequireSettingsExtensions.cs" />
     <Compile Include="Extensions\ResourceDefinitionExtensions.cs" />

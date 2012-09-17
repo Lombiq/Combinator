@@ -8,6 +8,7 @@ using Piedone.Combinator.SpriteGenerator;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Linq;
+using Piedone.Combinator.EventHandlers;
 
 namespace Piedone.Combinator.Services
 {
@@ -16,17 +17,20 @@ namespace Piedone.Combinator.Services
         private readonly IResourceFileService _resourceFileService;
         private readonly IMinificationService _minificationService;
         private readonly ICacheFileService _cacheFileService;
+        private readonly ICombinatorResourceEventHandler _eventHandler;
 
         private delegate string ImageMatchProcessor(string url, string extension, Match match);
 
         public ResourceProcessingService(
             IResourceFileService resourceFileService,
             IMinificationService minificationService,
-            ICacheFileService cacheFileService)
+            ICacheFileService cacheFileService,
+            ICombinatorResourceEventHandler eventHandler)
         {
             _resourceFileService = resourceFileService;
             _minificationService = minificationService;
             _cacheFileService = cacheFileService;
+            _eventHandler = eventHandler;
         }
 
         public void ProcessResource(CombinatorResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
@@ -39,6 +43,8 @@ namespace Piedone.Combinator.Services
                 {
                     _resourceFileService.LoadResourceContent(resource);
                 }
+
+                _eventHandler.OnContentLoaded(resource);
 
                 if (String.IsNullOrEmpty(resource.Content)) return;
 
@@ -58,6 +64,8 @@ namespace Piedone.Combinator.Services
                         EmbedImages(resource, settings.EmbeddedImagesMaxSizeKB);
                     }
                 }
+
+                _eventHandler.OnContentProcessed(resource);
 
                 combinedContent.Append(resource.Content);
             }

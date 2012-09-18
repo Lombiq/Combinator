@@ -4,10 +4,10 @@ Author: Piedone
 Website: http://combinator.codeplex.com
 Version: 2.0a3
 OrchardVersion: 1.5
-Description: Combines and minifies external stylesheets and javascript files. Minifications uses the YUI Compressor (http://yuicompressor.codeplex.com/), the original code for sprite generation is from Sprite Generator (http://spritegenerator.codeplex.com/).
+Description: Combines and minifies external stylesheets and javascript files. Minifications uses the YUI Compressor (http://yuicompressor.codeplex.com/), the original code for sprite generation is from Sprite Generator (http://spritegenerator.codeplex.com/) and stylesheets are parsed with ExCSS (https://github.com/TylerBrinks/ExCSS).
 Features:
     Piedone.Combinator:
 		Name: Combinator
-        Description: Combines and minifies external stylesheets and javascript files. Minifications uses the YUI Compressor (http://yuicompressor.codeplex.com/), the original code for sprite generation is from Sprite Generator (http://spritegenerator.codeplex.com/).
+        Description: Combines and minifies external stylesheets and javascript files. Minifications uses the YUI Compressor (http://yuicompressor.codeplex.com/), the original code for sprite generation is from Sprite Generator (http://spritegenerator.codeplex.com/) and stylesheets are parsed with ExCSS (https://github.com/TylerBrinks/ExCSS).
 		Category: Performance
 		Dependencies: Orchard.jQuery, Piedone.HelpfulLibraries.Serialization, Piedone.HelpfulLibraries.Tasks

@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Linq;
 using Piedone.Combinator.EventHandlers;
+using ExCSS;
+using ExCSS.Model;
 
 namespace Piedone.Combinator.Services
 {
@@ -18,8 +20,6 @@ namespace Piedone.Combinator.Services
         private readonly IMinificationService _minificationService;
         private readonly ICacheFileService _cacheFileService;
         private readonly ICombinatorResourceEventHandler _eventHandler;
-
-        private delegate string ImageMatchProcessor(string url, string extension, Match match);
 
         public ResourceProcessingService(
             IResourceFileService resourceFileService,
@@ -57,12 +57,15 @@ namespace Piedone.Combinator.Services
                 // Better to do after minification, as then urls commented out are removed
                 if (resource.Type == ResourceType.Style)
                 {
-                    AdjustRelativePaths(resource);
+                    var stylesheet = new StylesheetParser().Parse(resource.Content);
+                    AdjustRelativePaths(resource, stylesheet);
 
                     if (settings.EmbedCssImages && (settings.EmbedCssImagesStylesheetExcludeFilter == null || !settings.EmbedCssImagesStylesheetExcludeFilter.IsMatch(absoluteUrlString)))
                     {
-                        EmbedImages(resource, settings.EmbeddedImagesMaxSizeKB);
+                        EmbedImages(resource, stylesheet, settings.EmbeddedImagesMaxSizeKB);
                     }
+
+                    resource.Content = stylesheet.ToString();
                 }
 
                 _eventHandler.OnContentProcessed(resource);
@@ -78,18 +81,20 @@ namespace Piedone.Combinator.Services
         public void ReplaceCssImagesWithSprite(CombinatorResource resource)
         {
             var images = new Dictionary<string, CssImage>();
+            var stylesheet = new StylesheetParser().Parse(resource.Content);
 
-            ProcessImageUrls(resource,
-                (url, extension, match) =>
+            ProcessImageUrls(
+                resource,
+                stylesheet,
+                (ruleSet, urlTerm) =>
                 {
+                    var url = urlTerm.Value;
                     var imageContent = _resourceFileService.GetImageContent(MakeInlineUri(resource, url), 5000);
 
                     if (imageContent != null)
                     {
                         images[url] = new CssImage { Content = imageContent };
                     }
-
-                    return null;
                 });
 
             if (images.Count == 0) return;
@@ -110,14 +115,48 @@ namespace Piedone.Combinator.Services
                     }
                 });
 
-            resource.Content = Regex.Replace(
-                resource.Content,
-                @"background-image:\s?url\(['|""]?(.+?)['|""]?\);?",
-                (match) =>
+            ProcessImageUrls(
+                resource,
+                stylesheet,
+                (ruleSet, urlTerm) =>
                 {
-                    return images[match.Groups[1].Value].BackgroundImage.ToString();
-                },
-                RegexOptions.IgnoreCase);
+                    var url = urlTerm.Value;
+                    // This should really be always true
+                    if (images.ContainsKey(url))
+                    {
+                        var backgroundImage = images[url].BackgroundImage;
+
+                        var imageDeclaration = new Declaration
+                            {
+                                Name = "background-image",
+                                Expression = new Expression
+                                    {
+                                        Terms = new List<Term>
+                                        {
+                                            new Term { Type = TermType.Url, Value = backgroundImage.ImageUrl }
+                                        }
+                                    }
+                            };
+                        ruleSet.Declarations.Add(imageDeclaration);
+
+                        var bgPosition = backgroundImage.Position;
+                        var positionDeclaration = new Declaration
+                        {
+                            Name = "background-position",
+                            Expression = new Expression
+                            {
+                                Terms = new List<Term>
+                                        {
+                                            new Term { Type = TermType.Number, Value = bgPosition.X.ToString(), Unit = Unit.Px },
+                                            new Term { Type = TermType.Number, Value = bgPosition.Y.ToString(), Unit = Unit.Px }
+                                        }
+                            }
+                        };
+                        ruleSet.Declarations.Add(positionDeclaration);
+                    }
+                });
+
+            resource.Content = stylesheet.ToString();
         }
 
         private class CssImage
@@ -126,30 +165,14 @@ namespace Piedone.Combinator.Services
             public BackgroundImage BackgroundImage { get; set; }
         }
 
-        private void ProcessImageUrls(CombinatorResource resource, ImageMatchProcessor matchProcessor)
+        private void EmbedImages(CombinatorResource resource, Stylesheet stylesheet, int maxSizeKB)
         {
-            ProcessUrls(resource,
-                (match) =>
+            ProcessImageUrls(
+                resource,
+                stylesheet,
+                (ruleSet, urlTerm) =>
                 {
-                    var url = match.Groups[1].Value;
-                    var extension = Path.GetExtension(url).ToLowerInvariant();
-
-                    // This is a dumb check but otherwise we'd have to inspect the file thoroughly
-                    if (!String.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
-                    {
-                        var result = matchProcessor(url, extension, match);
-                        if (result != null) return result;
-                    }
-
-                    return match.Groups[0].Value;
-                });
-        }
-
-        private void EmbedImages(CombinatorResource resource, int maxSizeKB)
-        {
-            ProcessImageUrls(resource,
-                (url, extenstion, match) =>
-                {
+                    var url = urlTerm.Value;
                     var imageData = _resourceFileService.GetImageContent(MakeInlineUri(resource, url), maxSizeKB);
 
                     if (imageData != null)
@@ -160,42 +183,63 @@ namespace Piedone.Combinator.Services
                             + ";base64,"
                             + Convert.ToBase64String(imageData);
 
-                        return "url(\"" + dataUrl + "\")";
+                        urlTerm.Value = dataUrl;
                     }
-
-                    return null;
                 });
         }
 
-        private static void AdjustRelativePaths(CombinatorResource resource)
+        private static void AdjustRelativePaths(CombinatorResource resource, Stylesheet stylesheet)
         {
-            ProcessUrls(resource,
-                (match) =>
+            ProcessUrls(
+                resource,
+                stylesheet,
+                (ruleSet, urlTerm) =>
                 {
-                    var url = match.Groups[1].ToString();
-
-                    var uri = MakeInlineUri(resource, url);
+                    var uri = MakeInlineUri(resource, urlTerm.Value);
 
                     // Remote paths are preserved as full urls, local paths become uniformed relative ones.
                     string uriString = "";
                     if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToStringWithoutScheme();
                     else uriString = uri.PathAndQuery;
 
-                    return "url(\"" + uriString + "\")";
+                    urlTerm.Value = uriString;
                 });
         }
 
-        private static void ProcessUrls(CombinatorResource resource, MatchEvaluator evaluator)
+        private static void ProcessUrls(CombinatorResource resource, Stylesheet stylesheet, Action<RuleSet, Term> processor)
         {
-            string content = resource.Content;
+            var items =
+                stylesheet.RuleSets
+                    .SelectMany(ruleset => ruleset.Declarations
+                        .SelectMany(declaration => declaration.Expression.Terms
+                            .Where(term => term.Type == TermType.Url)
+                            .Select(term => new { RuleSet = ruleset, Term = term })))
+                .ToList();
 
-            content = Regex.Replace(
-                                    content,
-                                    "url\\(['|\"]?(.+?)['|\"]?\\)",
-                                    evaluator,
-                                    RegexOptions.IgnoreCase);
+            // Projected to a list so for can be used. This makes it possible to modify the collection from processors.
+            for (int i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                processor(item.RuleSet, item.Term);
+            }
+        }
 
-            resource.Content = content;
+        private static void ProcessImageUrls(CombinatorResource resource, Stylesheet stylesheet, Action<RuleSet, Term> processor)
+        {
+            ProcessUrls(
+                resource,
+                stylesheet,
+                (ruleSet, urlTerm) =>
+                {
+                    var url = urlTerm.Value;
+                    var extension = Path.GetExtension(url).ToLowerInvariant();
+
+                    // This is a dumb check but otherwise we'd have to inspect the file thoroughly
+                    if (!String.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
+                    {
+                        processor(ruleSet, urlTerm);
+                    }
+                });
         }
 
         private static Uri MakeInlineUri(CombinatorResource resource, string url)

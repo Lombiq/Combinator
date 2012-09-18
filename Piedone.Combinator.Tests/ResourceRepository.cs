@@ -73,7 +73,7 @@ namespace Piedone.Combinator.Tests
 
             resource = SaveResource("~/Modules/Piedone.Combinator/Styles/test.css", type);
             resource.LastUpdatedUtc = DateTime.UtcNow;
-            resource.Content = "~/Modules/Piedone.Combinator/Styles/test.css";
+            resource.Content = "body { background-image: url(/Modules/Piedone.Combinator/Styles/test.css); }";
 
             if (includeCDNResources)
             {
@@ -84,11 +84,11 @@ namespace Piedone.Combinator.Tests
 
             resource = SaveResource("~/Modules/Piedone.Combinator/Styles/test2.css", type);
             resource.LastUpdatedUtc = DateTime.UtcNow;
-            resource.Content = "~/Modules/Piedone.Combinator/Styles/test2.css";
+            resource.Content = "body { background-image: url(/Modules/Piedone.Combinator/Styles/test2.css); }";
 
             resource = SaveResource("~/Modules/Piedone.Combinator/Styles/test3.css", type);
             resource.LastUpdatedUtc = DateTime.UtcNow;
-            resource.Content = "~/Modules/Piedone.Combinator/Styles/test3.css";
+            resource.Content = "body { background-image: url(/Modules/Piedone.Combinator/Styles/test3.css); }";
         }
 
         public CombinatorResource GetResource(CombinatorResource resource)

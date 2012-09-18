@@ -31,7 +31,7 @@
     <ol>
         <li>
             @Html.LabelFor(m => m.CombinationExcludeRegex, T("Exclude from combination"))
-            @Html.TextBoxFor(m => m.CombinationExcludeRegex, new { @class = "textMedium" })
+            @Html.TextBoxFor(m => m.CombinationExcludeRegex, new { @class = "text large" })
             @Html.ValidationMessageFor(m => m.CombinationExcludeRegex)
             <span class="hint">@T("Files matched won't be processed in any way. Please provide a valid regular expression. Note that the full public urls of all resources will be checked against this regex. The match is case-sensitive. Regex.IsMatch() is used internally, so look at it for how to use. Example (without quotes): \"\\.min|jQuery\" will exclude all resources whose name contains \".min\" or \"jQuery\".")</span>
         </li>
@@ -53,7 +53,7 @@
         </li>
         <li>
             @Html.LabelFor(m => m.MinificationExcludeRegex, T("Exclude from minification"))
-            @Html.TextBoxFor(m => m.MinificationExcludeRegex, new { @class = "textMedium" })
+            @Html.TextBoxFor(m => m.MinificationExcludeRegex, new { @class = "text large" })
             @Html.ValidationMessageFor(m => m.MinificationExcludeRegex)
             <span class="hint">@T("Contents of matched files won't be minified. The same rules apply as with the combination exclusion regex.")</span>
         </li>
@@ -80,7 +80,7 @@
          </li>
          <li>
             @Html.LabelFor(m => m.EmbedCssImagesStylesheetExcludeRegex, T("Exclude from embedding"))
-            @Html.TextBoxFor(m => m.EmbedCssImagesStylesheetExcludeRegex, new { @class = "textMedium" })
+            @Html.TextBoxFor(m => m.EmbedCssImagesStylesheetExcludeRegex, new { @class = "text large" })
             @Html.ValidationMessageFor(m => m.EmbedCssImagesStylesheetExcludeRegex)
             <span class="hint">@T("Images of matched stylesheets won't be embedded. The same rules apply as with the combination exclusion regex. You can use this feature to exclude conditional stylesheets that are only for browsers prior to IE 8, so that for those clients the original images are presented.")</span>
         </li>

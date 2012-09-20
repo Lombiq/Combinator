@@ -14,6 +14,8 @@ namespace Piedone.Combinator.Models
 
         public virtual string ResourceDomain { get; set; }
 
+        public virtual bool EnableForAdmin { get; set; }
+
         public virtual bool MinifyResources { get; set; }
 
         [StringLengthMax]
@@ -30,8 +32,6 @@ namespace Piedone.Combinator.Models
 
         [StringLengthMax]
         public virtual string ResourceSetRegexes { get; set; }
-
-        public virtual bool EnableForAdmin { get; set; }
 
         public CombinatorSettingsPartRecord()
         {

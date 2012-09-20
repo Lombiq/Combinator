@@ -45,8 +45,14 @@
             @Html.LabelFor(m => m.ResourceDomain, T("Resource domain"))
             @Html.TextBoxFor(m => m.ResourceDomain, new { @class = "text large" })
             @Html.ValidationMessageFor(m => m.ResourceDomain)
-            <span class="hint">@T("If set, this domain will be used for local resource paths. Use this if you have a cookieless domain to handle static resources. The text here will be prepended to local paths, so specify the full domain with schema and ports (if any), e.g. \"//cookieless.mydomain.com:3030\".")</span>
+            <span class="hint">@T("If set, this domain will be used for local resource paths. Use this if you have a cookieless domain to handle static resources. The text here will be prepended to local paths, so specify the full domain with schema and port number (if any), e.g. \"//cookieless.mydomain.com:3030\".")</span>
         </li>
+        <li>
+            @Html.EditorFor(m => m.EnableForAdmin)
+            <label for="@Html.FieldIdFor(m => m.EnableForAdmin)" class="forcheckbox">@T("Enable for the admin site")</label>
+            @Html.ValidationMessageFor(m => m.EnableForAdmin)
+            <span class="hint">@T("Warning: WYSISWYG editors typically can't be combined, so exclude them from combination. The exclude filter \"TinyMce\" is usually enough with the default installation.")</span>
+    </li>
     </ol>
 </fieldset>
 <fieldset>
@@ -112,13 +118,6 @@
             <span class="hint">@T("You can define sets of resources that will be not combined with other resources. This way some resources that are common for a majority of pages can be combined to an individual resource for better client-side caching. The technique is useful when there are resources common for many pages and many pages include own resources. There should be one set defined per line as a regular expression, same rules apply as with the combination exclusion regex. WARNING: sets only work correctly if the resources in the end are included after each other.")</span>
         </li>
     </ol>
-</fieldset>
-<fieldset>
-    <legend>@T("Usage on the admin site")</legend>
-    @Html.EditorFor(m => m.EnableForAdmin)
-    <label for="@Html.FieldIdFor(m => m.EnableForAdmin)" class="forcheckbox">@T("Enable for the admin site")</label>
-    @Html.ValidationMessageFor(m => m.EnableForAdmin)
-    <span class="hint">@T("Warning: WYSISWYG editors typically can't be combined, so exclude them from combination. The exclude filter \"TinyMce\" is usually enough with the default installation.")</span>
 </fieldset>
 <fieldset>
     <legend>@T("Cache Control")</legend>

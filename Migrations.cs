@@ -38,6 +38,7 @@ namespace Piedone.Combinator.Migrations
                     .Column<string>("CombinationExcludeRegex", column => column.Unlimited())
                     .Column<bool>("CombineCdnResources")
                     .Column<string>("ResourceDomain")
+                    .Column<bool>("EnableForAdmin")
                     .Column<bool>("MinifyResources")
                     .Column<string>("MinificationExcludeRegex", column => column.Unlimited())
                     .Column<bool>("EmbedCssImages")
@@ -45,7 +46,6 @@ namespace Piedone.Combinator.Migrations
                     .Column<string>("EmbedCssImagesStylesheetExcludeRegex", column => column.Unlimited())
                     .Column<bool>("GenerateImageSprites")
                     .Column<string>("ResourceSetRegexes", column => column.Unlimited())
-                    .Column<bool>("EnableForAdmin")
             );
 
 

@@ -50,6 +50,7 @@ namespace Piedone.Combinator.Drivers
             formerSettings.EmbedCssImages = part.EmbedCssImages;
             formerSettings.EmbeddedImagesMaxSizeKB = part.EmbeddedImagesMaxSizeKB;
             formerSettings.EmbedCssImagesStylesheetExcludeRegex = part.EmbedCssImagesStylesheetExcludeRegex;
+            formerSettings.GenerateImageSprites = part.GenerateImageSprites;
             formerSettings.ResourceSetRegexes = part.ResourceSetRegexes;
 
             updater.TryUpdateModel(part, Prefix, null, null);
@@ -63,6 +64,7 @@ namespace Piedone.Combinator.Drivers
                 || part.EmbedCssImages != formerSettings.EmbedCssImages
                 || (part.EmbedCssImages && part.EmbeddedImagesMaxSizeKB != formerSettings.EmbeddedImagesMaxSizeKB)
                 || (part.EmbedCssImages && part.EmbedCssImagesStylesheetExcludeRegex != formerSettings.EmbedCssImagesStylesheetExcludeRegex)
+                || part.GenerateImageSprites != formerSettings.GenerateImageSprites
                 || (part.ResourceSetRegexes != formerSettings.ResourceSetRegexes))
             {
                 _cacheFileService.Empty();

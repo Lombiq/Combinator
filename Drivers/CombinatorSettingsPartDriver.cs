@@ -44,6 +44,7 @@ namespace Piedone.Combinator.Drivers
             var formerSettings = new CombinatorSettingsPartRecord();
             formerSettings.CombinationExcludeRegex = part.CombinationExcludeRegex;
             formerSettings.CombineCdnResources = part.CombineCdnResources;
+            formerSettings.ResourceDomain = part.ResourceDomain;
             formerSettings.MinifyResources = part.MinifyResources;
             formerSettings.MinificationExcludeRegex = part.MinificationExcludeRegex;
             formerSettings.EmbedCssImages = part.EmbedCssImages;
@@ -56,6 +57,7 @@ namespace Piedone.Combinator.Drivers
             // Not emptying the cache would cause inconsistencies
             if (part.CombinationExcludeRegex != formerSettings.CombinationExcludeRegex
                 || part.CombineCdnResources != formerSettings.CombineCdnResources
+                || part.ResourceDomain != formerSettings.ResourceDomain
                 || part.MinifyResources != formerSettings.MinifyResources
                 || (part.MinifyResources && part.MinificationExcludeRegex != formerSettings.MinificationExcludeRegex)
                 || part.EmbedCssImages != formerSettings.EmbedCssImages
@@ -77,6 +79,7 @@ namespace Piedone.Combinator.Drivers
 
             element.SetAttributeValue("CombinationExcludeRegex", part.CombinationExcludeRegex);
             element.SetAttributeValue("CombineCdnResources", part.CombineCdnResources);
+            element.SetAttributeValue("ResourceDomain", part.ResourceDomain);
             element.SetAttributeValue("MinifyResources", part.MinifyResources);
             element.SetAttributeValue("MinificationExcludeRegex", part.MinificationExcludeRegex);
             element.SetAttributeValue("EmbedCssImages", part.EmbedCssImages);
@@ -93,6 +96,7 @@ namespace Piedone.Combinator.Drivers
 
             context.ImportAttribute(partName, "CombinationExcludeRegex", value => part.CombinationExcludeRegex = value);
             context.ImportAttribute(partName, "CombineCdnResources", value => part.CombineCdnResources = bool.Parse(value));
+            context.ImportAttribute(partName, "ResourceDomain", value => part.ResourceDomain = value);
             context.ImportAttribute(partName, "MinifyResources", value => part.MinifyResources = bool.Parse(value));
             context.ImportAttribute(partName, "MinificationExcludeRegex", value => part.MinificationExcludeRegex = value);
             context.ImportAttribute(partName, "EmbedCssImages", value => part.EmbedCssImages = bool.Parse(value));

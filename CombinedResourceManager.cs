@@ -83,6 +83,7 @@ namespace Piedone.Combinator
                 var settings = new CombinatorSettings
                 {
                     CombineCDNResources = settingsPart.CombineCdnResources,
+                    ResourceDomain = settingsPart.ResourceDomain,
                     EmbedCssImages = settingsPart.EmbedCssImages,
                     EmbeddedImagesMaxSizeKB = settingsPart.EmbeddedImagesMaxSizeKB,
                     GenerateImageSprites = settingsPart.GenerateImageSprites,

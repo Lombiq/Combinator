@@ -37,6 +37,7 @@ namespace Piedone.Combinator.Migrations
                     .ContentPartRecord()
                     .Column<string>("CombinationExcludeRegex", column => column.Unlimited())
                     .Column<bool>("CombineCdnResources")
+                    .Column<string>("ResourceDomain")
                     .Column<bool>("MinifyResources")
                     .Column<string>("MinificationExcludeRegex", column => column.Unlimited())
                     .Column<bool>("EmbedCssImages")
@@ -149,8 +150,11 @@ namespace Piedone.Combinator.Migrations
         public int UpdateFrom8()
         {
             SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
-                table => table
-                    .AddColumn<bool>("GenerateImageSprites")
+                table =>
+                {
+                    table.AddColumn<bool>("GenerateImageSprites");
+                    table.AddColumn<string>("ResourceDomain");
+                }
             );
 
             return 9;

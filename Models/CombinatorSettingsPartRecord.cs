@@ -12,6 +12,8 @@ namespace Piedone.Combinator.Models
 
         public virtual bool CombineCdnResources { get; set; }
 
+        public virtual string ResourceDomain { get; set; }
+
         public virtual bool MinifyResources { get; set; }
 
         [StringLengthMax]

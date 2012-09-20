@@ -41,6 +41,12 @@
             @Html.ValidationMessageFor(m => m.CombineCdnResources)
             <span class="hint">@T("If checked, remote resources from CDNs will be also combined. Most of the time this defeats the purpose of CDNs but if the site fetches resources from many sources, for your targeted visitors it may be faster to serve them all combined from your site. Always measure the difference!")</span>
         </li>
+        <li>
+            @Html.LabelFor(m => m.ResourceDomain, T("Resource domain"))
+            @Html.TextBoxFor(m => m.ResourceDomain, new { @class = "text large" })
+            @Html.ValidationMessageFor(m => m.ResourceDomain)
+            <span class="hint">@T("If set, this domain will be used for local resource paths. Use this if you have a cookieless domain to handle static resources. The text here will be prepended to local paths, so specify the full domain with schema and ports (if any), e.g. \"//cookieless.mydomain.com:3030\".")</span>
+        </li>
     </ol>
 </fieldset>
 <fieldset>

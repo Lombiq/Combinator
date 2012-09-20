@@ -19,6 +19,12 @@ namespace Piedone.Combinator.Models
             set { Record.CombineCdnResources = value; }
         }
 
+        public string ResourceDomain
+        {
+            get { return Record.ResourceDomain; }
+            set { Record.ResourceDomain = value; }
+        }
+
         public bool MinifyResources
         {
             get { return Record.MinifyResources; }

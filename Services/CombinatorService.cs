@@ -64,7 +64,7 @@ namespace Piedone.Combinator.Services
 
                 _combinatorEventMonitor.MonitorCacheEmptied(ctx);
 
-                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode));
+                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode), settings.ResourceDomain);
             }, () => resources);
         }
 
@@ -102,7 +102,7 @@ namespace Piedone.Combinator.Services
 
                         _combinatorEventMonitor.MonitorCacheEmptied(ctx);
 
-                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode));
+                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode), settings.ResourceDomain);
                         combinedResources.SetLocation(location);
 
                         return combinedResources;
@@ -238,7 +238,7 @@ namespace Piedone.Combinator.Services
             saveCombination(combinatorResources[combinatorResources.Count - 1]);
         }
 
-        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources)
+        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources, string resourceDomain)
         {
             IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count);
 
@@ -248,7 +248,9 @@ namespace Piedone.Combinator.Services
                 {
                     var uriBuilder = new UriBuilder(resource.AbsoluteUrl);
                     uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
-                    resource.RequiredContext.Resource.SetUrl(uriBuilder.Uri.PathAndQuery.ToString()); // Using relative urls
+                    var urlString = uriBuilder.Uri.PathAndQuery.ToString();
+                    if (!String.IsNullOrEmpty(resourceDomain)) urlString = resourceDomain + urlString;
+                   resource.RequiredContext.Resource.SetUrl(urlString); // Using relative urls
                 }
                 resources.Add(resource.RequiredContext);
             }

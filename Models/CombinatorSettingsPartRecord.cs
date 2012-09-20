@@ -40,7 +40,7 @@ namespace Piedone.Combinator.Models
             EmbedCssImages = false;
             EmbeddedImagesMaxSizeKB = 15;
             EmbedCssImagesStylesheetExcludeRegex = "";
-            GenerateImageSprites = true;
+            GenerateImageSprites = false;
             ResourceSetRegexes = "";
             EnableForAdmin = false;
         }

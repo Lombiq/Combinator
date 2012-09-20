@@ -80,10 +80,11 @@ namespace Piedone.Combinator.Services
 
         public void ReplaceCssImagesWithSprite(CombinatorResource resource)
         {
-            Predicate<string> noSprite =
-                (url) =>
+            Func<RuleSet, string, bool> noSprite =
+                (ruleSet, url) =>
                 {
-                    return url.Contains("no-sprite");
+                    if (url.Contains("no-sprite")) return true;
+                    return ruleSet.Selectors.Any(selector => selector.SimpleSelectors.Any(simpleSelector => simpleSelector.Class == "no-sprite"));
                 };
 
             var images = new Dictionary<string, CssImage>();
@@ -96,7 +97,7 @@ namespace Piedone.Combinator.Services
                 {
                     var url = urlTerm.Value;
 
-                    if (noSprite(url)) return;
+                    if (noSprite(ruleSet, url)) return;
 
                     var imageContent = _resourceFileService.GetImageContent(MakeInlineUri(resource, url), 5000);
 
@@ -131,7 +132,7 @@ namespace Piedone.Combinator.Services
                 {
                     var url = urlTerm.Value;
 
-                    if (noSprite(url)) return;
+                    if (noSprite(ruleSet, url)) return;
 
                     // This should really be always true
                     if (images.ContainsKey(url))

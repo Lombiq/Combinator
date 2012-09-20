@@ -80,11 +80,35 @@ namespace Piedone.Combinator.Services
 
         public void ReplaceCssImagesWithSprite(CombinatorResource resource)
         {
-            Func<RuleSet, string, bool> noSprite =
+            Func<RuleSet, Term, bool> noSprite =
                 (ruleSet, url) =>
                 {
-                    if (url.Contains("no-sprite")) return true;
-                    return ruleSet.Selectors.Any(selector => selector.SimpleSelectors.Any(simpleSelector => simpleSelector.Class == "no-sprite"));
+                    if (url.Value.Contains("no-sprite")
+                        || ruleSet.Selectors.Any(selector => selector.SimpleSelectors.Any(simpleSelector => simpleSelector.Class == "no-sprite"))) return true;
+
+                    // Images with a background position are not suitable for sprite generation
+                    if (ruleSet.Declarations.Any(declaration => declaration.Name == "background-position")) return true;
+
+                    var backgroundTerms =
+                        ruleSet.Declarations
+                            .Where(declaration => declaration.Name == "background")
+                            .SelectMany(declaration => declaration.Expression.Terms);
+
+                    var backgroundTermValues = backgroundTerms.Select(term => term.Value);
+
+                    // Positioned backgrounds are not suitable either, except top-left ones
+                    if (backgroundTerms
+                        .Any(term =>
+                            term.Value == "center" ||
+                            term.Value == "top" ||
+                            term.Value == "right" ||
+                            term.Value == "bottom" ||
+                            term.Unit != null) &&
+                            !(backgroundTermValues.Contains("top") && backgroundTermValues.Contains("left"))) return true;
+
+                    if (backgroundTermValues.Any(value => value == "repeat-x" || value == "repeat-y" || value == "repeat")) return true;
+
+                    return false;
                 };
 
             var images = new Dictionary<string, CssImage>();
@@ -97,7 +121,7 @@ namespace Piedone.Combinator.Services
                 {
                     var url = urlTerm.Value;
 
-                    if (noSprite(ruleSet, url)) return;
+                    if (noSprite(ruleSet, urlTerm)) return;
 
                     var imageContent = _resourceFileService.GetImageContent(MakeInlineUri(resource, url), 5000);
 
@@ -132,24 +156,21 @@ namespace Piedone.Combinator.Services
                 {
                     var url = urlTerm.Value;
 
-                    if (noSprite(ruleSet, url)) return;
-
-                    // This should really be always true
                     if (images.ContainsKey(url))
                     {
                         var backgroundImage = images[url].BackgroundImage;
 
                         var imageDeclaration = new Declaration
+                        {
+                            Name = "background-image",
+                            Expression = new Expression
                             {
-                                Name = "background-image",
-                                Expression = new Expression
-                                    {
-                                        Terms = new List<Term>
+                                Terms = new List<Term>
                                         {
                                             new Term { Type = TermType.Url, Value = backgroundImage.ImageUrl }
                                         }
-                                    }
-                            };
+                            }
+                        };
                         ruleSet.Declarations.Add(imageDeclaration);
 
                         var bgPosition = backgroundImage.Position;

@@ -16,3 +16,8 @@ Features:
         Description: Automatically compiles .less files with dotless (http://www.dotlesscss.org/) so they can be used with Combinator. Contribution of Onestop Internet, Inc. (http://www.onestop.com/).
 		Category: Performance
 		Dependencies: Piedone.Combinator
+	Piedone.Combinator.Sass:
+		Name: Combinator SASS processor
+        Description: Automatically compiles .scss and .sass files with SassAndCoffee.Ruby (http://nuget.org/packages/SassAndCoffee.Ruby) so they can be used with Combinator. At the time only local SASS files are supported. Contribution of Onestop Internet, Inc. (http://www.onestop.com/).
+		Category: Performance
+		Dependencies: Piedone.Combinator

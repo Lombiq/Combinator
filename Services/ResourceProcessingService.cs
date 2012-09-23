@@ -11,9 +11,11 @@ using System.Linq;
 using Piedone.Combinator.EventHandlers;
 using ExCSS;
 using ExCSS.Model;
+using Orchard.Environment.Extensions;
 
 namespace Piedone.Combinator.Services
 {
+    [OrchardFeature("Piedone.Combinator")]
     public class ResourceProcessingService : IResourceProcessingService
     {
         private readonly IResourceFileService _resourceFileService;

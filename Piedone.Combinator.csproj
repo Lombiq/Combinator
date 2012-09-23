@@ -44,6 +44,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\bin\Autofac.dll</HintPath>
     </Reference>
+    <Reference Include="dotless.Core">
+      <HintPath>Libs\dotless\dotless.Core.dll</HintPath>
+    </Reference>
     <Reference Include="EcmaScript.NET, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Libs\YUICompressor\EcmaScript.NET.dll</HintPath>
@@ -107,6 +110,7 @@
     <Compile Include="EventHandlers\ICombinatorEventHandler.cs" />
     <Compile Include="EventHandlers\ICombinatorEventMonitor.cs" />
     <Compile Include="EventHandlers\ICombinatorResourceEventHandler.cs" />
+    <Compile Include="EventHandlers\LessPreprocessor.cs" />
     <Compile Include="Extensions\CombinedFileRecordExtensions.cs" />
     <Compile Include="Extensions\RequireSettingsExtensions.cs" />
     <Compile Include="Extensions\ResourceDefinitionExtensions.cs" />

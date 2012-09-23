@@ -11,3 +11,8 @@ Features:
         Description: Combines and minifies external stylesheets and javascript files. Minifications uses the YUI Compressor (http://yuicompressor.codeplex.com/), the original code for sprite generation is from Sprite Generator (http://spritegenerator.codeplex.com/) and stylesheets are parsed with ExCSS (https://github.com/TylerBrinks/ExCSS).
 		Category: Performance
 		Dependencies: Orchard.jQuery, Piedone.HelpfulLibraries.Serialization, Piedone.HelpfulLibraries.Tasks
+	Piedone.Combinator.Less:
+		Name: Combinator LESS processor
+        Description: Automatically compiles .less files with dotless (http://www.dotlesscss.org/) so they can be used with Combinator. Contribution of Onestop Internet, Inc. (http://www.onestop.com/).
+		Category: Performance
+		Dependencies: Piedone.Combinator

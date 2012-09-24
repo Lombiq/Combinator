@@ -4,6 +4,8 @@ using Orchard.Environment.Extensions;
 using Orchard.Security;
 using Orchard.UI.Admin;
 using Piedone.Combinator.Services;
+using Orchard.UI.Notify;
+using Orchard.Localization;
 
 namespace Piedone.Combinator.Controllers
 {
@@ -13,12 +15,16 @@ namespace Piedone.Combinator.Controllers
         private readonly IOrchardServices _orchardServices;
         private readonly ICacheFileService _cacheFileService;
 
+        public Localizer T { get; set; }
+
         public CombinatorAdminController(
             IOrchardServices orchardServices,
             ICacheFileService cacheFileService)
         {
             _orchardServices = orchardServices;
             _cacheFileService = cacheFileService;
+
+            T = NullLocalizer.Instance;
         }
 
         [HttpPost]
@@ -28,6 +34,7 @@ namespace Piedone.Combinator.Controllers
             if (_orchardServices.Authorizer.Authorize(StandardPermissions.SiteOwner))
             {
                 _cacheFileService.Empty();
+                _orchardServices.Notifier.Information(T("Cache emptied"));
             }
 
             // Since we are calling this via AJAX, this is not necessary. But the AJAX implementation is not the best.

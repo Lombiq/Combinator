@@ -91,10 +91,19 @@ namespace Piedone.Combinator.Services
                     // Images with a background position are not suitable for sprite generation
                     if (ruleSet.Declarations.Any(declaration => declaration.Name == "background-position")) return true;
 
+                    // Images with a background size are not suitable for sprite generation
+                    if (ruleSet.Declarations.Any(declaration => declaration.Name == "background-size")) return true;
+
                     var backgroundTerms =
                         ruleSet.Declarations
                             .Where(declaration => declaration.Name == "background")
                             .SelectMany(declaration => declaration.Expression.Terms);
+
+                    // Sized backgrounds are not suitable either
+                    // LineHeightTerm is filled with a value when if in the shorthand background declaration there's the background size specified, e.g.:
+                    // background: url(url-to-img) 300px 400px / 500px 600px no-repeat;
+                    // Now there will be a term for 400px, having LineHeightTerm specified for 500px.
+                    if (backgroundTerms.Any(term => term.LineHeightTerm != null)) return true;
 
                     var backgroundTermValues = backgroundTerms.Select(term => term.Value);
 

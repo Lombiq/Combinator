@@ -88,11 +88,18 @@ namespace Piedone.Combinator.Services
                     if (url.Value.Contains("no-sprite")
                         || ruleSet.Selectors.Any(selector => selector.SimpleSelectors.Any(simpleSelector => simpleSelector.Class == "no-sprite"))) return true;
 
-                    // Images with a background position are not suitable for sprite generation
-                    if (ruleSet.Declarations.Any(declaration => declaration.Name == "background-position")) return true;
+                    // Images with a background position are not suitable for sprite generation if they aren't top-left
+                    if (ruleSet.Declarations.Any(declaration => declaration.Name == "background-position"
+                        && (declaration.Expression.Terms.Count() != 2
+                                || !declaration.Expression.Terms.Any(term => term.Value == "top")
+                                || !declaration.Expression.Terms.Any(term => term.Value == "left")))) return true;
 
                     // Images with a background size are not suitable for sprite generation
                     if (ruleSet.Declarations.Any(declaration => declaration.Name == "background-size")) return true;
+
+                    // Images with a background repeat are not suitable for sprite generation
+                    if (ruleSet.Declarations.Any(declaration => declaration.Name == "background-repeat"
+                        && (declaration.Expression.Terms.Count() != 1 || declaration.Expression.Terms.First().Value != "no-repeat"))) return true;
 
                     var backgroundTerms =
                         ruleSet.Declarations

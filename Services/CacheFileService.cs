@@ -106,7 +106,7 @@ namespace Piedone.Combinator.Services
 
                     // This means the storage public url is not a local url (like it's with Azure blog storage)
                     if (!resource.IsOriginal && resource.IsCdnResource)
-                            ResourceProcessingService.ConvertRelativeUrlToAbsolute(resource, _httpContextAccessor.Current().Request.Url);
+                            ResourceProcessingService.ConvertRelativeUrlsToAbsolute(resource, _httpContextAccessor.Current().Request.Url);
 
                     resource.LastUpdatedUtc = file.LastUpdatedUtc ?? _clock.UtcNow;
                     resources.Add(resource);

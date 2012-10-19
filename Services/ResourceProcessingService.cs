@@ -76,7 +76,7 @@ namespace Piedone.Combinator.Services
             combinedContent.Append(resource.Content);
         }
 
-        public static void ConvertRelativeUrlToAbsolute(CombinatorResource resource, Uri baseUrl)
+        public static void ConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUrl)
         {
             var stylesheet = new StylesheetParser().Parse(resource.Content);
 

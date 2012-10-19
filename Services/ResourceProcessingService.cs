@@ -37,47 +37,44 @@ namespace Piedone.Combinator.Services
 
         public void ProcessResource(CombinatorResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
         {
-            if (!resource.IsCdnResource || settings.CombineCDNResources)
-            {
-                var absoluteUrlString = resource.AbsoluteUrl.ToString();
-
-                if (!resource.IsCdnResource || settings.CombineCDNResources)
-                {
-                    _resourceFileService.LoadResourceContent(resource);
-                }
-
-                _eventHandler.OnContentLoaded(resource);
-
-                if (String.IsNullOrEmpty(resource.Content)) return;
-
-                if (settings.MinifyResources && (settings.MinificationExcludeFilter == null || !settings.MinificationExcludeFilter.IsMatch(absoluteUrlString)))
-                {
-                    MinifyResourceContent(resource);
-                    if (String.IsNullOrEmpty(resource.Content)) return;
-                }
-
-                // Better to do after minification, as then urls commented out are removed
-                if (resource.Type == ResourceType.Style)
-                {
-                    var stylesheet = new StylesheetParser().Parse(resource.Content);
-                    AdjustRelativePaths(resource, stylesheet);
-
-                    if (settings.EmbedCssImages && (settings.EmbedCssImagesStylesheetExcludeFilter == null || !settings.EmbedCssImagesStylesheetExcludeFilter.IsMatch(absoluteUrlString)))
-                    {
-                        EmbedImages(resource, stylesheet, settings.EmbeddedImagesMaxSizeKB);
-                    }
-
-                    resource.Content = stylesheet.ToString();
-                }
-
-                _eventHandler.OnContentProcessed(resource);
-
-                combinedContent.Append(resource.Content);
-            }
-            else
+            if (resource.IsCdnResource && !settings.CombineCDNResources)
             {
                 resource.IsOriginal = true;
+                return;
             }
+
+
+            var absoluteUrlString = resource.AbsoluteUrl.ToString();
+
+            _resourceFileService.LoadResourceContent(resource);
+
+            _eventHandler.OnContentLoaded(resource);
+
+            if (String.IsNullOrEmpty(resource.Content)) return;
+
+            if (settings.MinifyResources && (settings.MinificationExcludeFilter == null || !settings.MinificationExcludeFilter.IsMatch(absoluteUrlString)))
+            {
+                MinifyResourceContent(resource);
+                if (String.IsNullOrEmpty(resource.Content)) return;
+            }
+
+            // Better to do after minification, as then urls commented out are removed
+            if (resource.Type == ResourceType.Style)
+            {
+                var stylesheet = new StylesheetParser().Parse(resource.Content);
+                AdjustRelativePaths(resource, stylesheet);
+
+                if (settings.EmbedCssImages && (settings.EmbedCssImagesStylesheetExcludeFilter == null || !settings.EmbedCssImagesStylesheetExcludeFilter.IsMatch(absoluteUrlString)))
+                {
+                    EmbedImages(resource, stylesheet, settings.EmbeddedImagesMaxSizeKB);
+                }
+
+                resource.Content = stylesheet.ToString();
+            }
+
+            _eventHandler.OnContentProcessed(resource);
+
+            combinedContent.Append(resource.Content);
         }
 
         public void ReplaceCssImagesWithSprite(CombinatorResource resource)

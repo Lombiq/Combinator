@@ -138,7 +138,7 @@ namespace Piedone.Combinator.Services
 
                     if (noSprite(ruleSet, urlTerm)) return;
 
-                    var imageContent = _resourceFileService.GetImageContent(MakeInlineUri(resource, url), 5000);
+                    var imageContent = _resourceFileService.GetImageContent(InlineUriFactory(resource, url), 5000);
 
                     if (imageContent != null)
                     {
@@ -222,7 +222,7 @@ namespace Piedone.Combinator.Services
                 (ruleSet, urlTerm) =>
                 {
                     var url = urlTerm.Value;
-                    var imageData = _resourceFileService.GetImageContent(MakeInlineUri(resource, url), maxSizeKB);
+                    var imageData = _resourceFileService.GetImageContent(InlineUriFactory(resource, url), maxSizeKB);
 
                     if (imageData != null)
                     {
@@ -244,11 +244,11 @@ namespace Piedone.Combinator.Services
                 stylesheet,
                 (ruleSet, urlTerm) =>
                 {
-                    var uri = MakeInlineUri(resource, urlTerm.Value);
+                    var uri = InlineUriFactory(resource, urlTerm.Value);
 
                     // Remote paths are preserved as full urls, local paths become uniformed relative ones.
                     string uriString = "";
-                    if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToStringWithoutScheme();
+                    if (resource.IsCdnResource || resource.AbsoluteUrl.Authority != uri.Authority) uriString = uri.ToStringWithoutScheme();
                     else uriString = uri.PathAndQuery;
 
                     urlTerm.Value = uriString;
@@ -291,7 +291,7 @@ namespace Piedone.Combinator.Services
                 });
         }
 
-        private static Uri MakeInlineUri(CombinatorResource resource, string url)
+        private static Uri InlineUriFactory(CombinatorResource resource, string url)
         {
             return Uri.IsWellFormedUriString(url, UriKind.Absolute) ? new Uri(url) : new Uri(resource.AbsoluteUrl, url);
         }

@@ -72,7 +72,7 @@ namespace Piedone.Combinator.Services
             {
                 var resourceManifest = new ResourceManifest();
                 resource.RequiredContext.Resource = resourceManifest.DefineResource(resource.Type.ToStringType(), settings.Url.ToString());
-                resource.RequiredContext.Resource.SetUrlWithoutScheme(settings.Url);
+                resource.RequiredContext.Resource.SetUrlProtocolRelative(settings.Url);
                 resource.IsOriginal = true;
             }
 

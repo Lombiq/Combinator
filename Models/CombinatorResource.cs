@@ -74,7 +74,7 @@ namespace Piedone.Combinator.Models
                 {
                     if (IsCdnResource)
                     {
-                        _requiredContext.Resource.SetUrlWithoutScheme(AbsoluteUrl);
+                        _requiredContext.Resource.SetUrlProtocolRelative(AbsoluteUrl);
                     }
                     else
                     {
@@ -91,7 +91,7 @@ namespace Piedone.Combinator.Models
                 var fullPath = NormalizedFullPath;
 
                 return Uri.IsWellFormedUriString(fullPath, UriKind.Absolute)
-                    && new Uri(fullPath).Host != _httpContext.Request.Url.Host;
+                    && new Uri(fullPath).Authority != _httpContext.Request.Url.Authority;
             }
         }
 

@@ -159,7 +159,7 @@ namespace Piedone.Combinator.Services
                         {
                             imageEnumerator.MoveNext();
                             imageEnumerator.Current.BackgroundImage = backgroundImage;
-                            imageEnumerator.Current.BackgroundImage.ImageUrl = publicUrl;
+                            imageEnumerator.Current.BackgroundImage.Url = InlineUriFactory(resource, publicUrl);
                         }
                     }
                 });
@@ -182,7 +182,7 @@ namespace Piedone.Combinator.Services
                             {
                                 Terms = new List<Term>
                                         {
-                                            new Term { Type = TermType.Url, Value = backgroundImage.ImageUrl }
+                                            new Term { Type = TermType.Url, Value = backgroundImage.Url.ToProtocolRelative() }
                                         }
                             }
                         };
@@ -248,7 +248,7 @@ namespace Piedone.Combinator.Services
 
                     // Remote paths are preserved as full urls, local paths become uniformed relative ones.
                     string uriString = "";
-                    if (resource.IsCdnResource || resource.AbsoluteUrl.Authority != uri.Authority) uriString = uri.ToStringWithoutScheme();
+                    if (resource.IsCdnResource || resource.AbsoluteUrl.Authority != uri.Authority) uriString = uri.ToProtocolRelative();
                     else uriString = uri.PathAndQuery;
 
                     urlTerm.Value = uriString;

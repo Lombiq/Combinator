@@ -20,9 +20,9 @@ namespace Piedone.Combinator.Extensions
             return Path.Combine(resource.BasePath + resource.Url);
         }
 
-        public static void SetUrlWithoutScheme(this ResourceDefinition resource, Uri url)
+        public static void SetUrlProtocolRelative(this ResourceDefinition resource, Uri url)
         {
-            resource.SetUrl(url.ToStringWithoutScheme());
+            resource.SetUrl(url.ToProtocolRelative());
         }
     }
 }

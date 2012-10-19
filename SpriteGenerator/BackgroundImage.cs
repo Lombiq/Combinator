@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Drawing;
+using Piedone.Combinator.Extensions;
 
 namespace Piedone.Combinator.SpriteGenerator
 {
     internal class BackgroundImage
     {
-        public string ImageUrl { get; set; }
+        public Uri Url { get; set; }
         public Point Position { get; set; }
 
         public override string ToString()
         {
             var declaration = "";
 
-            if (!String.IsNullOrEmpty(ImageUrl)) declaration += "background-image: url('" + ImageUrl + "');";
+            if (Url != null) declaration += "background-image: url('" + Url.ToProtocolRelative() + "');";
             if (Position != null) declaration += "background-position:" + Position.X + "px " + Position.Y + "px;";
 
             return declaration;

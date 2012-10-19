@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using Orchard;
 using Piedone.Combinator.Models;
-using System.IO;
 
 namespace Piedone.Combinator.Services
 {

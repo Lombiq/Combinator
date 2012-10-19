@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Text.RegularExpressions;
 using Autofac;
 using Moq;
@@ -7,7 +8,6 @@ using Orchard.Tests.Utility;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
 using Piedone.Combinator.Tests.Stubs;
-using System;
 
 namespace Piedone.Combinator.Tests.Services
 {

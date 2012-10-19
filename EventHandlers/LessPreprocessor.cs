@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using Piedone.Combinator.Models;
-using Orchard.Environment.Extensions;
-using System.IO;
+﻿using System.IO;
 using dotless.Core;
+using Orchard.Environment.Extensions;
+using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator.EventHandlers
 {

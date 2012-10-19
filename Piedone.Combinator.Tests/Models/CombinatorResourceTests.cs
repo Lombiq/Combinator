@@ -1,13 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Autofac;
 using NUnit.Framework;
-using System.ComponentModel;
-using Autofac;
-using Moq;
-using Piedone.Combinator.Models;
-using Orchard.Tests.Stubs;
 
 namespace Piedone.Combinator.Tests.Models
 {

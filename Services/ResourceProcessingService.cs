@@ -1,18 +1,16 @@
 ﻿using System;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
-using Piedone.Combinator.Extensions;
-using Piedone.Combinator.Models;
-using Piedone.Combinator.SpriteGenerator;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
-using Piedone.Combinator.EventHandlers;
+using System.Text;
 using ExCSS;
 using ExCSS.Model;
 using Orchard.Environment.Extensions;
-using Orchard.Mvc;
+using Piedone.Combinator.EventHandlers;
+using Piedone.Combinator.Extensions;
+using Piedone.Combinator.Models;
+using Piedone.Combinator.SpriteGenerator;
 
 namespace Piedone.Combinator.Services
 {

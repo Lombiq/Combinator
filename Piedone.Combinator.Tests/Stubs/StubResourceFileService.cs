@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Text;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
-using System.Text;
 
 namespace Piedone.Combinator.Tests.Stubs
 {

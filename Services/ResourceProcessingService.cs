@@ -12,6 +12,7 @@ using Piedone.Combinator.EventHandlers;
 using ExCSS;
 using ExCSS.Model;
 using Orchard.Environment.Extensions;
+using Orchard.Mvc;
 
 namespace Piedone.Combinator.Services
 {
@@ -75,6 +76,22 @@ namespace Piedone.Combinator.Services
             _eventHandler.OnContentProcessed(resource);
 
             combinedContent.Append(resource.Content);
+        }
+
+        public static void ConvertRelativeUrlToAbsolute(CombinatorResource resource, Uri baseUrl)
+        {
+            var stylesheet = new StylesheetParser().Parse(resource.Content);
+
+            // Modifying relative urls (because when saved, local urls were converted to unified relative ones) to point to the original domain
+            ProcessUrls(
+                resource,
+                stylesheet,
+                (ruleSet, urlTerm) =>
+                {
+                    if (Uri.IsWellFormedUriString(urlTerm.Value, UriKind.Absolute)) return;
+
+                    urlTerm.Value = new Uri(baseUrl, urlTerm.Value).ToProtocolRelative();
+                });
         }
 
         public void ReplaceCssImagesWithSprite(CombinatorResource resource)

@@ -8,6 +8,7 @@ using Orchard.Data;
 using Orchard.Environment.Extensions;
 using Orchard.Exceptions;
 using Orchard.FileSystems.Media;
+using Orchard.Mvc;
 using Orchard.Services;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
@@ -21,6 +22,7 @@ namespace Piedone.Combinator.Services
         private readonly IStorageProvider _storageProvider;
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly ICombinatorResourceManager _combinatorResourceManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IClock _clock;
         private readonly ICombinatorEventHandler _combinatorEventHandler;
 
@@ -40,6 +42,7 @@ namespace Piedone.Combinator.Services
             IStorageProvider storageProvider,
             IRepository<CombinedFileRecord> fileRepository,
             ICombinatorResourceManager combinatorResourceManager,
+            IHttpContextAccessor httpContextAccessor,
             IClock clock,
             ICombinatorEventHandler combinatorEventHandler,
             ICacheManager cacheManager,
@@ -48,6 +51,7 @@ namespace Piedone.Combinator.Services
             _storageProvider = storageProvider;
             _fileRepository = fileRepository;
             _combinatorResourceManager = combinatorResourceManager;
+            _httpContextAccessor = httpContextAccessor;
             _clock = clock;
             _combinatorEventHandler = combinatorEventHandler;
 
@@ -96,10 +100,14 @@ namespace Piedone.Combinator.Services
                 foreach (var file in files)
                 {
                     var resource = _combinatorResourceManager.ResourceFactory(file.Type);
-                    resource.FillRequiredContext(
-                        "CombinedResource" + file.Id.ToString(),
-                        _storageProvider.GetPublicUrl(MakePath(file)));
+
+                    resource.FillRequiredContext("CombinedResource" + file.Id.ToString(), _storageProvider.GetPublicUrl(MakePath(file)));
                     _combinatorResourceManager.DeserializeSettings(file.Settings, resource);
+
+                    // This means the storage public url in not a local url (like it's with Azure blog storage)
+                    if (!resource.IsOriginal && resource.IsCdnResource)
+                            ResourceProcessingService.ConvertRelativeUrlToAbsolute(resource, _httpContextAccessor.Current().Request.Url);
+
                     resource.LastUpdatedUtc = file.LastUpdatedUtc ?? _clock.UtcNow;
                     resources.Add(resource);
                 }

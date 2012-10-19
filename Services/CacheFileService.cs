@@ -104,7 +104,7 @@ namespace Piedone.Combinator.Services
                     resource.FillRequiredContext("CombinedResource" + file.Id.ToString(), _storageProvider.GetPublicUrl(MakePath(file)));
                     _combinatorResourceManager.DeserializeSettings(file.Settings, resource);
 
-                    // This means the storage public url in not a local url (like it's with Azure blog storage)
+                    // This means the storage public url is not a local url (like it's with Azure blog storage)
                     if (!resource.IsOriginal && resource.IsCdnResource)
                             ResourceProcessingService.ConvertRelativeUrlToAbsolute(resource, _httpContextAccessor.Current().Request.Url);
 

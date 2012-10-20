@@ -10,7 +10,7 @@ namespace Piedone.Combinator.EventHandlers
     {
         public void OnContentLoaded(CombinatorResource resource)
         {
-            if (Path.GetExtension(resource.RelativeUrl.ToString()).ToLowerInvariant() != ".less") return;
+            if (Path.GetExtension(resource.AbsoluteUrl.ToString()).ToLowerInvariant() != ".less") return;
 
             resource.Content = Less.Parse(resource.Content);
         }

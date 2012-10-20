@@ -19,7 +19,7 @@ namespace Piedone.Combinator.EventHandlers
 
         public void OnContentLoaded(CombinatorResource resource)
         {
-            var extension = Path.GetExtension(resource.RelativeUrl.ToString()).ToLowerInvariant();
+            var extension = Path.GetExtension(resource.AbsoluteUrl.ToString()).ToLowerInvariant();
             if (extension != ".sass" && extension != ".scss") return;
 
             using (var compiler = new SassCompiler())

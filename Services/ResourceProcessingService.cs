@@ -78,6 +78,8 @@ namespace Piedone.Combinator.Services
 
         public static void ConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUrl)
         {
+            if (String.IsNullOrEmpty(resource.Content)) return;
+
             var stylesheet = new StylesheetParser().Parse(resource.Content);
 
             // Modifying relative urls (because when saved, local urls were converted to unified relative ones) to point to the original domain

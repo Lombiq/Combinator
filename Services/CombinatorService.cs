@@ -150,8 +150,8 @@ namespace Piedone.Combinator.Services
 
             var combinedContent = new StringBuilder(1000);
 
-            Action<CombinatorResource> saveCombination =
-                (combinedResource) =>
+            Action<CombinatorResource, IEnumerable<CombinatorResource>> saveCombination =
+                (combinedResource, containedResources) =>
                 {
                     if (combinedResource == null) return;
 
@@ -165,6 +165,14 @@ namespace Piedone.Combinator.Services
                        _resourceProcessingService.ReplaceCssImagesWithSprite(combinedResource);
                     }
 
+                    combinedResource.Content = 
+                        "/*" + Environment.NewLine
+                        + "Resource bundle created by Combinator (http://combinator.codeplex.com/)" + Environment.NewLine + Environment.NewLine
+                        + "Resources in this bundle:" + Environment.NewLine
+                        + String.Join(Environment.NewLine, containedResources.Select(resource => "- " + resource.AbsoluteUrl.ToString()).ToArray())
+                        + Environment.NewLine + "*/"
+                        + Environment.NewLine + Environment.NewLine + Environment.NewLine + combinedResource.Content;
+
                     _cacheFileService.Save(hashCode, combinedResource);
 
                     combinedContent.Clear();
@@ -172,12 +180,14 @@ namespace Piedone.Combinator.Services
 
 
             Regex currentSetRegex = null;
+            var resourcesInCombination = new List<CombinatorResource>();
 
             for (int i = 0; i < combinatorResources.Count; i++)
             {
                 var resource = combinatorResources[i];
                 var previousResource = (i != 0) ? combinatorResources[i - 1] : null;
                 var absoluteUrlString = "";
+                resourcesInCombination.Add(resource);
 
                 try
                 {
@@ -189,14 +199,14 @@ namespace Piedone.Combinator.Services
                         if (previousResource != null
                             && (!previousResource.SettingsEqual(resource) || (previousResource.IsCdnResource != resource.IsCdnResource && !settings.CombineCDNResources)))
                         {
-                            saveCombination(previousResource);
+                            saveCombination(previousResource, resourcesInCombination);
                         }
 
                         // If this resource is in a different set than the previous, they can't be combined
                         if (currentSetRegex != null && !currentSetRegex.IsMatch(absoluteUrlString))
                         {
                             currentSetRegex = null;
-                            saveCombination(previousResource);
+                            saveCombination(previousResource, resourcesInCombination);
                         }
 
                         // Calculate if this resource is in a set
@@ -212,7 +222,7 @@ namespace Piedone.Combinator.Services
                             // The previous resource is in a different set or in no set so it can't be combined with this resource
                             if (currentSetRegex != null && previousResource != null)
                             {
-                                saveCombination(previousResource);
+                                saveCombination(previousResource, resourcesInCombination);
                             }
                         }
 
@@ -221,9 +231,9 @@ namespace Piedone.Combinator.Services
                     else
                     {
                         // This is a fully excluded resource
-                        if (previousResource != null) saveCombination(previousResource);
+                        if (previousResource != null) saveCombination(previousResource, resourcesInCombination);
                         resource.IsOriginal = true;
-                        saveCombination(resource);
+                        saveCombination(resource, resourcesInCombination);
                         combinatorResources[i] = null; // So previous resource detection works correctly
                     }
                 }
@@ -235,7 +245,7 @@ namespace Piedone.Combinator.Services
             }
 
 
-            saveCombination(combinatorResources[combinatorResources.Count - 1]);
+            saveCombination(combinatorResources[combinatorResources.Count - 1], resourcesInCombination);
         }
 
         private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources, string resourceDomain)

@@ -129,10 +129,13 @@ namespace Piedone.Combinator.Models
             var resourceManifest = new ResourceManifest();
             requiredContext.Resource = resourceManifest.DefineResource(Type.ToStringType(), name);
             requiredContext.Resource.SetUrl(url);
-            requiredContext.Settings = new RequireSettings();
-            requiredContext.Settings.Culture = culture;
-            requiredContext.Settings.Condition = condition;
-            requiredContext.Settings.Attributes = attributes != null ? new Dictionary<string, string>(attributes) : new Dictionary<string, string>();
+            requiredContext.Settings = new RequireSettings
+            {
+                Name = name,
+                Culture = culture,
+                Condition = condition,
+                Attributes = attributes != null ? new Dictionary<string, string>(attributes) : new Dictionary<string, string>()
+            };
             RequiredContext = requiredContext;
         }
 

@@ -158,20 +158,23 @@ namespace Piedone.Combinator.Services
                     // Don't save emtpy resources
                     if (combinedContent.Length == 0 && !combinedResource.IsOriginal) return;
 
-                    combinedResource.Content = combinedContent.ToString();
-
-                    if (combinedResource.Type == ResourceType.Style && !String.IsNullOrEmpty(combinedResource.Content) && settings.GenerateImageSprites)
+                    if (!combinedResource.IsOriginal)
                     {
-                       _resourceProcessingService.ReplaceCssImagesWithSprite(combinedResource);
-                    }
+                        combinedResource.Content = combinedContent.ToString();
 
-                    combinedResource.Content = 
-                        "/*" + Environment.NewLine
-                        + "Resource bundle created by Combinator (http://combinator.codeplex.com/)" + Environment.NewLine + Environment.NewLine
-                        + "Resources in this bundle:" + Environment.NewLine
-                        + String.Join(Environment.NewLine, containedResources.Select(resource => "- " + resource.AbsoluteUrl.ToString()).ToArray())
-                        + Environment.NewLine + "*/"
-                        + Environment.NewLine + Environment.NewLine + Environment.NewLine + combinedResource.Content;
+                        if (combinedResource.Type == ResourceType.Style && !String.IsNullOrEmpty(combinedResource.Content) && settings.GenerateImageSprites)
+                        {
+                            _resourceProcessingService.ReplaceCssImagesWithSprite(combinedResource);
+                        }
+
+                        combinedResource.Content =
+                            "/*" + Environment.NewLine
+                            + "Resource bundle created by Combinator (http://combinator.codeplex.com/)" + Environment.NewLine + Environment.NewLine
+                            + "Resources in this bundle:" + Environment.NewLine
+                            + String.Join(Environment.NewLine, containedResources.Select(resource => "- " + resource.AbsoluteUrl.ToString()).ToArray())
+                            + Environment.NewLine + "*/"
+                            + Environment.NewLine + Environment.NewLine + Environment.NewLine + combinedResource.Content;
+                    }
 
                     _cacheFileService.Save(hashCode, combinedResource);
 
@@ -187,14 +190,15 @@ namespace Piedone.Combinator.Services
                 var resource = combinatorResources[i];
                 var previousResource = (i != 0) ? combinatorResources[i - 1] : null;
                 var absoluteUrlString = "";
-                resourcesInCombination.Add(resource);
-
+                
                 try
                 {
                     absoluteUrlString = resource.AbsoluteUrl.ToString();
 
                     if (settings.CombinationExcludeFilter == null || !settings.CombinationExcludeFilter.IsMatch(absoluteUrlString))
                     {
+                        resourcesInCombination.Add(resource);
+
                         // If this resource differs from the previous one in terms of settings or CDN they can't be combined
                         if (previousResource != null
                             && (!previousResource.SettingsEqual(resource) || (previousResource.IsCdnResource != resource.IsCdnResource && !settings.CombineCDNResources)))
@@ -262,6 +266,7 @@ namespace Piedone.Combinator.Services
                     if (!String.IsNullOrEmpty(resourceDomain)) urlString = resourceDomain + urlString;
                    resource.RequiredContext.Resource.SetUrl(urlString); // Using relative urls
                 }
+
                 resources.Add(resource.RequiredContext);
             }
 

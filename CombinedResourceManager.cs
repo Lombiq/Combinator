@@ -71,7 +71,7 @@ namespace Piedone.Combinator
                 return _siteService.GetSiteSettings().As<CombinatorSettingsPart>();
             });
 
-            if (resources.Count == 0 
+            if (resources.Count == 0
                 || Orchard.UI.Admin.AdminFilter.IsApplied(_httpContextAccessor.Current().Request.RequestContext) && !settingsPart.EnableForAdmin) return resources;
 
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
@@ -99,27 +99,13 @@ namespace Piedone.Combinator
                     {
                         if (!String.IsNullOrEmpty(regex)) setRegexes.Add(new Regex(regex));
                     }
-                    settings.ResourceSetFilters = setRegexes.ToArray(); 
+                    settings.ResourceSetFilters = setRegexes.ToArray();
                 }
+
+                DiscoverResourceOverrides(resources, resourceType);
 
                 if (resourceType == ResourceType.Style)
                 {
-                    // Checking for overridden stylesheets
-                    var currentTheme = _themeManager.GetRequestTheme(_httpContextAccessor.Current().Request.RequestContext);
-                    var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
-
-                    foreach (var resource in resources)
-                    {
-                        var shapeName = StylesheetBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
-
-                        // Simply included CDN stylesheets are not in the ShapeTable, so we have to check
-                        if (shapeTable.Bindings.ContainsKey("Style__" + shapeName))
-                        {
-                            var binding = shapeTable.Bindings["Style__" + shapeName].BindingSource;
-                            resource.Resource.SetUrl(binding, null);
-                        }
-                    }
-
                     return _combinatorService.CombineStylesheets(resources, settings);
                 }
                 else if (resourceType == ResourceType.JavaScript)
@@ -134,6 +120,31 @@ namespace Piedone.Combinator
                 if (ex.IsFatal()) throw;
                 Logger.Error(ex, "Error when combining " + resourceType + " files");
                 return base.BuildRequiredResources(stringResourceType);
+            }
+        }
+
+        /// <summary>
+        /// Checks for overrides of static resources that can cause the actually used resource to be different from the included one
+        /// </summary>
+        /// <param name="resources">List of resources to process</param>
+        private void DiscoverResourceOverrides(List<ResourceRequiredContext> resources, ResourceType resourceType)
+        {
+            var shapeKeyPrefix = resourceType == ResourceType.Style ? "Style__" : "Script__";
+
+            var currentTheme = _themeManager.GetRequestTheme(_httpContextAccessor.Current().Request.RequestContext);
+            var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
+
+            foreach (var resource in resources)
+            {
+                var shapeName = StaticFileBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
+                var shapeKey = shapeKeyPrefix + shapeName;
+
+                // Simply included CDN stylesheets are not in the ShapeTable, so we have to check
+                if (shapeTable.Bindings.ContainsKey(shapeKey))
+                {
+                    var binding = shapeTable.Bindings[shapeKey].BindingSource;
+                    resource.Resource.SetUrl(binding, null);
+                }
             }
         }
     }

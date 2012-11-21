@@ -70,8 +70,6 @@ namespace Piedone.Combinator.Services
 
             if (settings.Url != null)
             {
-                var resourceManifest = new ResourceManifest();
-                resource.RequiredContext.Resource = resourceManifest.DefineResource(resource.Type.ToStringType(), resource.RequiredContext.Settings.Name);
                 resource.RequiredContext.Resource.SetUrlProtocolRelative(settings.Url);
                 resource.IsOriginal = true;
             }

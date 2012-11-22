@@ -104,16 +104,15 @@ namespace Piedone.Combinator
 
                 DiscoverResourceOverrides(resources, resourceType);
 
-                if (resourceType == ResourceType.Style)
-                {
-                    return _combinatorService.CombineStylesheets(resources, settings);
-                }
-                else if (resourceType == ResourceType.JavaScript)
-                {
-                    return _combinatorService.CombineScripts(resources, settings);
-                }
+                IList<ResourceRequiredContext> result;
 
-                return base.BuildRequiredResources(stringResourceType);
+                if (resourceType == ResourceType.Style) result = _combinatorService.CombineStylesheets(resources, settings);
+                else if (resourceType == ResourceType.JavaScript) result = _combinatorService.CombineScripts(resources, settings);
+                else return base.BuildRequiredResources(stringResourceType);
+
+                RemoveOriginalResourceShapes(result, resourceType);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -126,8 +125,35 @@ namespace Piedone.Combinator
         /// <summary>
         /// Checks for overrides of static resources that can cause the actually used resource to be different from the included one
         /// </summary>
-        /// <param name="resources">List of resources to process</param>
-        private void DiscoverResourceOverrides(List<ResourceRequiredContext> resources, ResourceType resourceType)
+        private void DiscoverResourceOverrides(IList<ResourceRequiredContext> resources, ResourceType resourceType)
+        {
+            TraverseResouceShapes(
+                resources,
+                resourceType,
+                (shapeTable, resource, shapeKey) =>
+                {
+                    var binding = shapeTable.Bindings[shapeKey].BindingSource;
+                    resource.Resource.SetUrl(binding, null);
+                });
+        }
+
+        /// <summary>
+        /// Removes shapes corresponding to resources that are included in their original form (i.e. not combined but excluded). This is
+        /// necessary because otherwise the ordering of a collection of original and combined resources are not kept (original resources are
+        /// written to the output before the other ones).
+        /// </summary>
+        private void RemoveOriginalResourceShapes(IList<ResourceRequiredContext> resources, ResourceType resourceType)
+        {
+            TraverseResouceShapes(
+                resources,
+                resourceType,
+                (shapeTable, resource, shapeKey) =>
+                {
+                    shapeTable.Bindings.Remove(shapeKey);
+                });
+        }
+
+        private void TraverseResouceShapes(IList<ResourceRequiredContext> resources, ResourceType resourceType, Action<ShapeTable, ResourceRequiredContext, string> processor)
         {
             var shapeKeyPrefix = resourceType == ResourceType.Style ? "Style__" : "Script__";
 
@@ -142,8 +168,7 @@ namespace Piedone.Combinator
                 // Simply included CDN stylesheets are not in the ShapeTable, so we have to check
                 if (shapeTable.Bindings.ContainsKey(shapeKey))
                 {
-                    var binding = shapeTable.Bindings[shapeKey].BindingSource;
-                    resource.Resource.SetUrl(binding, null);
+                    processor(shapeTable, resource, shapeKey);
                 }
             }
         }

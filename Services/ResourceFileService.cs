@@ -51,10 +51,10 @@ namespace Piedone.Combinator.Services
         private string FetchLocalResourceContent(CombinatorResource resource)
         {
             var relativeVirtualPath = resource.RelativeVirtualPath;
-
+            if (relativeVirtualPath == "~/") return "";
             // Maybe TryFileExists would be better?
             if (!_virtualPathProvider.FileExists(relativeVirtualPath)) throw new OrchardException(T("Local resource file not found under {0}", relativeVirtualPath));
-
+            
             string content;
             using (var stream = _virtualPathProvider.OpenFile(relativeVirtualPath))
             {

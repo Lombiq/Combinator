@@ -162,13 +162,17 @@ namespace Piedone.Combinator
 
             foreach (var resource in resources)
             {
-                var shapeName = StaticFileBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
-                var shapeKey = shapeKeyPrefix + shapeName;
-
-                // Simply included CDN stylesheets are not in the ShapeTable, so we have to check
-                if (shapeTable.Bindings.ContainsKey(shapeKey))
+                var fullPath = resource.Resource.GetFullPath();
+                if (!String.IsNullOrEmpty(fullPath))
                 {
-                    processor(shapeTable, resource, shapeKey);
+                    var shapeName = StaticFileBindingStrategy.GetAlternateShapeNameFromFileName(fullPath);
+                    var shapeKey = shapeKeyPrefix + shapeName;
+
+                    // Simply included CDN stylesheets are not in the ShapeTable, so we have to check
+                    if (shapeTable.Bindings.ContainsKey(shapeKey))
+                    {
+                        processor(shapeTable, resource, shapeKey);
+                    }
                 }
             }
         }

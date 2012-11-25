@@ -17,6 +17,7 @@ namespace Piedone.Combinator.Models
             get
             {
                 var fullPath = RequiredContext.Resource.GetFullPath();
+                if (String.IsNullOrEmpty(fullPath)) return "";
 
                 if (fullPath.StartsWith("//"))
                 {
@@ -57,6 +58,7 @@ namespace Piedone.Combinator.Models
         {
             get
             {
+                if (String.IsNullOrEmpty(NormalizedFullPath)) return "~/";
                 return VirtualPathUtility.ToAppRelative(NormalizedFullPath, ApplicationPath);
             }
         }
@@ -128,7 +130,7 @@ namespace Piedone.Combinator.Models
             var requiredContext = new ResourceRequiredContext();
             var resourceManifest = new ResourceManifest();
             requiredContext.Resource = resourceManifest.DefineResource(Type.ToStringType(), name);
-            requiredContext.Resource.SetUrl(url);
+            if (!String.IsNullOrEmpty(url)) requiredContext.Resource.SetUrl(url);
             requiredContext.Settings = new RequireSettings
             {
                 Name = name,

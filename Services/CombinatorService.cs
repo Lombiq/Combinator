@@ -23,7 +23,6 @@ namespace Piedone.Combinator.Services
         private readonly IResourceProcessingService _resourceProcessingService;
         private readonly ILockingCacheManager _lockingCacheManager;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
-        private readonly ILockFileManager _lockFileManager;
         private readonly ICombinatorResourceManager _combinatorResourceManager;
 
         public ILogger Logger { get; set; }
@@ -34,14 +33,12 @@ namespace Piedone.Combinator.Services
             IResourceProcessingService resourceProcessingService,
             ILockingCacheManager lockingCacheManager,
             ICombinatorEventMonitor combinatorEventMonitor,
-            ILockFileManager lockFileManager,
             ICombinatorResourceManager combinatorResourceManager)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
             _lockingCacheManager = lockingCacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
-            _lockFileManager = lockFileManager;
             _combinatorResourceManager = combinatorResourceManager;
 
             Logger = NullLogger.Instance;

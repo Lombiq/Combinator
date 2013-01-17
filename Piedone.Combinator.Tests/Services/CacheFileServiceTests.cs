@@ -58,7 +58,8 @@ namespace Piedone.Combinator.Tests.Services
         {
             get
             {
-                return new[] {
+                return new[]
+                {
                     typeof(CombinedFileRecord)
                 };
             }

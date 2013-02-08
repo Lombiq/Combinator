@@ -181,8 +181,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Placement.info" />
-    <Content Include="Styles\Web.config" />
-    <Content Include="Scripts\Web.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Orchard\Orchard.Framework.csproj">

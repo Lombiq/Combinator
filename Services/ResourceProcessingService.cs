@@ -51,13 +51,6 @@ namespace Piedone.Combinator.Services
 
             if (String.IsNullOrEmpty(resource.Content)) return;
 
-            if (settings.MinifyResources && (settings.MinificationExcludeFilter == null || !settings.MinificationExcludeFilter.IsMatch(absoluteUrlString)))
-            {
-                MinifyResourceContent(resource);
-                if (String.IsNullOrEmpty(resource.Content)) return;
-            }
-
-            // Better to do after minification, as then urls commented out are removed
             if (resource.Type == ResourceType.Style)
             {
                 var stylesheet = new StylesheetParser().Parse(resource.Content);
@@ -69,6 +62,12 @@ namespace Piedone.Combinator.Services
                 }
 
                 resource.Content = stylesheet.ToString();
+            }
+
+            if (settings.MinifyResources && (settings.MinificationExcludeFilter == null || !settings.MinificationExcludeFilter.IsMatch(absoluteUrlString)))
+            {
+                MinifyResourceContent(resource);
+                if (String.IsNullOrEmpty(resource.Content)) return;
             }
 
             _eventHandler.OnContentProcessed(resource);

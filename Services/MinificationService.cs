@@ -9,11 +9,15 @@ namespace Piedone.Combinator.Services
     {
         public string MinifyCss(string css)
         {
+            if (string.IsNullOrEmpty(css)) return string.Empty;
+
             return new CssCompressor().Compress(css);
         }
 
         public string MinifyJavaScript(string javaScript)
         {
+            if (string.IsNullOrEmpty(javaScript)) return string.Empty;
+
             return new JavaScriptCompressor().Compress(javaScript);
         }
     }

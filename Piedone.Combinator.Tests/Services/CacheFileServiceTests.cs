@@ -51,6 +51,8 @@ namespace Piedone.Combinator.Tests.Services
 
             _resourceRepository = new ResourceRepository(_container);
             _cacheFileService = _container.Resolve<ICacheFileService>();
+
+            SaveTestResources();
         }
 
 
@@ -70,7 +72,6 @@ namespace Piedone.Combinator.Tests.Services
         {
             // Todo: adjust mocking that CombinatorResource's context can be filled and so the GetCombinedResources() method tested
             // if it returns the correct data
-            SaveTestResources();
 
             Assert.That(_container.Resolve<IStorageProvider>().GetFile("Modules/Piedone/Combinator/Scripts/664456-1.js"), Is.Not.Null);
 
@@ -99,8 +100,6 @@ namespace Piedone.Combinator.Tests.Services
         [Test]
         public void EmtpyShouldDeleteAll()
         {
-            SaveTestResources();
-
             _cacheFileService.Empty();
             ClearSession();
 

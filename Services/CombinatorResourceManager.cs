@@ -1,26 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Newtonsoft.Json;
 using Orchard.Mvc;
 using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
-using Piedone.HelpfulLibraries.Serialization;
 
 namespace Piedone.Combinator.Services
 {
     public class CombinatorResourceManager : ICombinatorResourceManager
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ISimpleSerializer _serializer;
 
 
-        public CombinatorResourceManager(
-            IHttpContextAccessor httpContextAccessor,
-            ISimpleSerializer serializer)
+        public CombinatorResourceManager(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
-            _serializer = serializer;
         }
 
 
@@ -30,19 +26,11 @@ namespace Piedone.Combinator.Services
         }
 
 
-        [DataContract]
         public class SerializableSettings
         {
-            [DataMember]
             public Uri Url { get; set; }
-
-            [DataMember]
             public string Culture { get; set; }
-
-            [DataMember]
             public string Condition { get; set; }
-
-            [DataMember]
             public Dictionary<string, string> Attributes { get; set; }
         }
 
@@ -52,7 +40,7 @@ namespace Piedone.Combinator.Services
             var settings = resource.RequiredContext.Settings;
             if (settings == null) return "";
 
-            return _serializer.XmlSerialize(
+            return JsonConvert.SerializeObject(
                 new SerializableSettings()
                 {
                     Url = resource.IsOriginal ? resource.IsCdnResource ? resource.AbsoluteUrl : resource.RelativeUrl : null,
@@ -66,7 +54,7 @@ namespace Piedone.Combinator.Services
         {
             if (String.IsNullOrEmpty(serialization)) return;
 
-            var settings = _serializer.XmlDeserialize<SerializableSettings>(serialization);
+            var settings = JsonConvert.DeserializeObject<SerializableSettings>(serialization);
 
             if (settings.Url != null)
             {

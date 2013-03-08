@@ -49,7 +49,7 @@ namespace Piedone.Combinator.Migrations
             );
 
 
-            return 9;
+            return 10;
         }
 
         public int UpdateFrom1()
@@ -158,6 +158,14 @@ namespace Piedone.Combinator.Migrations
             );
 
             return 9;
+        }
+
+        public int UpdateFrom9()
+        {
+            _cacheFileService.Empty();
+
+
+            return 10;
         }
 
 

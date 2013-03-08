@@ -72,7 +72,7 @@ namespace Piedone.Combinator.Tests.Services
             // if it returns the correct data
             SaveTestResources();
 
-            Assert.That(_container.Resolve<IStorageProvider>().GetFile("Combinator/Scripts/664456-1.js"), Is.Not.Null);
+            Assert.That(_container.Resolve<IStorageProvider>().GetFile("Modules/Piedone/Combinator/Scripts/664456-1.js"), Is.Not.Null);
 
             var resources = _cacheFileService.GetCombinedResources(_cssResourcesHashCode);
 

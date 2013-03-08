@@ -33,7 +33,7 @@ namespace Piedone.Combinator.Services
         #endregion
 
         #region Static file caching fields
-        private const string _rootPath = "Combinator/";
+        private const string _rootPath = "Modules/Piedone/Combinator/";
         private const string _stylesPath = _rootPath + "Styles/";
         private const string _scriptsPath = _rootPath + "Scripts/";
         #endregion

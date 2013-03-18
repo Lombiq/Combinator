@@ -127,7 +127,7 @@
     <Content Include="Module.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controllers\CombinatorAdminController.cs" />
+    <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Drivers\CombinatorSettingsPartDriver.cs" />
     <Compile Include="EventHandlers\CombinatorEventMonitor.cs" />
     <Compile Include="EventHandlers\ICombinatorEventHandler.cs" />

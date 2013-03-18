@@ -117,7 +117,7 @@
                 combinator: {
                     emptyCache: function () {
                         $("#button\\.EmptyCache").attr("disabled", "disabled");
-                        var url = '@Url.Action("EmptyCache", new { Controller = "CombinatorAdmin", Area = "Piedone.Combinator" })';
+                        var url = '@Url.Action("EmptyCache", new { Controller = "Admin", Area = "Piedone.Combinator" })';
                         var postData = { __RequestVerificationToken: "@Html.AntiForgeryTokenValueOrchard()" };
                         $.post(url, postData, function (response) {
                             location.reload();

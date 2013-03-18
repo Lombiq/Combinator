@@ -10,14 +10,14 @@ using Piedone.Combinator.Services;
 namespace Piedone.Combinator.Controllers
 {
     [Admin, OrchardFeature("Piedone.Combinator")]
-    public class CombinatorAdminController : Controller
+    public class AdminController : Controller
     {
         private readonly IOrchardServices _orchardServices;
         private readonly ICacheFileService _cacheFileService;
 
         public Localizer T { get; set; }
 
-        public CombinatorAdminController(
+        public AdminController(
             IOrchardServices orchardServices,
             ICacheFileService cacheFileService)
         {

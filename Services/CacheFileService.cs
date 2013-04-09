@@ -148,6 +148,7 @@ namespace Piedone.Combinator.Services
             // this is the only way to deal with it.
             // We don't check if there were any files in a DB here, we try to delete even if there weren't. This adds robustness: with emptying the cache
             // everything can be reset, even if the user or a deploy process manipulated the DB or the file system.
+            // Also removing files and subfolders separately is necessary as just removing the root folder would yield a directory not empty exception.
             try
             {
                 _storageProvider.DeleteFolder(_scriptsPath);
@@ -203,6 +204,7 @@ namespace Piedone.Combinator.Services
                 _fileRepository.Delete(file);
                 // Try-catch for the case that someone deleted the file.
                 // Currently there is no way to check the existence of a file.
+                // Here file existence check should be because there is no file for uncombined resources.
                 try
                 {
                     _storageProvider.DeleteFile(MakePath(file));

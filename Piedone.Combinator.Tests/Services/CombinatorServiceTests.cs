@@ -265,7 +265,7 @@ namespace Piedone.Combinator.Tests.Services
 
         private class StubLockingCacheManager : ILockingCacheManager
         {
-            public TResult Get<TResult>(string key, Func<AcquireContext<string>, TResult> acquire, Func<TResult> fallback, int millisecondsTimeout = 4000)
+            public TResult Get<TResult>(string key, Func<AcquireContext<string>, TResult> acquire, Func<TResult> fallback, TimeSpan timeout)
             {
                 return acquire(new AcquireContext<string>(key, null));
             }

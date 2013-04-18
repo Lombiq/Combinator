@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using Newtonsoft.Json;
 using Orchard.Mvc;
+using Orchard.Services;
 using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
@@ -12,11 +12,13 @@ namespace Piedone.Combinator.Services
     public class CombinatorResourceManager : ICombinatorResourceManager
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IJsonConverter _jsonConverter;
 
 
-        public CombinatorResourceManager(IHttpContextAccessor httpContextAccessor)
+        public CombinatorResourceManager(IHttpContextAccessor httpContextAccessor, IJsonConverter jsonConverter)
         {
             _httpContextAccessor = httpContextAccessor;
+            _jsonConverter = jsonConverter;
         }
 
 
@@ -31,7 +33,7 @@ namespace Piedone.Combinator.Services
             var settings = resource.RequiredContext.Settings;
             if (settings == null) return "";
 
-            return JsonConvert.SerializeObject(
+            return _jsonConverter.Serialize(
                 new SerializableSettings()
                 {
                     Url = resource.IsOriginal ? resource.IsCdnResource ? resource.AbsoluteUrl : resource.RelativeUrl : null,
@@ -45,7 +47,7 @@ namespace Piedone.Combinator.Services
         {
             if (String.IsNullOrEmpty(serialization)) return;
 
-            var settings = JsonConvert.DeserializeObject<SerializableSettings>(serialization);
+            var settings = _jsonConverter.Deserialize<SerializableSettings>(serialization);
 
             if (settings.Url != null)
             {

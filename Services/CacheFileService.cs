@@ -106,7 +106,7 @@ namespace Piedone.Combinator.Services
 
                     // This means the storage public url is not a local url (like it's with Azure blog storage)
                     if (!resource.IsOriginal && resource.IsCdnResource)
-                            ResourceProcessingService.ConvertRelativeUrlsToAbsolute(resource, _httpContextAccessor.Current().Request.Url);
+                        ResourceProcessingService.ConvertRelativeUrlsToAbsolute(resource, _httpContextAccessor.Current().Request.Url);
 
                     resource.LastUpdatedUtc = file.LastUpdatedUtc ?? _clock.UtcNow;
                     resources.Add(resource);
@@ -143,39 +143,25 @@ namespace Piedone.Combinator.Services
             var files = _fileRepository.Table.ToList();
             DeleteFiles(files);
 
-            // These will throw an exception if a folder doesn't exist. Since currently there is no method
-            // in IStorageProvider to check the existence of a file/folder (see: http://orchard.codeplex.com/discussions/275146)
-            // this is the only way to deal with it.
             // We don't check if there were any files in a DB here, we try to delete even if there weren't. This adds robustness: with emptying the cache
             // everything can be reset, even if the user or a deploy process manipulated the DB or the file system.
             // Also removing files and subfolders separately is necessary as just removing the root folder would yield a directory not empty exception.
-            try
+            if (_storageProvider.FolderExists(_scriptsPath))
             {
                 _storageProvider.DeleteFolder(_scriptsPath);
-                Thread.Sleep(300); // This is to ensure we don't get an "access denied" when deleting the root folder
-            }
-            catch (Exception ex)
-            {
-                if (ex.IsFatal()) throw;
+                Thread.Sleep(300); // This is to ensure we don't get an "access denied" when deleting the root folder 
             }
 
-            try
+            if (_storageProvider.FolderExists(_stylesPath))
             {
                 _storageProvider.DeleteFolder(_stylesPath);
                 Thread.Sleep(300);
             }
-            catch (Exception ex)
-            {
-                if (ex.IsFatal()) throw;
-            }
 
-            try
+
+            if (_storageProvider.FolderExists(_rootPath))
             {
                 _storageProvider.DeleteFolder(_rootPath);
-            }
-            catch (Exception ex)
-            {
-                if (ex.IsFatal()) throw;
             }
 
             _combinatorEventHandler.CacheEmptied();
@@ -202,16 +188,9 @@ namespace Piedone.Combinator.Services
             foreach (var file in files)
             {
                 _fileRepository.Delete(file);
-                // Try-catch for the case that someone deleted the file.
-                // Currently there is no way to check the existence of a file.
-                // Here file existence check should be because there is no file for uncombined resources.
-                try
+                if (_storageProvider.FileExists(MakePath(file)))
                 {
                     _storageProvider.DeleteFile(MakePath(file));
-                }
-                catch (Exception ex)
-                {
-                    if (ex.IsFatal()) throw;
                 }
             }
         }

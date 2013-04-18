@@ -210,6 +210,21 @@ namespace Piedone.Combinator.Tests.Services
             {
                 SavedStreams.Add(path);
             }
+
+            public bool FileExists(string path)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string GetLocalPath(string url)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool FolderExists(string path)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private class StubStorageFolder : IStorageFolder

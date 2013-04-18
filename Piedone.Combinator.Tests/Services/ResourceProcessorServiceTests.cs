@@ -18,6 +18,7 @@ namespace Piedone.Combinator.Tests.Services
         private ResourceRepository _resourceRepository;
         private IResourceProcessingService _resourceProcessingService;
 
+
         [SetUp]
         public virtual void Init()
         {
@@ -44,6 +45,7 @@ namespace Piedone.Combinator.Tests.Services
         public void Clean()
         {
         }
+
 
         [Test]
         public void MinificationExclusionWorks()

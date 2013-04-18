@@ -15,6 +15,7 @@ namespace Piedone.Combinator.Tests
 
         public Dictionary<string, CombinatorResource> Resources { get; set; }
 
+
         public ResourceRepository(IContainer container)
         {
             _container = container;
@@ -25,6 +26,7 @@ namespace Piedone.Combinator.Tests
 
             Resources = new Dictionary<string, CombinatorResource>();
         }
+
 
         public CombinatorResource NewResource(ResourceType resourceType)
         {

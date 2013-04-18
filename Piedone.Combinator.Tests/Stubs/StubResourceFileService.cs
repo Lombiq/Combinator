@@ -9,10 +9,12 @@ namespace Piedone.Combinator.Tests.Stubs
     {
         private readonly ResourceRepository _resourceRepository;
 
+
         public StubResourceFileService(ResourceRepository resourceRepository)
         {
             _resourceRepository = resourceRepository;
         }
+
 
         public void LoadResourceContent(CombinatorResource resource)
         {

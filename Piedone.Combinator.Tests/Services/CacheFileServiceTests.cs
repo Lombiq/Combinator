@@ -24,6 +24,18 @@ namespace Piedone.Combinator.Tests.Services
         private ResourceRepository _resourceRepository;
         private ICacheFileService _cacheFileService;
 
+        protected override IEnumerable<Type> DatabaseTypes
+        {
+            get
+            {
+                return new[]
+                {
+                    typeof(CombinedFileRecord)
+                };
+            }
+        }
+
+
         public override void Register(ContainerBuilder builder)
         {
             builder.RegisterAutoMocking(MockBehavior.Loose);
@@ -56,18 +68,7 @@ namespace Piedone.Combinator.Tests.Services
             SaveTestResources();
         }
 
-
-        protected override IEnumerable<Type> DatabaseTypes
-        {
-            get
-            {
-                return new[]
-                {
-                    typeof(CombinedFileRecord)
-                };
-            }
-        }
-
+        
         [Test]
         public void SaveShouldBePersistent()
         {
@@ -124,6 +125,7 @@ namespace Piedone.Combinator.Tests.Services
 
             ClearSession();
         }
+
 
         private class StubStorageProvider : IStorageProvider
         {

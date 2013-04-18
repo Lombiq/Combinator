@@ -14,6 +14,7 @@ using Orchard.Tests.Stubs;
 using Orchard.Tests.Utility;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using System.Linq;
 
 namespace Piedone.Combinator.Tests.Services
 {
@@ -145,7 +146,7 @@ namespace Piedone.Combinator.Tests.Services
 
             public IStorageFile GetFile(string path)
             {
-                if (!CreatedFiles.Contains(path)) return null;
+                if (!FileExists(path)) return null;
 
                 return new Mock<IStorageFile>().Object;
             }
@@ -213,7 +214,7 @@ namespace Piedone.Combinator.Tests.Services
 
             public bool FileExists(string path)
             {
-                throw new NotImplementedException();
+                return CreatedFiles.Contains(path);
             }
 
             public string GetLocalPath(string url)
@@ -223,7 +224,7 @@ namespace Piedone.Combinator.Tests.Services
 
             public bool FolderExists(string path)
             {
-                throw new NotImplementedException();
+                return CreatedFiles.Any(p => p.StartsWith(path));
             }
         }
 

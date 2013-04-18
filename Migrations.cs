@@ -12,10 +12,12 @@ namespace Piedone.Combinator.Migrations
     {
         private readonly ICacheFileService _cacheFileService;
 
+
         public Migrations(ICacheFileService cacheFileService)
         {
             _cacheFileService = cacheFileService;
         }
+
 
         public int Create()
         {

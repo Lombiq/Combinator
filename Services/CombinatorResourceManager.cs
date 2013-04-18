@@ -26,15 +26,6 @@ namespace Piedone.Combinator.Services
         }
 
 
-        public class SerializableSettings
-        {
-            public Uri Url { get; set; }
-            public string Culture { get; set; }
-            public string Condition { get; set; }
-            public Dictionary<string, string> Attributes { get; set; }
-        }
-
-
         public string SerializeResourceSettings(CombinatorResource resource)
         {
             var settings = resource.RequiredContext.Settings;
@@ -67,6 +58,15 @@ namespace Piedone.Combinator.Services
             resourceSettings.Culture = settings.Culture;
             resourceSettings.Condition = settings.Condition;
             resourceSettings.Attributes = settings.Attributes;
+        }
+
+
+        public class SerializableSettings
+        {
+            public Uri Url { get; set; }
+            public string Culture { get; set; }
+            public string Condition { get; set; }
+            public Dictionary<string, string> Attributes { get; set; }
         }
     }
 }

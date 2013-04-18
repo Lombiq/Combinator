@@ -38,6 +38,7 @@ namespace Piedone.Combinator.Services
         private const string _scriptsPath = _rootPath + "Scripts/";
         #endregion
 
+
         public CacheFileService(
             IStorageProvider storageProvider,
             IRepository<CombinedFileRecord> fileRepository,
@@ -58,6 +59,7 @@ namespace Piedone.Combinator.Services
             _cacheManager = cacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
         }
+
 
         public void Save(int hashCode, CombinatorResource resource)
         {
@@ -178,6 +180,7 @@ namespace Piedone.Combinator.Services
             }
         }
 
+
         private List<CombinedFileRecord> GetRecords(int hashCode)
         {
             return _fileRepository.Fetch(file => file.HashCode == hashCode).ToList();
@@ -194,6 +197,7 @@ namespace Piedone.Combinator.Services
                 }
             }
         }
+
 
         private static string MakePath(CombinedFileRecord file)
         {

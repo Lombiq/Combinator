@@ -8,32 +8,34 @@ namespace Piedone.Combinator.EventHandlers
     {
         private readonly ISignals _signals;
 
-        private const string _configurationChangedSignal = "Piedone.Combinator.ConfigurationChangedSignal";
-        private const string _cacheEmptiedSignal = "Piedone.Combinator.CacheEmptiedSignal";
+        private const string ConfigurationChangedSignal = "Piedone.Combinator.ConfigurationChangedSignal";
+        private const string CacheEmptiedSignal = "Piedone.Combinator.CacheEmptiedSignal";
+
 
         public CombinatorEventMonitor(ISignals signals)
         {
             _signals = signals;
         }
 
+
         public void MonitorConfigurationChanged(IAcquireContext acquireContext)
         {
-            acquireContext.Monitor(_signals.When(_configurationChangedSignal));
+            acquireContext.Monitor(_signals.When(ConfigurationChangedSignal));
         }
 
         public void MonitorCacheEmptied(IAcquireContext acquireContext)
         {
-            acquireContext.Monitor(_signals.When(_cacheEmptiedSignal));
+            acquireContext.Monitor(_signals.When(CacheEmptiedSignal));
         }
 
         public void ConfigurationChanged()
         {
-            _signals.Trigger(_configurationChangedSignal);
+            _signals.Trigger(ConfigurationChangedSignal);
         }
 
         public void CacheEmptied()
         {
-            _signals.Trigger(_cacheEmptiedSignal);
+            _signals.Trigger(CacheEmptiedSignal);
         }
     }
 }

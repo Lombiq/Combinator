@@ -17,6 +17,7 @@ namespace Piedone.Combinator.Controllers
 
         public Localizer T { get; set; }
 
+
         public AdminController(
             IOrchardServices orchardServices,
             ICacheFileService cacheFileService)
@@ -26,6 +27,7 @@ namespace Piedone.Combinator.Controllers
 
             T = NullLocalizer.Instance;
         }
+
 
         [HttpPost]
         //public ActionResult EmptyCache(string returnUrl = "") Without AJAX

@@ -22,6 +22,7 @@ namespace Piedone.Combinator.Services
         private readonly ICacheFileService _cacheFileService;
         private readonly ICombinatorResourceEventHandler _eventHandler;
 
+
         public ResourceProcessingService(
             IResourceFileService resourceFileService,
             IMinificationService minificationService,
@@ -33,6 +34,7 @@ namespace Piedone.Combinator.Services
             _cacheFileService = cacheFileService;
             _eventHandler = eventHandler;
         }
+
 
         public void ProcessResource(CombinatorResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
         {
@@ -224,11 +226,6 @@ namespace Piedone.Combinator.Services
             resource.Content = stylesheet.ToString();
         }
 
-        private class CssImage
-        {
-            public byte[] Content { get; set; }
-            public BackgroundImage BackgroundImage { get; set; }
-        }
 
         private void EmbedImages(CombinatorResource resource, Stylesheet stylesheet, int maxSizeKB)
         {
@@ -252,6 +249,19 @@ namespace Piedone.Combinator.Services
                     }
                 });
         }
+
+        private void MinifyResourceContent(CombinatorResource resource)
+        {
+            if (resource.Type == ResourceType.Style)
+            {
+                resource.Content = _minificationService.MinifyCss(resource.Content);
+            }
+            else if (resource.Type == ResourceType.JavaScript)
+            {
+                resource.Content = _minificationService.MinifyJavaScript(resource.Content);
+            }
+        }
+
 
         private static void AdjustRelativePaths(CombinatorResource resource, Stylesheet stylesheet)
         {
@@ -312,16 +322,11 @@ namespace Piedone.Combinator.Services
             return Uri.IsWellFormedUriString(url, UriKind.Absolute) ? new Uri(url) : new Uri(resource.AbsoluteUrl, url);
         }
 
-        private void MinifyResourceContent(CombinatorResource resource)
+
+        private class CssImage
         {
-            if (resource.Type == ResourceType.Style)
-            {
-                resource.Content = _minificationService.MinifyCss(resource.Content);
-            }
-            else if (resource.Type == ResourceType.JavaScript)
-            {
-                resource.Content = _minificationService.MinifyJavaScript(resource.Content);
-            }
+            public byte[] Content { get; set; }
+            public BackgroundImage BackgroundImage { get; set; }
         }
     }
 }

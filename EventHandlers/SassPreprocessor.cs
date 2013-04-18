@@ -12,10 +12,12 @@ namespace Piedone.Combinator.EventHandlers
     {
         private readonly IVirtualPathProvider _virtualPathProvider;
 
+
         public SassPreprocessor(IVirtualPathProvider virtualPathProvider)
         {
             _virtualPathProvider = virtualPathProvider;
         }
+
 
         public void OnContentLoaded(CombinatorResource resource)
         {

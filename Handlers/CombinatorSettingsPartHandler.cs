@@ -14,6 +14,7 @@ namespace Piedone.Combinator
     {
         public Localizer T { get; set; }
 
+
         public CombinatorSettingsPartHandler(
             IRepository<CombinatorSettingsPartRecord> repository,
             Work<ICacheFileService> cacheFileServiceWork)
@@ -29,6 +30,7 @@ namespace Piedone.Combinator
                     part.CacheFileCountField.Loader(() => cacheFileServiceWork.Value.GetCount());
                 });
         }
+
 
         protected override void GetItemMetadata(GetContentItemMetadataContext context)
         {

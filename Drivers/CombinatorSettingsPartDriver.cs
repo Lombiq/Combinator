@@ -19,6 +19,7 @@ namespace Piedone.Combinator.Drivers
             get { return "Combinator"; }
         }
 
+
         public CombinatorSettingsPartDriver(
             ICacheFileService cacheFileService,
             ICombinatorEventHandler combinatorEventHandler)
@@ -26,6 +27,7 @@ namespace Piedone.Combinator.Drivers
             _cacheFileService = cacheFileService;
             _combinatorEventHandler = combinatorEventHandler;
         }
+
 
         // GET
         protected override DriverResult Editor(CombinatorSettingsPart part, dynamic shapeHelper)

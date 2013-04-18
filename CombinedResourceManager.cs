@@ -37,6 +37,7 @@ namespace Piedone.Combinator
 
         public ILogger Logger { get; set; }
 
+
         public CombinedResourceManager(
             IEnumerable<Meta<IResourceManifestProvider>> resourceProviders,
             ISiteService siteService,
@@ -58,6 +59,7 @@ namespace Piedone.Combinator
 
             Logger = NullLogger.Instance;
         }
+
 
         public override IList<ResourceRequiredContext> BuildRequiredResources(string stringResourceType)
         {
@@ -121,6 +123,7 @@ namespace Piedone.Combinator
                 return base.BuildRequiredResources(stringResourceType);
             }
         }
+
 
         /// <summary>
         /// Checks for overrides of static resources that can cause the actually used resource to be different from the included one

@@ -20,12 +20,6 @@ namespace Piedone.Combinator.Tests.Stubs
         {
         }
 
-        public string GetImageBase64Data(Uri imageUrl, int maxSizeKB)
-        {
-            return "base64: " + imageUrl;
-        }
-
-
         public byte[] GetImageContent(Uri imageUrl, int maxSizeKB)
         {
             return Encoding.Unicode.GetBytes(imageUrl.ToString());

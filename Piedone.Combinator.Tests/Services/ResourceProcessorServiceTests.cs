@@ -22,7 +22,7 @@ namespace Piedone.Combinator.Tests.Services
         [SetUp]
         public virtual void Init()
         {
-            
+
             var builder = new ContainerBuilder();
 
             builder.RegisterAutoMocking(MockBehavior.Loose);
@@ -54,7 +54,7 @@ namespace Piedone.Combinator.Tests.Services
 
             var settings = new CombinatorSettings
             {
-                MinificationExcludeFilter = new Regex("test\\.css"), 
+                MinificationExcludeFilter = new Regex("test\\.css"),
                 MinifyResources = true
             };
 
@@ -76,7 +76,7 @@ namespace Piedone.Combinator.Tests.Services
             var type = ResourceType.Style;
 
             resource = _resourceRepository.SaveResource("~/Modules/Piedone.Combinator/Styles/urls.css", type);
-            resource.Content = "body {"; 
+            resource.Content = "body {";
             resource.Content += "background-image: url(\"/Images/Root.png\");\r\n";
             resource.Content += "background-image: url(Images/Sub.png);\r\n"; // Also changing quotes
             resource.Content += "background-image: url('Current.png');\r\n"; // Also changing quotes
@@ -86,11 +86,11 @@ namespace Piedone.Combinator.Tests.Services
 
             _resourceProcessingService.ProcessResource(resource, new StringBuilder(), new CombinatorSettings());
 
-            Assert.That(resource.Content.Contains("url(/Images/Root.png);"), Is.True);
-            Assert.That(resource.Content.Contains("url(/Modules/Piedone.Combinator/Styles/Images/Sub.png);"), Is.True);
-            Assert.That(resource.Content.Contains("url(/Modules/Piedone.Combinator/Styles/Current.png);"), Is.True);
-            Assert.That(resource.Content.Contains("url(/Modules/Piedone.Combinator/Images/Parent.png);"), Is.True);
-            Assert.That(resource.Content.Contains("url(//google.com/Images/Remote.png);"), Is.True);
+            Assert.That(ContainsUrl(resource, "/Images/Root.png"), Is.True);
+            Assert.That(ContainsUrl(resource, "/Modules/Piedone.Combinator/Styles/Images/Sub.png"), Is.True);
+            Assert.That(ContainsUrl(resource, "/Modules/Piedone.Combinator/Styles/Current.png"), Is.True);
+            Assert.That(ContainsUrl(resource, "/Modules/Piedone.Combinator/Images/Parent.png"), Is.True);
+            Assert.That(ContainsUrl(resource, "//google.com/Images/Remote.png"), Is.True);
         }
 
         [Test]
@@ -98,9 +98,9 @@ namespace Piedone.Combinator.Tests.Services
         {
             Func<string, string> toBase64 =
                 (url) =>
-                    {
-                        return Convert.ToBase64String(Encoding.Unicode.GetBytes(url));
-                    };
+                {
+                    return Convert.ToBase64String(Encoding.Unicode.GetBytes(url));
+                };
 
             _resourceRepository.Clear();
             CombinatorResource resource;
@@ -108,7 +108,7 @@ namespace Piedone.Combinator.Tests.Services
             var type = ResourceType.Style;
 
             resource = _resourceRepository.SaveResource("~/Modules/Piedone.Combinator/Styles/imagese.css", type);
-            resource.Content = "body {"; 
+            resource.Content = "body {";
             resource.Content += "background-image: url(\"/Images/one.png\");\r\n";
             resource.Content += "background-image: url(\"/Images/two.png\");\r\n";
             resource.Content += "background-image: url(\"/Images/three.png\");\r\n";
@@ -117,10 +117,18 @@ namespace Piedone.Combinator.Tests.Services
 
             _resourceProcessingService.ProcessResource(resource, new StringBuilder(), new CombinatorSettings() { EmbedCssImages = true });
 
-            Assert.That(resource.Content.Contains("url(data:image/png;base64," + toBase64("http://localhost/Images/one.png") + ");"), Is.True);
-            Assert.That(resource.Content.Contains("url(data:image/png;base64," + toBase64("http://localhost/Images/two.png") + ");"), Is.True);
-            Assert.That(resource.Content.Contains("url(data:image/png;base64," + toBase64("http://localhost/Images/three.png") + ");"), Is.True);
-            Assert.That(resource.Content.Contains("url(data:image/png;base64," + toBase64("http://google.com/Images/Remote.png") + ");"), Is.True);
+            Assert.That(ContainsUrl(resource, "data:image/png;base64," + toBase64("http://localhost/Images/one.png")), Is.True);
+            Assert.That(ContainsUrl(resource, "data:image/png;base64," + toBase64("http://localhost/Images/two.png")), Is.True);
+            Assert.That(ContainsUrl(resource, "data:image/png;base64," + toBase64("http://localhost/Images/three.png")), Is.True);
+            Assert.That(ContainsUrl(resource, "data:image/png;base64," + toBase64("http://google.com/Images/Remote.png")), Is.True);
+        }
+
+
+        public static bool ContainsUrl(CombinatorResource resource, string url)
+        {
+            return
+                resource.Content.Contains("url(\"" + url + "\")") ||
+                resource.Content.Contains("url(" + url + ")");
         }
     }
 }

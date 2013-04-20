@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using ExCSS;
 using ExCSS.Model;
 using Orchard.Environment.Extensions;
@@ -42,6 +43,8 @@ namespace Piedone.Combinator.Services
                 return;
             }
 
+        private delegate string ImageMatchProcessor(string url, string extension, Match match);
+
 
             var absoluteUrlString = resource.AbsoluteUrl.ToString();
 
@@ -53,15 +56,23 @@ namespace Piedone.Combinator.Services
 
             if (resource.Type == ResourceType.Style)
             {
-                var stylesheet = new StylesheetParser().Parse(resource.Content);
-                AdjustRelativePaths(resource, stylesheet);
+                //var stylesheet = new StylesheetParser().Parse(resource.Content);
+                //AdjustRelativePaths(resource, stylesheet);
+
+                //if (settings.EmbedCssImages && (settings.EmbedCssImagesStylesheetExcludeFilter == null || !settings.EmbedCssImagesStylesheetExcludeFilter.IsMatch(absoluteUrlString)))
+                //{
+                //    EmbedImages(resource, stylesheet, settings.EmbeddedImagesMaxSizeKB);
+                //}
+
+                //resource.Content = stylesheet.ToString();
+
+                // Needed until ExCss becomes mature
+                RegexAdjustRelativePaths(resource);
 
                 if (settings.EmbedCssImages && (settings.EmbedCssImagesStylesheetExcludeFilter == null || !settings.EmbedCssImagesStylesheetExcludeFilter.IsMatch(absoluteUrlString)))
                 {
-                    EmbedImages(resource, stylesheet, settings.EmbeddedImagesMaxSizeKB);
+                    RegexEmbedImages(resource, settings.EmbeddedImagesMaxSizeKB);
                 }
-
-                resource.Content = stylesheet.ToString();
             }
 
             if (settings.MinifyResources && (settings.MinificationExcludeFilter == null || !settings.MinificationExcludeFilter.IsMatch(absoluteUrlString)))
@@ -252,6 +263,87 @@ namespace Piedone.Combinator.Services
                     }
                 });
         }
+
+        // This will be needed until ExCSS becomes mature
+        #region Legacy Regex-based CSS processing
+        private void RegexProcessImageUrls(CombinatorResource resource, ImageMatchProcessor matchProcessor)
+        {
+            RegexProcessUrls(resource,
+                (match) =>
+                {
+                    var url = match.Groups[1].Value;
+                    var extension = Path.GetExtension(url).ToLowerInvariant();
+
+                    // This is a dumb check but otherwise we'd have to inspect the file thoroughly
+                    if (!String.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
+                    {
+                        var result = matchProcessor(url, extension, match);
+                        if (result != null) return result;
+                    }
+
+                    return match.Groups[0].Value;
+                });
+        }
+
+        private void RegexEmbedImages(CombinatorResource resource, int maxSizeKB)
+        {
+            RegexProcessImageUrls(resource,
+                (url, extenstion, match) =>
+                {
+                    var imageData = _resourceFileService.GetImageContent(RegexMakeInlineUri(resource, url), maxSizeKB);
+
+                    if (imageData != null)
+                    {
+                        var dataUrl =
+                        "data:image/"
+                            + Path.GetExtension(url).Replace(".", "")
+                            + ";base64,"
+                            + Convert.ToBase64String(imageData);
+
+                        return "url(\"" + dataUrl + "\")";
+                    }
+
+                    return null;
+                });
+        }
+
+        private static void RegexAdjustRelativePaths(CombinatorResource resource)
+        {
+            RegexProcessUrls(resource,
+                (match) =>
+                {
+                    var url = match.Groups[1].ToString();
+
+                    var uri = RegexMakeInlineUri(resource, url);
+
+                    // Remote paths are preserved as full urls, local paths become uniformed relative ones.
+                    string uriString = "";
+                    if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToProtocolRelative();
+                    else uriString = uri.PathAndQuery;
+
+                    return "url(\"" + uriString + "\")";
+                });
+        }
+
+        private static void RegexProcessUrls(CombinatorResource resource, MatchEvaluator evaluator)
+        {
+            string content = resource.Content;
+
+            content = Regex.Replace(
+                                    content,
+                                    "url\\(['|\"]?(.+?)['|\"]?\\)",
+                                    evaluator,
+                                    RegexOptions.IgnoreCase);
+
+            resource.Content = content;
+        }
+
+        private static Uri RegexMakeInlineUri(CombinatorResource resource, string url)
+        {
+            return Uri.IsWellFormedUriString(url, UriKind.Absolute) ? new Uri(url) : new Uri(resource.AbsoluteUrl, url);
+        }
+        #endregion
+
 
         private static void AdjustRelativePaths(CombinatorResource resource, Stylesheet stylesheet)
         {

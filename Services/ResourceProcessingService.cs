@@ -22,6 +22,8 @@ namespace Piedone.Combinator.Services
         private readonly IMinificationService _minificationService;
         private readonly ICacheFileService _cacheFileService;
         private readonly ICombinatorResourceEventHandler _eventHandler;
+        private delegate string ImageMatchProcessor(string url, string extension, Match match);
+
 
         public ResourceProcessingService(
             IResourceFileService resourceFileService,
@@ -35,6 +37,7 @@ namespace Piedone.Combinator.Services
             _eventHandler = eventHandler;
         }
 
+
         public void ProcessResource(CombinatorResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
         {
             if (resource.IsCdnResource && !settings.CombineCDNResources)
@@ -42,8 +45,6 @@ namespace Piedone.Combinator.Services
                 resource.IsOriginal = true;
                 return;
             }
-
-        private delegate string ImageMatchProcessor(string url, string extension, Match match);
 
 
             var absoluteUrlString = resource.AbsoluteUrl.ToString();
@@ -85,25 +86,7 @@ namespace Piedone.Combinator.Services
 
             combinedContent.Append(resource.Content);
         }
-
-        public static void ConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUrl)
-        {
-            if (String.IsNullOrEmpty(resource.Content)) return;
-
-            var stylesheet = new StylesheetParser().Parse(resource.Content);
-
-            // Modifying relative urls (because when saved, local urls were converted to unified relative ones) to point to the original domain
-            ProcessUrls(
-                resource,
-                stylesheet,
-                (ruleSet, urlTerm) =>
-                {
-                    if (Uri.IsWellFormedUriString(urlTerm.Value, UriKind.Absolute)) return;
-
-                    urlTerm.Value = new Uri(baseUrl, urlTerm.Value).ToProtocolRelative();
-                });
-        }
-
+    
         public void ReplaceCssImagesWithSprite(CombinatorResource resource)
         {
             Func<RuleSet, Term, bool> noSprite =
@@ -235,11 +218,25 @@ namespace Piedone.Combinator.Services
             resource.Content = stylesheet.ToString();
         }
 
-        private class CssImage
+
+        public static void ConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUrl)
         {
-            public byte[] Content { get; set; }
-            public BackgroundImage BackgroundImage { get; set; }
+            if (String.IsNullOrEmpty(resource.Content)) return;
+
+            var stylesheet = new StylesheetParser().Parse(resource.Content);
+
+            // Modifying relative urls (because when saved, local urls were converted to unified relative ones) to point to the original domain
+            ProcessUrls(
+                resource,
+                stylesheet,
+                (ruleSet, urlTerm) =>
+                {
+                    if (Uri.IsWellFormedUriString(urlTerm.Value, UriKind.Absolute)) return;
+
+                    urlTerm.Value = new Uri(baseUrl, urlTerm.Value).ToProtocolRelative();
+                });
         }
+
 
         private void EmbedImages(CombinatorResource resource, Stylesheet stylesheet, int maxSizeKB)
         {
@@ -263,6 +260,7 @@ namespace Piedone.Combinator.Services
                     }
                 });
         }
+
 
         // This will be needed until ExCSS becomes mature
         #region Legacy Regex-based CSS processing
@@ -345,6 +343,19 @@ namespace Piedone.Combinator.Services
         #endregion
 
 
+        private void MinifyResourceContent(CombinatorResource resource)
+        {
+            if (resource.Type == ResourceType.Style)
+            {
+                resource.Content = _minificationService.MinifyCss(resource.Content);
+            }
+            else if (resource.Type == ResourceType.JavaScript)
+            {
+                resource.Content = _minificationService.MinifyJavaScript(resource.Content);
+            }
+        }
+
+
         private static void AdjustRelativePaths(CombinatorResource resource, Stylesheet stylesheet)
         {
             ProcessUrls(
@@ -404,16 +415,11 @@ namespace Piedone.Combinator.Services
             return Uri.IsWellFormedUriString(url, UriKind.Absolute) ? new Uri(url) : new Uri(resource.AbsoluteUrl, url);
         }
 
-        private void MinifyResourceContent(CombinatorResource resource)
+
+        private class CssImage
         {
-            if (resource.Type == ResourceType.Style)
-            {
-                resource.Content = _minificationService.MinifyCss(resource.Content);
-            }
-            else if (resource.Type == ResourceType.JavaScript)
-            {
-                resource.Content = _minificationService.MinifyJavaScript(resource.Content);
-            }
+            public byte[] Content { get; set; }
+            public BackgroundImage BackgroundImage { get; set; }
         }
     }
 }

@@ -6,7 +6,6 @@ using System.Threading;
 using Orchard.Caching;
 using Orchard.Data;
 using Orchard.Environment.Extensions;
-using Orchard.Exceptions;
 using Orchard.FileSystems.Media;
 using Orchard.Mvc;
 using Orchard.Services;

@@ -97,7 +97,7 @@ namespace Piedone.Combinator
                 if (!String.IsNullOrEmpty(settingsPart.ResourceSetRegexes))
                 {
                     var setRegexes = new List<Regex>();
-                    foreach (var regex in settingsPart.ResourceSetRegexes.Trim().Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+                    foreach (var regex in settingsPart.ResourceSetRegexesEnumerable)
                     {
                         if (!String.IsNullOrEmpty(regex)) setRegexes.Add(new Regex(regex));
                     }

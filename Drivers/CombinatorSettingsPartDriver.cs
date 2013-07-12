@@ -1,7 +1,10 @@
-﻿using Orchard.ContentManagement;
+﻿using System;
+using System.Text.RegularExpressions;
+using Orchard.ContentManagement;
 using Orchard.ContentManagement.Drivers;
 using Orchard.ContentManagement.Handlers;
 using Orchard.Environment.Extensions;
+using Orchard.Localization;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
@@ -19,6 +22,8 @@ namespace Piedone.Combinator.Drivers
             get { return "Combinator"; }
         }
 
+        public Localizer T { get; set; }
+
 
         public CombinatorSettingsPartDriver(
             ICacheFileService cacheFileService,
@@ -26,6 +31,8 @@ namespace Piedone.Combinator.Drivers
         {
             _cacheFileService = cacheFileService;
             _combinatorEventHandler = combinatorEventHandler;
+
+            T = NullLocalizer.Instance;
         }
 
 
@@ -33,7 +40,7 @@ namespace Piedone.Combinator.Drivers
         protected override DriverResult Editor(CombinatorSettingsPart part, dynamic shapeHelper)
         {
             return ContentShape("Parts_CombinatorSettings_SiteSettings",
-                    () =>   shapeHelper.EditorTemplate(
+                    () => shapeHelper.EditorTemplate(
                             TemplateName: "Parts.CombinatorSettings.SiteSettings",
                             Model: part,
                             Prefix: Prefix))
@@ -57,7 +64,7 @@ namespace Piedone.Combinator.Drivers
 
             updater.TryUpdateModel(part, Prefix, null, null);
 
-            // Not emptying the cache would cause inconsistencies
+
             if (part.CombinationExcludeRegex != formerSettings.CombinationExcludeRegex
                 || part.CombineCdnResources != formerSettings.CombineCdnResources
                 || part.ResourceDomain != formerSettings.ResourceDomain
@@ -69,7 +76,21 @@ namespace Piedone.Combinator.Drivers
                 || part.GenerateImageSprites != formerSettings.GenerateImageSprites
                 || (part.ResourceSetRegexes != formerSettings.ResourceSetRegexes))
             {
+                // Not emptying the cache would cause inconsistencies
                 _cacheFileService.Empty();
+
+                if (!string.IsNullOrEmpty(part.CombinationExcludeRegex)) TestRegex(part.CombinationExcludeRegex, T("combination exclude regex"), updater);
+                if (!string.IsNullOrEmpty(part.MinificationExcludeRegex)) TestRegex(part.MinificationExcludeRegex, T("minification exclude regex"), updater);
+                if (!string.IsNullOrEmpty(part.EmbedCssImagesStylesheetExcludeRegex)) TestRegex(part.EmbedCssImagesStylesheetExcludeRegex, T("embedded css images exclude regex"), updater);
+                if (!string.IsNullOrEmpty(part.ResourceSetRegexes))
+                {
+                    int i = 1;
+                    foreach (var regex in part.ResourceSetRegexesEnumerable)
+                    {
+                        TestRegex(regex, T("resource set regexes #{0}", i.ToString()), updater);
+                        i++;
+                    }
+                }
             }
 
             _combinatorEventHandler.ConfigurationChanged();
@@ -109,6 +130,19 @@ namespace Piedone.Combinator.Drivers
             context.ImportAttribute(partName, "GenerateImageSprites", value => part.GenerateImageSprites = bool.Parse(value));
             context.ImportAttribute(partName, "ResourceSetRegexes", value => part.ResourceSetRegexes = value);
             context.ImportAttribute(partName, "EnableForAdmin", value => part.EnableForAdmin = bool.Parse(value));
+        }
+
+
+        private void TestRegex(string pattern, LocalizedString fieldName, IUpdateModel updater)
+        {
+            try
+            {
+                Regex.IsMatch("test", pattern);
+            }
+            catch (ArgumentException ex)
+            {
+                updater.AddModelError("Combinator." + fieldName.TextHint + "Malformed", T("There was a problem with the regex for {0} you provided: {1}", fieldName.Text, ex.Message));
+            }
         }
     }
 }

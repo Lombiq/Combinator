@@ -1,6 +1,7 @@
 ﻿using Orchard.ContentManagement;
 using Orchard.ContentManagement.Handlers;
 using Orchard.Data;
+using Orchard.Environment;
 using Orchard.Environment.Extensions;
 using Orchard.Localization;
 using Piedone.Combinator.Models;
@@ -13,21 +14,23 @@ namespace Piedone.Combinator
     {
         public Localizer T { get; set; }
 
+
         public CombinatorSettingsPartHandler(
             IRepository<CombinatorSettingsPartRecord> repository,
-            ICacheFileService cacheFileService)
+            Work<ICacheFileService> cacheFileServiceWork)
         {
             Filters.Add(new ActivatingFilter<CombinatorSettingsPart>("Site"));
             Filters.Add(StorageFilter.For(repository));
 
             T = NullLocalizer.Instance;
 
-            OnLoaded<CombinatorSettingsPart>((context, part) =>
-            {
-                // Add loaders that will load content just-in-time
-                part.CacheFileCountField.Loader(() => cacheFileService.GetCount());
-            });
+            OnActivated<CombinatorSettingsPart>((context, part) =>
+                {
+                    // Add loaders that will load content just-in-time
+                    part.CacheFileCountField.Loader(() => cacheFileServiceWork.Value.GetCount());
+                });
         }
+
 
         protected override void GetItemMetadata(GetContentItemMetadataContext context)
         {

@@ -1,26 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using Orchard.Mvc;
+using Orchard.Services;
 using Orchard.UI.Resources;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
-using Piedone.HelpfulLibraries.Serialization;
 
 namespace Piedone.Combinator.Services
 {
     public class CombinatorResourceManager : ICombinatorResourceManager
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ISimpleSerializer _serializer;
+        private readonly IJsonConverter _jsonConverter;
 
 
-        public CombinatorResourceManager(
-            IHttpContextAccessor httpContextAccessor,
-            ISimpleSerializer serializer)
+        public CombinatorResourceManager(IHttpContextAccessor httpContextAccessor, IJsonConverter jsonConverter)
         {
             _httpContextAccessor = httpContextAccessor;
-            _serializer = serializer;
+            _jsonConverter = jsonConverter;
         }
 
 
@@ -30,29 +27,12 @@ namespace Piedone.Combinator.Services
         }
 
 
-        [DataContract]
-        public class SerializableSettings
-        {
-            [DataMember]
-            public Uri Url { get; set; }
-
-            [DataMember]
-            public string Culture { get; set; }
-
-            [DataMember]
-            public string Condition { get; set; }
-
-            [DataMember]
-            public Dictionary<string, string> Attributes { get; set; }
-        }
-
-
         public string SerializeResourceSettings(CombinatorResource resource)
         {
             var settings = resource.RequiredContext.Settings;
             if (settings == null) return "";
 
-            return _serializer.XmlSerialize(
+            return _jsonConverter.Serialize(
                 new SerializableSettings()
                 {
                     Url = resource.IsOriginal ? resource.IsCdnResource ? resource.AbsoluteUrl : resource.RelativeUrl : null,
@@ -66,13 +46,11 @@ namespace Piedone.Combinator.Services
         {
             if (String.IsNullOrEmpty(serialization)) return;
 
-            var settings = _serializer.XmlDeserialize<SerializableSettings>(serialization);
+            var settings = _jsonConverter.Deserialize<SerializableSettings>(serialization);
 
             if (settings.Url != null)
             {
-                var resourceManifest = new ResourceManifest();
-                resource.RequiredContext.Resource = resourceManifest.DefineResource(resource.Type.ToStringType(), settings.Url.ToString());
-                resource.RequiredContext.Resource.SetUrlWithoutScheme(settings.Url);
+                resource.RequiredContext.Resource.SetUrlProtocolRelative(settings.Url);
                 resource.IsOriginal = true;
             }
 
@@ -81,6 +59,15 @@ namespace Piedone.Combinator.Services
             resourceSettings.Culture = settings.Culture;
             resourceSettings.Condition = settings.Condition;
             resourceSettings.Attributes = settings.Attributes;
+        }
+
+
+        public class SerializableSettings
+        {
+            public Uri Url { get; set; }
+            public string Culture { get; set; }
+            public string Condition { get; set; }
+            public Dictionary<string, string> Attributes { get; set; }
         }
     }
 }

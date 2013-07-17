@@ -17,12 +17,12 @@ namespace Piedone.Combinator.Extensions
 
             if (resource.Url.Contains("~")) return resource.Url;
 
-            return Path.Combine(resource.BasePath + resource.Url);
+            return Path.Combine(resource.BasePath, resource.Url);
         }
 
-        public static void SetUrlWithoutScheme(this ResourceDefinition resource, Uri url)
+        public static void SetUrlProtocolRelative(this ResourceDefinition resource, Uri url)
         {
-            resource.SetUrl(url.ToStringWithoutScheme());
+            resource.SetUrl(url.ToProtocolRelative());
         }
     }
 }

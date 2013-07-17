@@ -37,6 +37,7 @@ namespace Piedone.Combinator
 
         public ILogger Logger { get; set; }
 
+
         public CombinedResourceManager(
             IEnumerable<Meta<IResourceManifestProvider>> resourceProviders,
             ISiteService siteService,
@@ -59,6 +60,7 @@ namespace Piedone.Combinator
             Logger = NullLogger.Instance;
         }
 
+
         public override IList<ResourceRequiredContext> BuildRequiredResources(string stringResourceType)
         {
             // It's necessary to make a copy since making a change to the local variable also changes the private one.
@@ -71,7 +73,7 @@ namespace Piedone.Combinator
                 return _siteService.GetSiteSettings().As<CombinatorSettingsPart>();
             });
 
-            if (resources.Count == 0 
+            if (resources.Count == 0
                 || Orchard.UI.Admin.AdminFilter.IsApplied(_httpContextAccessor.Current().Request.RequestContext) && !settingsPart.EnableForAdmin) return resources;
 
             var resourceType = ResourceTypeHelper.StringTypeToEnum(stringResourceType);
@@ -80,9 +82,11 @@ namespace Piedone.Combinator
             {
                 var settings = new CombinatorSettings
                 {
-                    CombineCDNResources = settingsPart.CombineCDNResources,
+                    CombineCDNResources = settingsPart.CombineCdnResources,
+                    ResourceDomain = settingsPart.ResourceDomain,
                     EmbedCssImages = settingsPart.EmbedCssImages,
                     EmbeddedImagesMaxSizeKB = settingsPart.EmbeddedImagesMaxSizeKB,
+                    GenerateImageSprites = settingsPart.GenerateImageSprites,
                     MinifyResources = settingsPart.MinifyResources
                 };
 
@@ -93,45 +97,86 @@ namespace Piedone.Combinator
                 if (!String.IsNullOrEmpty(settingsPart.ResourceSetRegexes))
                 {
                     var setRegexes = new List<Regex>();
-                    foreach (var regex in settingsPart.ResourceSetRegexes.Trim().Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+                    foreach (var regex in settingsPart.ResourceSetRegexesEnumerable)
                     {
                         if (!String.IsNullOrEmpty(regex)) setRegexes.Add(new Regex(regex));
                     }
-                    settings.ResourceSetFilters = setRegexes.ToArray(); 
+                    settings.ResourceSetFilters = setRegexes.ToArray();
                 }
 
-                if (resourceType == ResourceType.Style)
-                {
-                    // Checking for overridden stylesheets
-                    var currentTheme = _themeManager.GetRequestTheme(_httpContextAccessor.Current().Request.RequestContext);
-                    var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
+                DiscoverResourceOverrides(resources, resourceType);
 
-                    foreach (var resource in resources)
-                    {
-                        var shapeName = StylesheetBindingStrategy.GetAlternateShapeNameFromFileName(resource.Resource.GetFullPath());
+                IList<ResourceRequiredContext> result;
 
-                        // Simply included CDN stylesheets are not in the ShapeTable, so we have to check
-                        if (shapeTable.Bindings.ContainsKey("Style__" + shapeName))
-                        {
-                            var binding = shapeTable.Bindings["Style__" + shapeName].BindingSource;
-                            resource.Resource.SetUrl(binding, null);
-                        }
-                    }
+                if (resourceType == ResourceType.Style) result = _combinatorService.CombineStylesheets(resources, settings);
+                else if (resourceType == ResourceType.JavaScript) result = _combinatorService.CombineScripts(resources, settings);
+                else return base.BuildRequiredResources(stringResourceType);
 
-                    return _combinatorService.CombineStylesheets(resources, settings);
-                }
-                else if (resourceType == ResourceType.JavaScript)
-                {
-                    return _combinatorService.CombineScripts(resources, settings);
-                }
+                RemoveOriginalResourceShapes(result, resourceType);
 
-                return base.BuildRequiredResources(stringResourceType);
+                return result;
             }
             catch (Exception ex)
             {
                 if (ex.IsFatal()) throw;
                 Logger.Error(ex, "Error when combining " + resourceType + " files");
                 return base.BuildRequiredResources(stringResourceType);
+            }
+        }
+
+
+        /// <summary>
+        /// Checks for overrides of static resources that can cause the actually used resource to be different from the included one
+        /// </summary>
+        private void DiscoverResourceOverrides(IList<ResourceRequiredContext> resources, ResourceType resourceType)
+        {
+            TraverseResouceShapes(
+                resources,
+                resourceType,
+                (shapeTable, resource, shapeKey) =>
+                {
+                    var binding = shapeTable.Bindings[shapeKey].BindingSource;
+                    resource.Resource.SetUrl(binding, null);
+                });
+        }
+
+        /// <summary>
+        /// Removes shapes corresponding to resources that are included in their original form (i.e. not combined but excluded). This is
+        /// necessary because otherwise the ordering of a collection of original and combined resources are not kept (original resources are
+        /// written to the output before the other ones).
+        /// </summary>
+        private void RemoveOriginalResourceShapes(IList<ResourceRequiredContext> resources, ResourceType resourceType)
+        {
+            TraverseResouceShapes(
+                resources,
+                resourceType,
+                (shapeTable, resource, shapeKey) =>
+                {
+                    shapeTable.Bindings.Remove(shapeKey);
+                });
+        }
+
+        private void TraverseResouceShapes(IList<ResourceRequiredContext> resources, ResourceType resourceType, Action<ShapeTable, ResourceRequiredContext, string> processor)
+        {
+            var shapeKeyPrefix = resourceType == ResourceType.Style ? "Style__" : "Script__";
+
+            var currentTheme = _themeManager.GetRequestTheme(_httpContextAccessor.Current().Request.RequestContext);
+            var shapeTable = _shapeTableLocator.Lookup(currentTheme.Id);
+
+            foreach (var resource in resources)
+            {
+                var fullPath = resource.Resource.GetFullPath();
+                if (!String.IsNullOrEmpty(fullPath))
+                {
+                    var shapeName = StaticFileBindingStrategy.GetAlternateShapeNameFromFileName(fullPath);
+                    var shapeKey = shapeKeyPrefix + shapeName;
+
+                    // Simply included CDN stylesheets are not in the ShapeTable, so we have to check
+                    if (shapeTable.Bindings.ContainsKey(shapeKey))
+                    {
+                        processor(shapeTable, resource, shapeKey);
+                    }
+                }
             }
         }
     }

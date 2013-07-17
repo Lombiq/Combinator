@@ -1,6 +1,6 @@
 ﻿using Orchard.ContentManagement.Records;
-using Orchard.Environment.Extensions;
 using Orchard.Data.Conventions;
+using Orchard.Environment.Extensions;
 
 namespace Piedone.Combinator.Models
 {
@@ -11,6 +11,10 @@ namespace Piedone.Combinator.Models
         public virtual string CombinationExcludeRegex { get; set; }
 
         public virtual bool CombineCdnResources { get; set; }
+
+        public virtual string ResourceDomain { get; set; }
+
+        public virtual bool EnableForAdmin { get; set; }
 
         public virtual bool MinifyResources { get; set; }
 
@@ -24,10 +28,11 @@ namespace Piedone.Combinator.Models
         [StringLengthMax]
         public virtual string EmbedCssImagesStylesheetExcludeRegex { get; set; }
 
+        public virtual bool GenerateImageSprites { get; set; }
+
         [StringLengthMax]
         public virtual string ResourceSetRegexes { get; set; }
 
-        public virtual bool EnableForAdmin { get; set; }
 
         public CombinatorSettingsPartRecord()
         {
@@ -38,6 +43,7 @@ namespace Piedone.Combinator.Models
             EmbedCssImages = false;
             EmbeddedImagesMaxSizeKB = 15;
             EmbedCssImagesStylesheetExcludeRegex = "";
+            GenerateImageSprites = false;
             ResourceSetRegexes = "";
             EnableForAdmin = false;
         }

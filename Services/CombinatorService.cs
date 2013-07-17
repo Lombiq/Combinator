@@ -23,30 +23,29 @@ namespace Piedone.Combinator.Services
         private readonly IResourceProcessingService _resourceProcessingService;
         private readonly ILockingCacheManager _lockingCacheManager;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
-        private readonly ILockFileManager _lockFileManager;
         private readonly ICombinatorResourceManager _combinatorResourceManager;
 
         public ILogger Logger { get; set; }
         public Localizer T { get; set; }
+
 
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
             ILockingCacheManager lockingCacheManager,
             ICombinatorEventMonitor combinatorEventMonitor,
-            ILockFileManager lockFileManager,
             ICombinatorResourceManager combinatorResourceManager)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
             _lockingCacheManager = lockingCacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
-            _lockFileManager = lockFileManager;
             _combinatorResourceManager = combinatorResourceManager;
 
             Logger = NullLogger.Instance;
             T = NullLocalizer.Instance;
         }
+
 
         public IList<ResourceRequiredContext> CombineStylesheets(
             IList<ResourceRequiredContext> resources,
@@ -64,7 +63,7 @@ namespace Piedone.Combinator.Services
 
                 _combinatorEventMonitor.MonitorCacheEmptied(ctx);
 
-                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode));
+                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode), settings.ResourceDomain);
             }, () => resources);
         }
 
@@ -102,7 +101,7 @@ namespace Piedone.Combinator.Services
 
                         _combinatorEventMonitor.MonitorCacheEmptied(ctx);
 
-                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode));
+                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode), settings.ResourceDomain);
                         combinedResources.SetLocation(location);
 
                         return combinedResources;
@@ -119,6 +118,7 @@ namespace Piedone.Combinator.Services
 
             return combinedScripts;
         }
+
 
         /// <summary>
         /// Combines (and minifies) the content of resources and saves the combinations
@@ -145,29 +145,37 @@ namespace Piedone.Combinator.Services
                     resource.Settings.Condition,
                     resource.Settings.Attributes);
 
-                //var requiredContext = new ResourceRequiredContext();
-                //var resourceManifest = new ResourceManifest();
-                //requiredContext.Resource = resourceManifest.DefineResource(ResourceTypeHelper.EnumToStringType(resourceType), resource.Resource.Name);
-                //requiredContext.Resource.SetUrl(resource.Resource.GetFullPath());
-                //requiredContext.Settings = new RequireSettings();
-                //requiredContext.Settings.Culture = resource.Settings.Culture;
-                //requiredContext.Settings.Condition = resource.Settings.Condition;
-                //requiredContext.Settings.Attributes = new Dictionary<string, string>(resource.Settings.Attributes);
-                //combinatorResource.RequiredContext = requiredContext;
-
                 combinatorResources.Add(combinatorResource);
             }
 
             var combinedContent = new StringBuilder(1000);
 
-            Action<CombinatorResource> saveCombination =
-                (combinedResource) =>
+            Action<CombinatorResource, IEnumerable<CombinatorResource>> saveCombination =
+                (combinedResource, containedResources) =>
                 {
                     if (combinedResource == null) return;
+
                     // Don't save emtpy resources
                     if (combinedContent.Length == 0 && !combinedResource.IsOriginal) return;
 
-                    combinedResource.Content = combinedContent.ToString();
+                    if (!combinedResource.IsOriginal)
+                    {
+                        combinedResource.Content = combinedContent.ToString();
+
+                        if (combinedResource.Type == ResourceType.Style && !String.IsNullOrEmpty(combinedResource.Content) && settings.GenerateImageSprites)
+                        {
+                            _resourceProcessingService.ReplaceCssImagesWithSprite(combinedResource);
+                        }
+
+                        combinedResource.Content =
+                            "/*" + Environment.NewLine
+                            + "Resource bundle created by Combinator (http://combinator.codeplex.com/)" + Environment.NewLine + Environment.NewLine
+                            + "Resources in this bundle:" + Environment.NewLine
+                            + String.Join(Environment.NewLine, containedResources.Select(resource => "- " + resource.AbsoluteUrl.ToString()).ToArray())
+                            + Environment.NewLine + "*/"
+                            + Environment.NewLine + Environment.NewLine + Environment.NewLine + combinedResource.Content;
+                    }
+
                     _cacheFileService.Save(hashCode, combinedResource);
 
                     combinedContent.Clear();
@@ -175,31 +183,34 @@ namespace Piedone.Combinator.Services
 
 
             Regex currentSetRegex = null;
+            var resourcesInCombination = new List<CombinatorResource>();
 
             for (int i = 0; i < combinatorResources.Count; i++)
             {
                 var resource = combinatorResources[i];
                 var previousResource = (i != 0) ? combinatorResources[i - 1] : null;
                 var absoluteUrlString = "";
-
+                
                 try
                 {
                     absoluteUrlString = resource.AbsoluteUrl.ToString();
 
                     if (settings.CombinationExcludeFilter == null || !settings.CombinationExcludeFilter.IsMatch(absoluteUrlString))
                     {
+                        resourcesInCombination.Add(resource);
+
                         // If this resource differs from the previous one in terms of settings or CDN they can't be combined
                         if (previousResource != null
                             && (!previousResource.SettingsEqual(resource) || (previousResource.IsCdnResource != resource.IsCdnResource && !settings.CombineCDNResources)))
                         {
-                            saveCombination(previousResource);
+                            saveCombination(previousResource, resourcesInCombination);
                         }
 
                         // If this resource is in a different set than the previous, they can't be combined
                         if (currentSetRegex != null && !currentSetRegex.IsMatch(absoluteUrlString))
                         {
                             currentSetRegex = null;
-                            saveCombination(previousResource);
+                            saveCombination(previousResource, resourcesInCombination);
                         }
 
                         // Calculate if this resource is in a set
@@ -215,7 +226,7 @@ namespace Piedone.Combinator.Services
                             // The previous resource is in a different set or in no set so it can't be combined with this resource
                             if (currentSetRegex != null && previousResource != null)
                             {
-                                saveCombination(previousResource);
+                                saveCombination(previousResource, resourcesInCombination);
                             }
                         }
 
@@ -224,9 +235,9 @@ namespace Piedone.Combinator.Services
                     else
                     {
                         // This is a fully excluded resource
-                        if (previousResource != null) saveCombination(previousResource);
+                        if (previousResource != null) saveCombination(previousResource, resourcesInCombination);
                         resource.IsOriginal = true;
-                        saveCombination(resource);
+                        saveCombination(resource, resourcesInCombination);
                         combinatorResources[i] = null; // So previous resource detection works correctly
                     }
                 }
@@ -238,10 +249,11 @@ namespace Piedone.Combinator.Services
             }
 
 
-            saveCombination(combinatorResources[combinatorResources.Count - 1]);
+            saveCombination(combinatorResources[combinatorResources.Count - 1], resourcesInCombination);
         }
 
-        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources)
+
+        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources, string resourceDomain)
         {
             IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count);
 
@@ -251,8 +263,11 @@ namespace Piedone.Combinator.Services
                 {
                     var uriBuilder = new UriBuilder(resource.AbsoluteUrl);
                     uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
-                    resource.RequiredContext.Resource.SetUrl(uriBuilder.Uri.PathAndQuery.ToString()); // Using relative urls
+                    var urlString = uriBuilder.Uri.PathAndQuery.ToString();
+                    if (!String.IsNullOrEmpty(resourceDomain)) urlString = resourceDomain + urlString;
+                   resource.RequiredContext.Resource.SetUrl(urlString); // Using relative urls
                 }
+
                 resources.Add(resource.RequiredContext);
             }
 

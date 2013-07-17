@@ -17,6 +17,7 @@ namespace Piedone.Combinator.Models
             get
             {
                 var fullPath = RequiredContext.Resource.GetFullPath();
+                if (String.IsNullOrEmpty(fullPath)) return "";
 
                 if (fullPath.StartsWith("//"))
                 {
@@ -57,6 +58,7 @@ namespace Piedone.Combinator.Models
         {
             get
             {
+                if (String.IsNullOrEmpty(NormalizedFullPath)) return "~/";
                 return VirtualPathUtility.ToAppRelative(NormalizedFullPath, ApplicationPath);
             }
         }
@@ -74,7 +76,7 @@ namespace Piedone.Combinator.Models
                 {
                     if (IsCdnResource)
                     {
-                        _requiredContext.Resource.SetUrlWithoutScheme(AbsoluteUrl);
+                        _requiredContext.Resource.SetUrlProtocolRelative(AbsoluteUrl);
                     }
                     else
                     {
@@ -91,7 +93,7 @@ namespace Piedone.Combinator.Models
                 var fullPath = NormalizedFullPath;
 
                 return Uri.IsWellFormedUriString(fullPath, UriKind.Absolute)
-                    && new Uri(fullPath).Host != _httpContext.Request.Url.Host;
+                    && new Uri(fullPath).Authority != _httpContext.Request.Url.Authority;
             }
         }
 
@@ -107,6 +109,9 @@ namespace Piedone.Combinator.Models
 
         public string Content { get; set; }
 
+        /// <summary>
+        /// Indicates that the resource was not touched and was kept in its original state
+        /// </summary>
         public bool IsOriginal { get; set; }
 
 
@@ -125,11 +130,14 @@ namespace Piedone.Combinator.Models
             var requiredContext = new ResourceRequiredContext();
             var resourceManifest = new ResourceManifest();
             requiredContext.Resource = resourceManifest.DefineResource(Type.ToStringType(), name);
-            requiredContext.Resource.SetUrl(url);
-            requiredContext.Settings = new RequireSettings();
-            requiredContext.Settings.Culture = culture;
-            requiredContext.Settings.Condition = condition;
-            requiredContext.Settings.Attributes = attributes != null ? new Dictionary<string, string>(attributes) : new Dictionary<string, string>();
+            if (!String.IsNullOrEmpty(url)) requiredContext.Resource.SetUrl(url);
+            requiredContext.Settings = new RequireSettings
+            {
+                Name = name,
+                Culture = culture,
+                Condition = condition,
+                Attributes = attributes != null ? new Dictionary<string, string>(attributes) : new Dictionary<string, string>()
+            };
             RequiredContext = requiredContext;
         }
 

@@ -1,4 +1,6 @@
-﻿using Orchard.ContentManagement;
+﻿using System;
+using System.Collections.Generic;
+using Orchard.ContentManagement;
 using Orchard.Core.Common.Utilities;
 using Orchard.Environment.Extensions;
 
@@ -13,10 +15,22 @@ namespace Piedone.Combinator.Models
             set { Record.CombinationExcludeRegex = value; }
         }
 
-        public bool CombineCDNResources
+        public bool CombineCdnResources
         {
             get { return Record.CombineCdnResources; }
             set { Record.CombineCdnResources = value; }
+        }
+
+        public string ResourceDomain
+        {
+            get { return Record.ResourceDomain; }
+            set { Record.ResourceDomain = value; }
+        }
+
+        public bool EnableForAdmin
+        {
+            get { return Record.EnableForAdmin; }
+            set { Record.EnableForAdmin = value; }
         }
 
         public bool MinifyResources
@@ -49,16 +63,21 @@ namespace Piedone.Combinator.Models
             set { Record.EmbedCssImagesStylesheetExcludeRegex = value; }
         }
 
+        public bool GenerateImageSprites
+        {
+            get { return Record.GenerateImageSprites; }
+            set { Record.GenerateImageSprites = value; }
+        }
+
         public string ResourceSetRegexes
         {
             get { return Record.ResourceSetRegexes; }
             set { Record.ResourceSetRegexes = value; }
         }
 
-        public bool EnableForAdmin
+        public IEnumerable<string> ResourceSetRegexesEnumerable
         {
-            get { return Record.EnableForAdmin; }
-            set { Record.EnableForAdmin = value; }
+            get { return ResourceSetRegexes.Trim().Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries); }
         }
 
         private readonly LazyField<int> _cacheFileCount = new LazyField<int>();

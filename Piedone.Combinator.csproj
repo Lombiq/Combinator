@@ -20,6 +20,10 @@
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
     <UseIISExpress>false</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,27 +45,54 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Autofac, Version=2.2.4.900, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+    <Reference Include="Autofac, Version=2.6.1.841, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\bin\Autofac.dll</HintPath>
+      <HintPath>..\..\..\..\lib\autofac\Autofac.dll</HintPath>
     </Reference>
-    <Reference Include="EcmaScript.NET, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="dotless.Core">
+      <HintPath>Libs\dotless\dotless.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="EcmaScript.NET">
       <HintPath>Libs\YUICompressor\EcmaScript.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="ExCSS">
+      <HintPath>Libs\ExCSS.dll</HintPath>
     </Reference>
     <Reference Include="Iesi.Collections, Version=1.0.1.0, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Libs\YUICompressor\Iesi.Collections.dll</HintPath>
     </Reference>
+    <Reference Include="IronRuby">
+      <HintPath>..\..\..\..\lib\dlr\IronRuby.dll</HintPath>
+    </Reference>
+    <Reference Include="IronRuby.Libraries">
+      <HintPath>..\..\..\..\lib\dlr\IronRuby.Libraries.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Dynamic">
+      <HintPath>..\..\..\..\lib\dlr\Microsoft.Dynamic.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting">
+      <HintPath>..\..\..\..\lib\dlr\Microsoft.Scripting.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting.Metadata">
+      <HintPath>Libs\SassAndCoffee\IronRuby.1.1.3\Microsoft.Scripting.Metadata.dll</HintPath>
+    </Reference>
     <Reference Include="NAnt.Core">
       <HintPath>Libs\YUICompressor\NAnt.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="SassAndCoffee.Core">
+      <HintPath>Libs\SassAndCoffee\SassAndCoffee.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="SassAndCoffee.Ruby">
+      <HintPath>Libs\SassAndCoffee\SassAndCoffee.Ruby.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.ComponentModel.DataAnnotations">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Mvc, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -86,16 +117,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Recipes\Combinator.Recipe.xml" />
     <Content Include="Web.config" />
     <Content Include="Properties\AssemblyInfo.cs" />
     <Content Include="Module.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controllers\CombinatorAdminController.cs" />
+    <Compile Include="Commands\CombinatorCommands.cs" />
+    <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Drivers\CombinatorSettingsPartDriver.cs" />
     <Compile Include="EventHandlers\CombinatorEventMonitor.cs" />
     <Compile Include="EventHandlers\ICombinatorEventHandler.cs" />
     <Compile Include="EventHandlers\ICombinatorEventMonitor.cs" />
+    <Compile Include="EventHandlers\ICombinatorResourceEventHandler.cs" />
+    <Compile Include="EventHandlers\LessPreprocessor.cs" />
+    <Compile Include="EventHandlers\SassPreprocessor.cs" />
     <Compile Include="Extensions\CombinedFileRecordExtensions.cs" />
     <Compile Include="Extensions\RequireSettingsExtensions.cs" />
     <Compile Include="Extensions\ResourceDefinitionExtensions.cs" />
@@ -124,6 +160,19 @@
     <Compile Include="Services\MinificationService.cs" />
     <Compile Include="Services\ResourceFileService.cs" />
     <Compile Include="Services\ResourceProcessingService.cs" />
+    <Compile Include="SpriteGenerator\BackgroundImage.cs" />
+    <Compile Include="SpriteGenerator\Placement.cs" />
+    <Compile Include="SpriteGenerator\Sprite.cs" />
+    <Compile Include="SpriteGenerator\Utility\Algorithm.cs" />
+    <Compile Include="SpriteGenerator\Utility\Bit.cs" />
+    <Compile Include="SpriteGenerator\Utility\Contour.cs" />
+    <Compile Include="SpriteGenerator\Utility\Graph.cs" />
+    <Compile Include="SpriteGenerator\Utility\GraphNode.cs" />
+    <Compile Include="SpriteGenerator\Utility\HorizontalContour.cs" />
+    <Compile Include="SpriteGenerator\Utility\Module.cs" />
+    <Compile Include="SpriteGenerator\Utility\OT.cs" />
+    <Compile Include="SpriteGenerator\Utility\OTree.cs" />
+    <Compile Include="SpriteGenerator\Utility\VerticalContour.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Web.config" />
@@ -133,8 +182,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Placement.info" />
-    <Content Include="Styles\Web.config" />
-    <Content Include="Scripts\Web.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Orchard\Orchard.Framework.csproj">
@@ -146,7 +193,7 @@
       <Name>Orchard.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\Piedone.HelpfulLibraries\Piedone.HelpfulLibraries.csproj">
-      <Project>{EA61AD10-39D6-41A9-B12B-227F50C54158}</Project>
+      <Project>{ea61ad10-39d6-41a9-b12b-227f50c54158}</Project>
       <Name>Piedone.HelpfulLibraries</Name>
     </ProjectReference>
   </ItemGroup>

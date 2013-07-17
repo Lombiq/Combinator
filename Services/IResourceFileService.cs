@@ -6,8 +6,7 @@ namespace Piedone.Combinator.Services
 {
     public interface IResourceFileService : IDependency
     {
-        string GetLocalResourceContent(CombinatorResource resource);
-        string GetRemoteResourceContent(CombinatorResource resource);
-        string GetImageBase64Data(Uri imageUrl, int maxSizeKB);
+        void LoadResourceContent(CombinatorResource resource);
+        byte[] GetImageContent(Uri imageUrl, int maxSizeKB);
     }
 }

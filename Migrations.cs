@@ -12,10 +12,12 @@ namespace Piedone.Combinator.Migrations
     {
         private readonly ICacheFileService _cacheFileService;
 
+
         public Migrations(ICacheFileService cacheFileService)
         {
             _cacheFileService = cacheFileService;
         }
+
 
         public int Create()
         {
@@ -27,7 +29,8 @@ namespace Piedone.Combinator.Migrations
                     .Column<string>("Type")
                     .Column<DateTime>("LastUpdatedUtc")
                     .Column<string>("Settings", column => column.Unlimited())
-            ).AlterTable(typeof(CombinedFileRecord).Name,
+                )
+            .AlterTable(typeof(CombinedFileRecord).Name,
                 table => table
                     .CreateIndex("File", new string[] { "HashCode" })
             );
@@ -37,17 +40,19 @@ namespace Piedone.Combinator.Migrations
                     .ContentPartRecord()
                     .Column<string>("CombinationExcludeRegex", column => column.Unlimited())
                     .Column<bool>("CombineCdnResources")
+                    .Column<string>("ResourceDomain")
+                    .Column<bool>("EnableForAdmin")
                     .Column<bool>("MinifyResources")
                     .Column<string>("MinificationExcludeRegex", column => column.Unlimited())
                     .Column<bool>("EmbedCssImages")
                     .Column<int>("EmbeddedImagesMaxSizeKB")
                     .Column<string>("EmbedCssImagesStylesheetExcludeRegex", column => column.Unlimited())
+                    .Column<bool>("GenerateImageSprites")
                     .Column<string>("ResourceSetRegexes", column => column.Unlimited())
-                    .Column<bool>("EnableForAdmin")
-            );
+                );
 
 
-            return 8;
+            return 10;
         }
 
         public int UpdateFrom1()
@@ -69,12 +74,12 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
                 table => table
                     .AddColumn<string>("CombinationExcludeRegex")
-            );
+                );
 
             SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
                 table => table
                     .AddColumn<string>("Settings", column => column.Unlimited())
-            );
+                );
 
             return 3;
         }
@@ -99,7 +104,7 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
                 table => table
                     .AddColumn<string>("ResourceSetRegexes")
-            );
+                );
 
             return 5;
         }
@@ -109,7 +114,7 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
                 table => table
                     .AddColumn<bool>("EnableForAdmin")
-            );
+                );
 
             return 6;
         }
@@ -143,6 +148,27 @@ namespace Piedone.Combinator.Migrations
             );
 
             return 8;
+        }
+
+        public int UpdateFrom8()
+        {
+            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+                table =>
+                {
+                    table.AddColumn<bool>("GenerateImageSprites");
+                    table.AddColumn<string>("ResourceDomain");
+                }
+            );
+
+            return 9;
+        }
+
+        public int UpdateFrom9()
+        {
+            _cacheFileService.Empty();
+
+
+            return 10;
         }
 
 

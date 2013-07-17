@@ -1,29 +1,11 @@
 ﻿@model Piedone.Combinator.Models.CombinatorSettingsPart
+
 @{
-    Script.Require("jQuery").AtHead();
+    Script.Require("jQuery").AtFoot();
 }
-@using (Script.Head())
-{
-    <script type="text/javascript">
-        (function ($) {
-            // Doing this with JS is not a nice solution but it seems there is no other way to make a POST to the action
-            $.extend({
-                combinator: {
-                    emptyCache: function () {
-                        $("#button\\.EmptyCache").attr("disabled", "disabled");
-                        var url = '@Url.Action("EmptyCache", new { Controller = "CombinatorAdmin", Area = "Piedone.Combinator" })';
-                        var postData = { __RequestVerificationToken: "@Html.AntiForgeryTokenValueOrchard()" };
-                        $.post(url, postData, function (response) {
-                            location.reload();
-                        });
-                    }
-                }
-            });
-        })(jQuery);
-    </script>
-}
+
 <h1>
-    @T("Combinator Settings")
+    @Html.TitleForPage(T("Combinator Settings").Text)
 </h1>
 <span class="hint">@T("There are currently {0} combined resource files cached.", Model.CacheFileCount)</span>
 <fieldset>
@@ -31,15 +13,27 @@
     <ol>
         <li>
             @Html.LabelFor(m => m.CombinationExcludeRegex, T("Exclude from combination"))
-            @Html.TextBoxFor(m => m.CombinationExcludeRegex, new { @class = "textMedium" })
+            @Html.TextBoxFor(m => m.CombinationExcludeRegex, new { @class = "text large" })
             @Html.ValidationMessageFor(m => m.CombinationExcludeRegex)
             <span class="hint">@T("Files matched won't be processed in any way. Please provide a valid regular expression. Note that the full public urls of all resources will be checked against this regex. The match is case-sensitive. Regex.IsMatch() is used internally, so look at it for how to use. Example (without quotes): \"\\.min|jQuery\" will exclude all resources whose name contains \".min\" or \"jQuery\".")</span>
         </li>
         <li>
-            @Html.EditorFor(m => m.CombineCDNResources)
-            <label for="@Html.FieldIdFor(m => m.CombineCDNResources)" class="forcheckbox">@T("Combine CDN Resources")</label>
-            @Html.ValidationMessageFor(m => m.CombineCDNResources)
+            @Html.EditorFor(m => m.CombineCdnResources)
+            <label for="@Html.FieldIdFor(m => m.CombineCdnResources)" class="forcheckbox">@T("Combine CDN Resources")</label>
+            @Html.ValidationMessageFor(m => m.CombineCdnResources)
             <span class="hint">@T("If checked, remote resources from CDNs will be also combined. Most of the time this defeats the purpose of CDNs but if the site fetches resources from many sources, for your targeted visitors it may be faster to serve them all combined from your site. Always measure the difference!")</span>
+        </li>
+        <li>
+            @Html.LabelFor(m => m.ResourceDomain, T("Resource domain"))
+            @Html.TextBoxFor(m => m.ResourceDomain, new { @class = "text large" })
+            @Html.ValidationMessageFor(m => m.ResourceDomain)
+            <span class="hint">@T("If set, this domain will be used for local resource paths. Use this if you have a cookieless domain to handle static resources. The text here will be prepended to local paths, so specify the full domain with schema and port number (if any), e.g. \"//cookieless.mydomain.com:3030\".")</span>
+        </li>
+        <li>
+            @Html.EditorFor(m => m.EnableForAdmin)
+            <label for="@Html.FieldIdFor(m => m.EnableForAdmin)" class="forcheckbox">@T("Enable for the admin site")</label>
+            @Html.ValidationMessageFor(m => m.EnableForAdmin)
+            <span class="hint">@T("Warning: WYSISWYG editors typically can't be combined, so exclude them from combination. The exclude filter \"TinyMce\" is usually enough with the default installation.")</span>
         </li>
     </ol>
 </fieldset>
@@ -53,14 +47,14 @@
         </li>
         <li>
             @Html.LabelFor(m => m.MinificationExcludeRegex, T("Exclude from minification"))
-            @Html.TextBoxFor(m => m.MinificationExcludeRegex, new { @class = "textMedium" })
+            @Html.TextBoxFor(m => m.MinificationExcludeRegex, new { @class = "text large" })
             @Html.ValidationMessageFor(m => m.MinificationExcludeRegex)
             <span class="hint">@T("Contents of matched files won't be minified. The same rules apply as with the combination exclusion regex.")</span>
         </li>
     </ol>
 </fieldset>
 <fieldset>
-    <legend>@T("Image Embedding Settings")</legend>
+    <legend>@T("Image Processing Settings")</legend>
     <ol>
         <li>
             <span class="checkbox-and-label">
@@ -80,9 +74,19 @@
          </li>
          <li>
             @Html.LabelFor(m => m.EmbedCssImagesStylesheetExcludeRegex, T("Exclude from embedding"))
-            @Html.TextBoxFor(m => m.EmbedCssImagesStylesheetExcludeRegex, new { @class = "textMedium" })
+            @Html.TextBoxFor(m => m.EmbedCssImagesStylesheetExcludeRegex, new { @class = "text large" })
             @Html.ValidationMessageFor(m => m.EmbedCssImagesStylesheetExcludeRegex)
             <span class="hint">@T("Images of matched stylesheets won't be embedded. The same rules apply as with the combination exclusion regex. You can use this feature to exclude conditional stylesheets that are only for browsers prior to IE 8, so that for those clients the original images are presented.")</span>
+        </li>
+        <li>
+            <span class="checkbox-and-label">
+                @Html.EditorFor(m => m.GenerateImageSprites)
+                <label for="@Html.FieldIdFor(m => m.GenerateImageSprites)" class="forcheckbox">@T("Generate image sprites")</label>
+                @Html.ValidationMessageFor(m => m.GenerateImageSprites)
+            </span>
+            <span class="hint">
+                @T("Images not embedded will be processed. If an image has \"no-sprite\" in its name it won't be merged into a sprite.")
+            </span>
         </li>
     </ol>
 </fieldset>
@@ -98,14 +102,29 @@
     </ol>
 </fieldset>
 <fieldset>
-    <legend>@T("Usage on the admin site")</legend>
-    @Html.EditorFor(m => m.EnableForAdmin)
-    <label for="@Html.FieldIdFor(m => m.EnableForAdmin)" class="forcheckbox">@T("Enable for the admin site")</label>
-    @Html.ValidationMessageFor(m => m.EnableForAdmin)
-    <span class="hint">@T("Warning: WYSISWYG editors typically can't be combined, so exclude them from combination. The exclude filter \"TinyMce\" is usually enough with the default installation.")</span>
-</fieldset>
-<fieldset>
     <legend>@T("Cache Control")</legend>
     <button type="button" id="button.EmptyCache" name="button.EmptyCache" value="EmptyCache"
         onclick="$.combinator.emptyCache(); return false;">@T("Empty cache")</button>
 </fieldset>
+
+
+@using (Script.Foot())
+{
+    <script type="text/javascript">
+        (function ($) {
+            // Doing this with JS is not a nice solution but it seems there is no other way to make a POST to the action
+            $.extend({
+                combinator: {
+                    emptyCache: function () {
+                        $("#button\\.EmptyCache").attr("disabled", "disabled");
+                        var url = '@Url.Action("EmptyCache", new { Controller = "Admin", Area = "Piedone.Combinator" })';
+                        var postData = { __RequestVerificationToken: "@Html.AntiForgeryTokenValueOrchard()" };
+                        $.post(url, postData, function (response) {
+                            location.reload();
+                        });
+                    }
+                }
+            });
+        })(jQuery);
+    </script>
+}

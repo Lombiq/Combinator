@@ -14,6 +14,7 @@ using Orchard.Tests.Stubs;
 using Orchard.Tests.Utility;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using System.Linq;
 
 namespace Piedone.Combinator.Tests.Services
 {
@@ -22,6 +23,18 @@ namespace Piedone.Combinator.Tests.Services
     {
         private ResourceRepository _resourceRepository;
         private ICacheFileService _cacheFileService;
+
+        protected override IEnumerable<Type> DatabaseTypes
+        {
+            get
+            {
+                return new[]
+                {
+                    typeof(CombinedFileRecord)
+                };
+            }
+        }
+
 
         public override void Register(ContainerBuilder builder)
         {
@@ -55,18 +68,7 @@ namespace Piedone.Combinator.Tests.Services
             SaveTestResources();
         }
 
-
-        protected override IEnumerable<Type> DatabaseTypes
-        {
-            get
-            {
-                return new[]
-                {
-                    typeof(CombinedFileRecord)
-                };
-            }
-        }
-
+        
         [Test]
         public void SaveShouldBePersistent()
         {
@@ -124,6 +126,7 @@ namespace Piedone.Combinator.Tests.Services
             ClearSession();
         }
 
+
         private class StubStorageProvider : IStorageProvider
         {
             private FileSystemStorageProvider FileSystemStorageProvider { get; set; }
@@ -145,7 +148,7 @@ namespace Piedone.Combinator.Tests.Services
 
             public IStorageFile GetFile(string path)
             {
-                if (!CreatedFiles.Contains(path)) return null;
+                if (!FileExists(path)) return null;
 
                 return new Mock<IStorageFile>().Object;
             }
@@ -209,6 +212,21 @@ namespace Piedone.Combinator.Tests.Services
             public void SaveStream(string path, Stream inputStream)
             {
                 SavedStreams.Add(path);
+            }
+
+            public bool FileExists(string path)
+            {
+                return CreatedFiles.Contains(path);
+            }
+
+            public string GetLocalPath(string url)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool FolderExists(string path)
+            {
+                return CreatedFiles.Any(p => p.StartsWith(path));
             }
         }
 

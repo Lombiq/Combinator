@@ -33,6 +33,7 @@ namespace Piedone.Combinator.Models
         [StringLengthMax]
         public virtual string ResourceSetRegexes { get; set; }
 
+
         public CombinatorSettingsPartRecord()
         {
             CombinationExcludeRegex = "";

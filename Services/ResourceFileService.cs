@@ -15,6 +15,7 @@ namespace Piedone.Combinator.Services
 
         public Localizer T { get; set; }
 
+
         public ResourceFileService(
             IVirtualPathProvider virtualPathProvider)
         {
@@ -47,6 +48,7 @@ namespace Piedone.Combinator.Services
                 return imageData;
             }
         }
+
 
         private string FetchLocalResourceContent(CombinatorResource resource)
         {

@@ -9,6 +9,7 @@ namespace Piedone.Combinator.SpriteGenerator
         public Uri Url { get; set; }
         public Point Position { get; set; }
 
+
         public override string ToString()
         {
             var declaration = "";

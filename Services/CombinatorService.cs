@@ -28,6 +28,7 @@ namespace Piedone.Combinator.Services
         public ILogger Logger { get; set; }
         public Localizer T { get; set; }
 
+
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
@@ -44,6 +45,7 @@ namespace Piedone.Combinator.Services
             Logger = NullLogger.Instance;
             T = NullLocalizer.Instance;
         }
+
 
         public IList<ResourceRequiredContext> CombineStylesheets(
             IList<ResourceRequiredContext> resources,
@@ -116,6 +118,7 @@ namespace Piedone.Combinator.Services
 
             return combinedScripts;
         }
+
 
         /// <summary>
         /// Combines (and minifies) the content of resources and saves the combinations
@@ -248,6 +251,7 @@ namespace Piedone.Combinator.Services
 
             saveCombination(combinatorResources[combinatorResources.Count - 1], resourcesInCombination);
         }
+
 
         private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources, string resourceDomain)
         {

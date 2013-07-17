@@ -8,6 +8,7 @@ namespace Piedone.Combinator.Tests.Models
     {
         private ResourceRepository _resourceRepository;
 
+
         [SetUp]
         public virtual void Init()
         {
@@ -18,6 +19,7 @@ namespace Piedone.Combinator.Tests.Models
         public void Clean()
         {
         }
+
 
         [Test]
         public void LocalResourcesAreIdentified()
@@ -36,6 +38,7 @@ namespace Piedone.Combinator.Tests.Models
 
             Assert.That(resource.IsCdnResource, Is.True);
         }
+
 
         //private CombinatorResource Factory(ResourceType type)
         //{

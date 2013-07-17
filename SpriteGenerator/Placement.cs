@@ -8,10 +8,12 @@ namespace Piedone.Combinator.SpriteGenerator
     {
         private List<Module> _modules;
 
+
         public Placement(List<Module> modules)
         {
             _modules = modules;
         }
+
 
         /// <summary>
         /// Gets the half perimeter of the placement.

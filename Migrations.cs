@@ -12,10 +12,12 @@ namespace Piedone.Combinator.Migrations
     {
         private readonly ICacheFileService _cacheFileService;
 
+
         public Migrations(ICacheFileService cacheFileService)
         {
             _cacheFileService = cacheFileService;
         }
+
 
         public int Create()
         {
@@ -27,7 +29,8 @@ namespace Piedone.Combinator.Migrations
                     .Column<string>("Type")
                     .Column<DateTime>("LastUpdatedUtc")
                     .Column<string>("Settings", column => column.Unlimited())
-            ).AlterTable(typeof(CombinedFileRecord).Name,
+                )
+            .AlterTable(typeof(CombinedFileRecord).Name,
                 table => table
                     .CreateIndex("File", new string[] { "HashCode" })
             );
@@ -46,7 +49,7 @@ namespace Piedone.Combinator.Migrations
                     .Column<string>("EmbedCssImagesStylesheetExcludeRegex", column => column.Unlimited())
                     .Column<bool>("GenerateImageSprites")
                     .Column<string>("ResourceSetRegexes", column => column.Unlimited())
-            );
+                );
 
 
             return 10;
@@ -71,12 +74,12 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
                 table => table
                     .AddColumn<string>("CombinationExcludeRegex")
-            );
+                );
 
             SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
                 table => table
                     .AddColumn<string>("Settings", column => column.Unlimited())
-            );
+                );
 
             return 3;
         }
@@ -101,7 +104,7 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
                 table => table
                     .AddColumn<string>("ResourceSetRegexes")
-            );
+                );
 
             return 5;
         }
@@ -111,7 +114,7 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
                 table => table
                     .AddColumn<bool>("EnableForAdmin")
-            );
+                );
 
             return 6;
         }

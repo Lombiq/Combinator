@@ -21,6 +21,7 @@ namespace Piedone.Combinator.Tests.Services
         private ResourceRepository _resourceRepository;
         private ICombinatorService _combinatorService;
 
+
         [SetUp]
         public virtual void Init()
         {
@@ -51,6 +52,7 @@ namespace Piedone.Combinator.Tests.Services
         public void Clean()
         {
         }
+
 
         [Test]
         public void ConditionalStylesAreSplit()
@@ -172,7 +174,6 @@ namespace Piedone.Combinator.Tests.Services
 
             Assert.That(resource.Content.Contains("ImageSprite"), Is.True);
         }
-
 
 
         private class StubResourceProcessingService : IResourceProcessingService

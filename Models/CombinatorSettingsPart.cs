@@ -1,4 +1,6 @@
-﻿using Orchard.ContentManagement;
+﻿using System;
+using System.Collections.Generic;
+using Orchard.ContentManagement;
 using Orchard.Core.Common.Utilities;
 using Orchard.Environment.Extensions;
 
@@ -71,6 +73,11 @@ namespace Piedone.Combinator.Models
         {
             get { return Record.ResourceSetRegexes; }
             set { Record.ResourceSetRegexes = value; }
+        }
+
+        public IEnumerable<string> ResourceSetRegexesEnumerable
+        {
+            get { return ResourceSetRegexes.Trim().Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries); }
         }
 
         private readonly LazyField<int> _cacheFileCount = new LazyField<int>();

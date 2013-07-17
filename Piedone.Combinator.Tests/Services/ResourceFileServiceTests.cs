@@ -18,6 +18,7 @@ namespace Piedone.Combinator.Tests.Services
         private ResourceRepository _resourceRepository;
         private IResourceFileService _resourceFileService;
 
+
         [SetUp]
         public virtual void Init()
         {
@@ -41,6 +42,7 @@ namespace Piedone.Combinator.Tests.Services
         public void Clean()
         {
         }
+
 
         [Test]
         public void LocalResourcesAreRetrieved()

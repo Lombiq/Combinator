@@ -17,10 +17,12 @@ namespace Piedone.Combinator.SpriteGenerator
         private Placement _placement;
         private List<Module> _modules;
 
+
         public Sprite(IEnumerable<byte[]> imageContents)
         {
             _imageContents = imageContents;
         }
+
 
         public IEnumerable<BackgroundImage> Generate(Stream sprite, ImageFormat spriteFormat)
         {

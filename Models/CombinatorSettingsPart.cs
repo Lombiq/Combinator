@@ -81,7 +81,7 @@ namespace Piedone.Combinator.Models
         }
 
         private readonly LazyField<int> _cacheFileCount = new LazyField<int>();
-        public LazyField<int> CacheFileCountField { get { return _cacheFileCount; } }
+        internal LazyField<int> CacheFileCountField { get { return _cacheFileCount; } }
         public int CacheFileCount
         {
             get { return _cacheFileCount.Value; }

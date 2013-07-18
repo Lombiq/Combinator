@@ -52,7 +52,7 @@ namespace Piedone.Combinator.Migrations
                 );
 
 
-            return 10;
+            return 11;
         }
 
         public int UpdateFrom1()
@@ -165,10 +165,20 @@ namespace Piedone.Combinator.Migrations
 
         public int UpdateFrom9()
         {
+            // Changing cache file folder
             _cacheFileService.Empty();
 
 
             return 10;
+        }
+
+        public int UpdateFrom10()
+        {
+            // Cache files are now in a hidden folder in Media
+            _cacheFileService.Empty();
+
+
+            return 11;
         }
 
 

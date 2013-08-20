@@ -20,7 +20,7 @@ namespace Piedone.Combinator.Tests.Stubs
         {
         }
 
-        public byte[] GetImageContent(Uri imageUrl, int maxSizeKB)
+        public byte[] GetImageContent(Uri imageUrl)
         {
             return Encoding.Unicode.GetBytes(imageUrl.ToString());
         }

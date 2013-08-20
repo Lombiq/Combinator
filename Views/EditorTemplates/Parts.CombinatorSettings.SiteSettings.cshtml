@@ -85,7 +85,7 @@
                 @Html.ValidationMessageFor(m => m.GenerateImageSprites)
             </span>
             <span class="hint">
-                @T("Images not embedded will be processed. If an image has \"no-sprite\" in its name it won't be merged into a sprite.")
+                @T("Images not embedded will be processed. If an image has \"no-sprite\" in its file name or the \".no-sprite\" class is among the selectors of the css block it's included in it won't be merged into a sprite.")
             </span>
         </li>
     </ol>

@@ -75,9 +75,9 @@ namespace Piedone.Combinator.Tests.Services
             // Todo: adjust mocking that CombinatorResource's context can be filled and so the GetCombinedResources() method tested
             // if it returns the correct data
 
-            Assert.That(_container.Resolve<IStorageProvider>().GetFile("Modules/Piedone/Combinator/Scripts/664456-1.js"), Is.Not.Null);
+            Assert.That(_container.Resolve<IStorageProvider>().GetFile("_PiedoneModules/Combinator/Styles/" + _cssResourcesHashCode + "-1.css"), Is.Not.Null);
 
-            var resources = _cacheFileService.GetCombinedResources(_cssResourcesHashCode);
+            var resources = _cacheFileService.GetCombinedResources(_jsResourcesHashCode);
 
             Assert.That(resources, Is.Not.Null);
             Assert.That(resources.Count, Is.EqualTo(2));
@@ -116,12 +116,12 @@ namespace Piedone.Combinator.Tests.Services
 
         private void SaveTestResources()
         {
-            var resource1 = _resourceRepository.NewResource(ResourceType.JavaScript);
+            var resource1 = _resourceRepository.NewResource(ResourceType.Style);
             resource1.Content = "test";
-            _cacheFileService.Save(_jsResourcesHashCode, resource1);
+            _cacheFileService.Save(_cssResourcesHashCode, resource1);
 
-            _cacheFileService.Save(_cssResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript));
-            _cacheFileService.Save(_cssResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript));
+            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript));
+            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript));
 
             ClearSession();
         }

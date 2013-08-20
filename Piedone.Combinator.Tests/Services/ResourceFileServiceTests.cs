@@ -79,15 +79,8 @@ namespace Piedone.Combinator.Tests.Services
         [Test]
         public void ImagesDataAreRetrieved()
         {
-            var data = _resourceFileService.GetImageContent(new Uri("http://code.google.com/images/code_logo.gif"), 5);
+            var data = _resourceFileService.GetImageContent(new Uri("http://code.google.com/images/code_logo.gif"));
             Assert.That(data.Length, Is.EqualTo(3383));
-        }
-
-        [Test]
-        public void ImagesTooBigAreNotRetrieved()
-        {
-            var data = _resourceFileService.GetImageContent(new Uri("http://code.google.com/images/code_logo.gif"), 1);
-            Assert.That(data, Is.Null);
         }
     }
 }

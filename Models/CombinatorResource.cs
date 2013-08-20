@@ -97,6 +97,17 @@ namespace Piedone.Combinator.Models
             }
         }
 
+        /// <summary>
+        /// True if the resource comes from a non-local storage like Azure Blob Storage
+        /// </summary>
+        public bool IsRemoteStorageResource
+        {
+            get
+            {
+                return !IsOriginal && IsCdnResource;
+            }
+        }
+
         public bool IsConditional
         {
             get { return !String.IsNullOrEmpty(RequiredContext.Settings.Condition); }

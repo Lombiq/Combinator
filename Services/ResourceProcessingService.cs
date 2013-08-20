@@ -86,7 +86,7 @@ namespace Piedone.Combinator.Services
 
             combinedContent.Append(resource.Content);
         }
-    
+
         public void ReplaceCssImagesWithSprite(CombinatorResource resource)
         {
             Func<RuleSet, Term, bool> noSprite =
@@ -148,9 +148,9 @@ namespace Piedone.Combinator.Services
 
                     if (noSprite(ruleSet, urlTerm)) return;
 
-                    var imageContent = _resourceFileService.GetImageContent(InlineUriFactory(resource, url), 5000);
+                    var imageContent = _resourceFileService.GetImageContent(InlineUriFactory(resource, url));
 
-                    if (imageContent != null)
+                    if (imageContent.Length / 1024 <= 5000)
                     {
                         images[url] = new CssImage { Content = imageContent };
                     }
@@ -246,15 +246,15 @@ namespace Piedone.Combinator.Services
                 (ruleSet, urlTerm) =>
                 {
                     var url = urlTerm.Value;
-                    var imageData = _resourceFileService.GetImageContent(InlineUriFactory(resource, url), maxSizeKB);
+                    var imageContent = _resourceFileService.GetImageContent(InlineUriFactory(resource, url));
 
-                    if (imageData != null)
+                    if (imageContent.Length / 1024 <= maxSizeKB)
                     {
                         var dataUrl =
                         "data:image/"
                             + Path.GetExtension(url).Replace(".", "")
                             + ";base64,"
-                            + Convert.ToBase64String(imageData);
+                            + Convert.ToBase64String(imageContent);
 
                         urlTerm.Value = dataUrl;
                     }
@@ -264,6 +264,21 @@ namespace Piedone.Combinator.Services
 
         // This will be needed until ExCSS becomes mature
         #region Legacy Regex-based CSS processing
+        public static void RegexConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUrl)
+        {
+            if (String.IsNullOrEmpty(resource.Content)) return;
+
+            RegexProcessUrls(resource,
+                (match) =>
+                {
+                    var url = match.Groups[1].ToString();
+
+                    if (Uri.IsWellFormedUriString(url, UriKind.Absolute)) return url;
+
+                    return "url(\"" + new Uri(baseUrl, url).ToProtocolRelative() + "\")";
+                });
+        }
+
         private void RegexProcessImageUrls(CombinatorResource resource, ImageMatchProcessor matchProcessor)
         {
             RegexProcessUrls(resource,
@@ -288,15 +303,15 @@ namespace Piedone.Combinator.Services
             RegexProcessImageUrls(resource,
                 (url, extenstion, match) =>
                 {
-                    var imageData = _resourceFileService.GetImageContent(RegexMakeInlineUri(resource, url), maxSizeKB);
+                    var imageContent = _resourceFileService.GetImageContent(RegexMakeInlineUri(resource, url));
 
-                    if (imageData != null)
+                    if (imageContent.Length / 1024 <= maxSizeKB)
                     {
                         var dataUrl =
                         "data:image/"
                             + Path.GetExtension(url).Replace(".", "")
                             + ";base64,"
-                            + Convert.ToBase64String(imageData);
+                            + Convert.ToBase64String(imageContent);
 
                         return "url(\"" + dataUrl + "\")";
                     }

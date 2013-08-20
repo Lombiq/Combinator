@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Orchard.UI.Resources;
+using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator.Extensions
 {
     public static class ResourceListExtensions
     {
-        public static int GetResourceListHashCode<T>(this IList<T> resources) where T: ResourceRequiredContext
+        public static int GetResourceListHashCode<T>(this IList<T> resources) where T : ResourceRequiredContext
         {
             var key = "";
 
@@ -19,6 +20,11 @@ namespace Piedone.Combinator.Extensions
         {
             resources.ToList().ForEach(resource => resource.Settings.Location = location);
             return resources;
+        }
+
+        public static int GetCombinatorResourceListHashCode<T>(this IList<T> resources) where T : CombinatorResource
+        {
+            return resources.Select(resource => resource.RequiredContext).ToList().GetResourceListHashCode();
         }
     }
 }

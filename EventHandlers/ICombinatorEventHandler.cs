@@ -6,5 +6,6 @@ namespace Piedone.Combinator.EventHandlers
     {
         void ConfigurationChanged();
         void CacheEmptied();
+        void BundleChanged(int hashCode);
     }
 }

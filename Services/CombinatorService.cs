@@ -52,7 +52,7 @@ namespace Piedone.Combinator.Services
             ICombinatorSettings settings)
         {
             var hashCode = resources.GetResourceListHashCode();
-            var lockName = MakeLockName(hashCode);
+            var lockName = MakeLockName(hashCode) + ".Styles";
 
             return _lockingCacheManager.Get(lockName, ctx =>
             {
@@ -86,7 +86,7 @@ namespace Piedone.Combinator.Services
                 (location) =>
                 {
                     var locationHashCode = hashCode + (int)location;
-                    var lockName = MakeLockName(locationHashCode);
+                    var lockName = MakeLockName(locationHashCode) + ".Scripts";
 
                     var combinedResourcesAtLocation = _lockingCacheManager.Get(lockName, ctx =>
                     {
@@ -136,7 +136,7 @@ namespace Piedone.Combinator.Services
             foreach (var resource in resources)
             {
                 var combinatorResource = _combinatorResourceManager.ResourceFactory(resourceType);
-                
+
                 // Copying the context so the original one won't be touched
                 combinatorResource.FillRequiredContext(
                     resource.Resource.Name,
@@ -150,8 +150,8 @@ namespace Piedone.Combinator.Services
 
             var combinedContent = new StringBuilder(1000);
 
-            Action<CombinatorResource, IEnumerable<CombinatorResource>> saveCombination =
-                (combinedResource, containedResources) =>
+            Action<CombinatorResource, List<CombinatorResource>, int> saveCombination =
+                (combinedResource, containedResources, bundleHashCode) =>
                 {
                     if (combinedResource == null) return;
 
@@ -176,9 +176,27 @@ namespace Piedone.Combinator.Services
                             + Environment.NewLine + Environment.NewLine + Environment.NewLine + combinedResource.Content;
                     }
 
+
+                    // We save a bundle now. First the bundle should be saved separately under its unique name, then for this resource list.
+                    if (bundleHashCode != hashCode)
+                    {
+                        if (!_cacheFileService.Exists(bundleHashCode))
+                        {
+                            _cacheFileService.Save(bundleHashCode, combinedResource);
+                        }
+
+                        // Overriding the url for the resource in this resource list with the url of the set.
+                        combinedResource.IsOriginal = true;
+                        var set = _cacheFileService.GetCombinedResources(bundleHashCode).Single(); // Should be one resource
+                        combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToProtocolRelative());
+                        combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;
+                        AddTimestampToUrl(combinedResource);
+                    }
+
                     _cacheFileService.Save(hashCode, combinedResource);
 
                     combinedContent.Clear();
+                    containedResources.Clear();
                 };
 
 
@@ -190,27 +208,25 @@ namespace Piedone.Combinator.Services
                 var resource = combinatorResources[i];
                 var previousResource = (i != 0) ? combinatorResources[i - 1] : null;
                 var absoluteUrlString = "";
-                
+
                 try
                 {
                     absoluteUrlString = resource.AbsoluteUrl.ToString();
 
                     if (settings.CombinationExcludeFilter == null || !settings.CombinationExcludeFilter.IsMatch(absoluteUrlString))
                     {
-                        resourcesInCombination.Add(resource);
-
                         // If this resource differs from the previous one in terms of settings or CDN they can't be combined
                         if (previousResource != null
                             && (!previousResource.SettingsEqual(resource) || (previousResource.IsCdnResource != resource.IsCdnResource && !settings.CombineCDNResources)))
                         {
-                            saveCombination(previousResource, resourcesInCombination);
+                            saveCombination(previousResource, resourcesInCombination, hashCode);
                         }
 
                         // If this resource is in a different set than the previous, they can't be combined
                         if (currentSetRegex != null && !currentSetRegex.IsMatch(absoluteUrlString))
                         {
                             currentSetRegex = null;
-                            saveCombination(previousResource, resourcesInCombination);
+                            saveCombination(previousResource, resourcesInCombination, resourcesInCombination.GetCombinatorResourceListHashCode());
                         }
 
                         // Calculate if this resource is in a set
@@ -224,20 +240,21 @@ namespace Piedone.Combinator.Services
                             }
 
                             // The previous resource is in a different set or in no set so it can't be combined with this resource
-                            if (currentSetRegex != null && previousResource != null)
+                            if (currentSetRegex != null && previousResource != null && resourcesInCombination.Any())
                             {
-                                saveCombination(previousResource, resourcesInCombination);
+                                saveCombination(previousResource, resourcesInCombination, hashCode);
                             }
                         }
 
                         _resourceProcessingService.ProcessResource(resource, combinedContent, settings);
+                        resourcesInCombination.Add(resource);
                     }
                     else
                     {
                         // This is a fully excluded resource
-                        if (previousResource != null) saveCombination(previousResource, resourcesInCombination);
+                        if (previousResource != null) saveCombination(previousResource, resourcesInCombination, hashCode);
                         resource.IsOriginal = true;
-                        saveCombination(resource, resourcesInCombination);
+                        saveCombination(resource, resourcesInCombination, hashCode);
                         combinatorResources[i] = null; // So previous resource detection works correctly
                     }
                 }
@@ -249,7 +266,7 @@ namespace Piedone.Combinator.Services
             }
 
 
-            saveCombination(combinatorResources[combinatorResources.Count - 1], resourcesInCombination);
+            saveCombination(combinatorResources[combinatorResources.Count - 1], resourcesInCombination, hashCode);
         }
 
 
@@ -259,13 +276,10 @@ namespace Piedone.Combinator.Services
 
             foreach (var resource in combinedResources)
             {
-                if (!resource.IsCdnResource && !resource.IsOriginal)
+                if ((!resource.IsCdnResource && !resource.IsOriginal) || resource.IsRemoteStorageResource)
                 {
-                    var uriBuilder = new UriBuilder(resource.AbsoluteUrl);
-                    uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
-                    var urlString = uriBuilder.Uri.PathAndQuery.ToString();
-                    if (!String.IsNullOrEmpty(resourceDomain)) urlString = resourceDomain + urlString;
-                   resource.RequiredContext.Resource.SetUrl(urlString); // Using relative urls
+                    AddTimestampToUrl(resource);
+                    if (!String.IsNullOrEmpty(resourceDomain)) resource.RequiredContext.Resource.SetUrl(resourceDomain + resource.RequiredContext.Resource.Url);
                 }
 
                 resources.Add(resource.RequiredContext);
@@ -277,6 +291,14 @@ namespace Piedone.Combinator.Services
         private static string MakeLockName(int hashCode)
         {
             return "Piedone.Combinator.CombinedResources." + hashCode.ToString();
+        }
+
+        private static void AddTimestampToUrl(CombinatorResource resource)
+        {
+            var uriBuilder = new UriBuilder(resource.AbsoluteUrl);
+            uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
+            var urlString = resource.IsCdnResource ? uriBuilder.Uri.ToProtocolRelative() : uriBuilder.Uri.PathAndQuery.ToString();
+            resource.RequiredContext.Resource.SetUrl(urlString);
         }
     }
 }

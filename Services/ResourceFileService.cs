@@ -37,15 +37,20 @@ namespace Piedone.Combinator.Services
             }
         }
 
-        public byte[] GetImageContent(Uri imageUrl, int maxSizeKB)
+        public byte[] GetImageContent(Uri imageUrl)
         {
             // Since these are public urls referenced in stylesheets, there's no simple way to tell their local path.
             // That's why all images are downloaded with WebClient.
-            using (var wc = new WebClient())
+            try
             {
-                var imageData = wc.DownloadData(imageUrl);
-                if (imageData.Length / 1024 > maxSizeKB) return null;
-                return imageData;
+                using (var wc = new WebClient())
+                {
+                    return wc.DownloadData(imageUrl);
+                }
+            }
+            catch (WebException ex)
+            {
+                throw new ApplicationException("Downloading image content failed for " + imageUrl.ToString() + ".", ex);
             }
         }
 
@@ -56,7 +61,7 @@ namespace Piedone.Combinator.Services
             if (relativeVirtualPath == "~/") return "";
             // Maybe TryFileExists would be better?
             if (!_virtualPathProvider.FileExists(relativeVirtualPath)) throw new OrchardException(T("Local resource file not found under {0}", relativeVirtualPath));
-            
+
             string content;
             using (var stream = _virtualPathProvider.OpenFile(relativeVirtualPath))
             {

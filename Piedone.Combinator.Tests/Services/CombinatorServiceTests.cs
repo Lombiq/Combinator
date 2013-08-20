@@ -212,9 +212,9 @@ namespace Piedone.Combinator.Tests.Services
 
                 if (!resource.IsOriginal)
                 {
-                    var url = "http://localhost/Media/Combinator/";
-                    if (resource.Type == ResourceType.Style) url += "CombinedStyles/" + sliceName + ".css";
-                    else if (resource.Type == ResourceType.JavaScript) url += "CombinedScripts/" + sliceName + ".js";
+                    var url = "/Media/Default/_PiedoneModules/Combinator/";
+                    if (resource.Type == ResourceType.Style) url += "Styles/" + sliceName + ".css";
+                    else if (resource.Type == ResourceType.JavaScript) url += "Scripts/" + sliceName + ".js";
 
                     resource.RequiredContext.Resource.SetUrl(url);
                 }

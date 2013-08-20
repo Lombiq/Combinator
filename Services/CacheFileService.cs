@@ -6,6 +6,7 @@ using System.Threading;
 using Orchard.Caching;
 using Orchard.Data;
 using Orchard.Environment.Extensions;
+using Orchard.Exceptions;
 using Orchard.FileSystems.Media;
 using Orchard.Mvc;
 using Orchard.Services;
@@ -37,7 +38,6 @@ namespace Piedone.Combinator.Services
         private const string _scriptsPath = _rootPath + "Scripts/";
         #endregion
 
-
         public CacheFileService(
             IStorageProvider storageProvider,
             IRepository<CombinedFileRecord> fileRepository,
@@ -59,7 +59,6 @@ namespace Piedone.Combinator.Services
             _combinatorEventMonitor = combinatorEventMonitor;
         }
 
-
         public void Save(int hashCode, CombinatorResource resource)
         {
             var sliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
@@ -73,6 +72,8 @@ namespace Piedone.Combinator.Services
                 Settings = _combinatorResourceManager.SerializeResourceSettings(resource)
             };
 
+            _fileRepository.Create(fileRecord);
+
             if (!String.IsNullOrEmpty(resource.Content))
             {
                 var path = MakePath(fileRecord);
@@ -82,9 +83,29 @@ namespace Piedone.Combinator.Services
                     var bytes = Encoding.UTF8.GetBytes(resource.Content);
                     stream.Write(bytes, 0, bytes.Length);
                 }
+
+                // This is needed to adjust relative paths if the resource is stored in a remote storage provider.
+                // Why the double-saving? Before saving the file there is no reliable way to tell whether the storage public url will be a
+                // remote one or not...
+                var testResource = _combinatorResourceManager.ResourceFactory(resource.Type);
+                testResource.FillRequiredContext("TestCombinedResource", _storageProvider.GetPublicUrl(path));
+                _combinatorResourceManager.DeserializeSettings(fileRecord.Settings, testResource);
+                if (testResource.IsRemoteStorageResource)
+                {
+                    _storageProvider.DeleteFile(path);
+
+                    testResource.Content = resource.Content;
+                    ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(testResource, _httpContextAccessor.Current().Request.Url);
+
+                    using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                    {
+                        var bytes = Encoding.UTF8.GetBytes(testResource.Content);
+                        stream.Write(bytes, 0, bytes.Length);
+                    }
+                }
             }
 
-            _fileRepository.Create(fileRecord);
+            _combinatorEventHandler.BundleChanged(hashCode);
         }
 
         public IList<CombinatorResource> GetCombinedResources(int hashCode)
@@ -92,6 +113,7 @@ namespace Piedone.Combinator.Services
             return _cacheManager.Get(MakeCacheKey("GetCombinedResources." + hashCode.ToString()), ctx =>
             {
                 _combinatorEventMonitor.MonitorCacheEmptied(ctx);
+                _combinatorEventMonitor.MonitorBundleChanged(ctx, hashCode);
 
                 var files = GetRecords(hashCode);
                 var fileCount = files.Count;
@@ -104,10 +126,6 @@ namespace Piedone.Combinator.Services
 
                     resource.FillRequiredContext("CombinedResource" + file.Id.ToString(), _storageProvider.GetPublicUrl(MakePath(file)));
                     _combinatorResourceManager.DeserializeSettings(file.Settings, resource);
-
-                    // This means the storage public url is not a local url (like it's with Azure blog storage)
-                    if (!resource.IsOriginal && resource.IsCdnResource)
-                        ResourceProcessingService.ConvertRelativeUrlsToAbsolute(resource, _httpContextAccessor.Current().Request.Url);
 
                     resource.LastUpdatedUtc = file.LastUpdatedUtc ?? _clock.UtcNow;
                     resources.Add(resource);
@@ -122,6 +140,7 @@ namespace Piedone.Combinator.Services
             return _cacheManager.Get(MakeCacheKey("Exists." + hashCode.ToString()), ctx =>
             {
                 _combinatorEventMonitor.MonitorCacheEmptied(ctx);
+                _combinatorEventMonitor.MonitorBundleChanged(ctx, hashCode);
                 // Maybe also check if the file exists?
                 return _fileRepository.Count(file => file.HashCode == hashCode) != 0;
             });
@@ -131,13 +150,6 @@ namespace Piedone.Combinator.Services
         {
             return _fileRepository.Table.Count();
         }
-
-        //public void Delete(int hashCode)
-        //{
-        //    DeleteFiles(GetRecords(hashCode));
-
-        //    TriggerCacheChangedSignal(hashCode);
-        //}
 
         public void Empty()
         {
@@ -178,7 +190,6 @@ namespace Piedone.Combinator.Services
                 streamWriter(stream, publicUrl);
             }
         }
-
 
         private List<CombinedFileRecord> GetRecords(int hashCode)
         {

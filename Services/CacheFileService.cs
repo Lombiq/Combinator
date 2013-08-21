@@ -124,8 +124,12 @@ namespace Piedone.Combinator.Services
                 {
                     var resource = _combinatorResourceManager.ResourceFactory(file.Type);
 
-                    resource.FillRequiredContext("CombinedResource" + file.Id.ToString(), _storageProvider.GetPublicUrl(MakePath(file)));
+                    resource.FillRequiredContext("CombinedResource" + file.Id.ToString(), string.Empty);
                     _combinatorResourceManager.DeserializeSettings(file.Settings, resource);
+                    if (!resource.IsOriginal) // If the resource is original its url was filled from the settings
+                    {
+                        resource.RequiredContext.Resource.SetUrl(_storageProvider.GetPublicUrl(MakePath(file)));
+                    }
 
                     resource.LastUpdatedUtc = file.LastUpdatedUtc ?? _clock.UtcNow;
                     resources.Add(resource);

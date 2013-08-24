@@ -39,7 +39,7 @@ namespace Piedone.Combinator.Models
             CombinationExcludeRegex = "";
             CombineCdnResources = false;
             MinifyResources = true;
-            MinificationExcludeRegex = "";
+            MinificationExcludeRegex = ".min";
             EmbedCssImages = false;
             EmbeddedImagesMaxSizeKB = 15;
             EmbedCssImagesStylesheetExcludeRegex = "";

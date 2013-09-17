@@ -17,6 +17,7 @@ using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using System.Linq;
 
 namespace Piedone.Combinator
 {
@@ -44,7 +45,6 @@ namespace Piedone.Combinator
             IShapeTableLocator shapeTableLocator,
             IThemeManager themeManager,
             IHttpContextAccessor httpContextAccessor,
-            ICacheManager cacheManager,
             ICombinatorEventMonitor combinatorEventMonitor)
             : base(resourceProviders)
         {
@@ -145,7 +145,13 @@ namespace Piedone.Combinator
                 resourceType,
                 (shapeTable, resource, shapeKey) =>
                 {
+                    if (shapeKey.EndsWith("-Combined")) return;
+
+                    // We remove the original shape binding but also re-add it under a different name. The latter operation is needed
+                    // because this way shape override detection (e.g. whether a script is overridden in a child theme) can work.
+                    var binding = shapeTable.Bindings[shapeKey];
                     shapeTable.Bindings.Remove(shapeKey);
+                    shapeTable.Bindings.Add(CombinedShapeKey(shapeKey), binding);
                 });
         }
 
@@ -169,8 +175,22 @@ namespace Piedone.Combinator
                     {
                         processor(shapeTable, resource, shapeKey);
                     }
+                    else
+                    {
+                        // Maybe the original binding was removed previously and the combined shape binding remains.
+                        shapeKey = CombinedShapeKey(shapeKey);
+                        if (shapeTable.Bindings.ContainsKey(shapeKey))
+                        {
+                            processor(shapeTable, resource, shapeKey);
+                        }
+                    }
                 }
             }
+        }
+
+        private static string CombinedShapeKey(string originalShapeKey)
+        {
+            return originalShapeKey + "-Combined";
         }
     }
 }

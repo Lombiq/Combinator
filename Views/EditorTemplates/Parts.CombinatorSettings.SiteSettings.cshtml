@@ -64,7 +64,7 @@
             </span>
             <span>
                 @Html.LabelFor(m => m.EmbeddedImagesMaxSizeKB, T("Maximal size of images to embed (in KBs)"))
-                @Html.TextBoxFor(m => m.EmbeddedImagesMaxSizeKB, new { @class = "text text-small" })
+                @Html.TextBoxFor(m => m.EmbeddedImagesMaxSizeKB, new { @class = "text small" })
                 @Html.ValidationMessageFor(m => m.EmbeddedImagesMaxSizeKB)
             </span>
             <span class="hint">
@@ -95,7 +95,7 @@
     <ol>
         <li>
             @Html.LabelFor(m => m.ResourceSetRegexes, T("Define one per line"))
-            @Html.TextAreaFor(m => m.ResourceSetRegexes, new { @class = "textMedium" })
+            @Html.TextAreaFor(m => m.ResourceSetRegexes)
             @Html.ValidationMessageFor(m => m.ResourceSetRegexes)
             <span class="hint">@T("You can define sets of resources that will be not combined with other resources. This way some resources that are common for a majority of pages can be combined to an individual resource for better client-side caching. The technique is useful when there are resources common for many pages and many pages include own resources. There should be one set defined per line as a regular expression, same rules apply as with the combination exclusion regex. WARNING: sets only work correctly if the resources in the end are included after each other.")</span>
         </li>

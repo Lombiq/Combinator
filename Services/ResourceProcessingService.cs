@@ -331,8 +331,15 @@ namespace Piedone.Combinator.Services
 
                     // Remote paths are preserved as full urls, local paths become uniformed relative ones.
                     string uriString = "";
-                    if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToProtocolRelative();
-                    else uriString = uri.PathAndQuery;
+                    if (uri.Scheme != "data")
+                    {
+                        if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToProtocolRelative();
+                        else uriString = uri.PathAndQuery;
+                    }
+                    else
+                    {
+                        uriString = url;
+                    }
 
                     return "url(\"" + uriString + "\")";
                 });
@@ -381,11 +388,15 @@ namespace Piedone.Combinator.Services
                     var uri = InlineUriFactory(resource, urlTerm.Value);
 
                     // Remote paths are preserved as full urls, local paths become uniformed relative ones.
-                    string uriString = "";
-                    if (resource.IsCdnResource || resource.AbsoluteUrl.Authority != uri.Authority) uriString = uri.ToProtocolRelative();
-                    else uriString = uri.PathAndQuery;
+                    if (uri.Scheme != "data")
+                    {
+                        string uriString = "";
 
-                    urlTerm.Value = uriString;
+                        if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToProtocolRelative();
+                        else uriString = uri.PathAndQuery;
+
+                        urlTerm.Value = uriString;
+                    }
                 });
         }
 

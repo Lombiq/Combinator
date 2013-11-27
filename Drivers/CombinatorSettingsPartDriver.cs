@@ -50,7 +50,7 @@ namespace Piedone.Combinator.Drivers
         // POST
         protected override DriverResult Editor(CombinatorSettingsPart part, IUpdateModel updater, dynamic shapeHelper)
         {
-            var formerSettings = new CombinatorSettingsPartRecord();
+            var formerSettings = new CombinatorSettingsPart();
             formerSettings.CombinationExcludeRegex = part.CombinationExcludeRegex;
             formerSettings.CombineCdnResources = part.CombineCdnResources;
             formerSettings.ResourceDomain = part.ResourceDomain;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Orchard.Caching;
+using Orchard.Caching.Services;
 using Orchard.Data;
 using Orchard.Environment.Extensions;
 using Orchard.Exceptions;
@@ -27,7 +28,7 @@ namespace Piedone.Combinator.Services
         private readonly ICombinatorEventHandler _combinatorEventHandler;
 
         #region In-memory caching fields
-        private readonly ICacheManager _cacheManager;
+        private readonly ICacheService _cacheService;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
         private const string CachePrefix = "Piedone.Combinator.";
         #endregion
@@ -45,7 +46,7 @@ namespace Piedone.Combinator.Services
             IHttpContextAccessor httpContextAccessor,
             IClock clock,
             ICombinatorEventHandler combinatorEventHandler,
-            ICacheManager cacheManager,
+            ICacheService cacheService,
             ICombinatorEventMonitor combinatorEventMonitor)
         {
             _storageProvider = storageProvider;
@@ -55,7 +56,7 @@ namespace Piedone.Combinator.Services
             _clock = clock;
             _combinatorEventHandler = combinatorEventHandler;
 
-            _cacheManager = cacheManager;
+            _cacheService = cacheService;
             _combinatorEventMonitor = combinatorEventMonitor;
         }
 
@@ -110,10 +111,11 @@ namespace Piedone.Combinator.Services
 
         public IList<CombinatorResource> GetCombinedResources(int hashCode)
         {
-            return _cacheManager.Get(MakeCacheKey("GetCombinedResources." + hashCode.ToString()), ctx =>
+            var cacheKey = MakeCacheKey("GetCombinedResources." + hashCode);
+            return _cacheService.Get(cacheKey, () =>
             {
-                _combinatorEventMonitor.MonitorCacheEmptied(ctx);
-                _combinatorEventMonitor.MonitorBundleChanged(ctx, hashCode);
+                _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
+                _combinatorEventMonitor.MonitorBundleChanged(cacheKey, hashCode);
 
                 var files = GetRecords(hashCode);
                 var fileCount = files.Count;
@@ -141,10 +143,11 @@ namespace Piedone.Combinator.Services
 
         public bool Exists(int hashCode)
         {
-            return _cacheManager.Get(MakeCacheKey("Exists." + hashCode.ToString()), ctx =>
+            var cacheKey = MakeCacheKey("Exists." + hashCode);
+            return _cacheService.Get(cacheKey, () =>
             {
-                _combinatorEventMonitor.MonitorCacheEmptied(ctx);
-                _combinatorEventMonitor.MonitorBundleChanged(ctx, hashCode);
+                _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
+                _combinatorEventMonitor.MonitorBundleChanged(cacheKey, hashCode);
                 // Maybe also check if the file exists?
                 return _fileRepository.Count(file => file.HashCode == hashCode) != 0;
             });

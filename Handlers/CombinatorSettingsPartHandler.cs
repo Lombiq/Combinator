@@ -15,12 +15,9 @@ namespace Piedone.Combinator
         public Localizer T { get; set; }
 
 
-        public CombinatorSettingsPartHandler(
-            IRepository<CombinatorSettingsPartRecord> repository,
-            Work<ICacheFileService> cacheFileServiceWork)
+        public CombinatorSettingsPartHandler( Work<ICacheFileService> cacheFileServiceWork)
         {
             Filters.Add(new ActivatingFilter<CombinatorSettingsPart>("Site"));
-            Filters.Add(StorageFilter.For(repository));
 
             T = NullLocalizer.Instance;
 
@@ -28,6 +25,13 @@ namespace Piedone.Combinator
                 {
                     // Add loaders that will load content just-in-time
                     part.CacheFileCountField.Loader(() => cacheFileServiceWork.Value.GetCount());
+                });
+
+            OnInitializing<CombinatorSettingsPart>((context, part) =>
+                {
+                    part.MinifyResources = true;
+                    part.MinificationExcludeRegex = ".min";
+                    part.EmbeddedImagesMaxSizeKB = 15;
                 });
         }
 

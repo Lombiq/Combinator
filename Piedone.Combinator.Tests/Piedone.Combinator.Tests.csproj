@@ -135,6 +135,10 @@
     <Compile Include="TestHelpers\CombinatorResourceHelper.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Orchard.Caching\Orchard.Caching.csproj">
+      <Project>{7528bf74-25c7-4abe-883a-443b4eec4776}</Project>
+      <Name>Orchard.Caching</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Piedone.HelpfulLibraries\Piedone.HelpfulLibraries.csproj">
       <Project>{EA61AD10-39D6-41A9-B12B-227F50C54158}</Project>
       <Name>Piedone.HelpfulLibraries</Name>

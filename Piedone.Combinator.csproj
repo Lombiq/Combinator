@@ -148,7 +148,6 @@
     <Compile Include="CombinedResourceManager.cs" />
     <Compile Include="Models\CombinatorResource.cs" />
     <Compile Include="Models\CombinatorSettings.cs" />
-    <Compile Include="Models\CombinatorSettingsPartRecord.cs" />
     <Compile Include="Models\CombinedFileRecord.cs" />
     <Compile Include="Models\CombinatorSettingsPart.cs" />
     <Compile Include="Models\ICombinatorSettings.cs" />
@@ -179,6 +178,7 @@
     <Compile Include="SpriteGenerator\Utility\OT.cs" />
     <Compile Include="SpriteGenerator\Utility\OTree.cs" />
     <Compile Include="SpriteGenerator\Utility\VerticalContour.cs" />
+    <Compile Include="UpgradeMigrations.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\EditorTemplates\Parts.CombinatorSettings.SiteSettings.cshtml" />
@@ -195,9 +195,17 @@
       <Project>{9916839C-39FC-4CEB-A5AF-89CA7E87119F}</Project>
       <Name>Orchard.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Orchard.Caching\Orchard.Caching.csproj">
+      <Project>{7528bf74-25c7-4abe-883a-443b4eec4776}</Project>
+      <Name>Orchard.Caching</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Piedone.HelpfulLibraries\Piedone.HelpfulLibraries.csproj">
       <Project>{ea61ad10-39d6-41a9-b12b-227f50c54158}</Project>
       <Name>Piedone.HelpfulLibraries</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Upgrade\Upgrade.csproj">
+      <Project>{8a9fdb57-342d-49c2-bafc-d885aae5cc7c}</Project>
+      <Name>Upgrade</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

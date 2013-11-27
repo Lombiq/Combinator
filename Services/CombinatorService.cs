@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Orchard;
+using Orchard.Caching.Services;
 using Orchard.Environment.Extensions;
 using Orchard.Exceptions;
 using Orchard.Localization;
@@ -12,7 +13,6 @@ using Orchard.UI.Resources;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
-using Piedone.HelpfulLibraries.Tasks;
 
 namespace Piedone.Combinator.Services
 {
@@ -21,7 +21,7 @@ namespace Piedone.Combinator.Services
     {
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceProcessingService _resourceProcessingService;
-        private readonly ILockingCacheManager _lockingCacheManager;
+        private readonly ICacheService _cacheService;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
         private readonly ICombinatorResourceManager _combinatorResourceManager;
 
@@ -32,13 +32,13 @@ namespace Piedone.Combinator.Services
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
-            ILockingCacheManager lockingCacheManager,
+            ICacheService cacheService,
             ICombinatorEventMonitor combinatorEventMonitor,
             ICombinatorResourceManager combinatorResourceManager)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
-            _lockingCacheManager = lockingCacheManager;
+            _cacheService = cacheService;
             _combinatorEventMonitor = combinatorEventMonitor;
             _combinatorResourceManager = combinatorResourceManager;
 
@@ -52,19 +52,19 @@ namespace Piedone.Combinator.Services
             ICombinatorSettings settings)
         {
             var hashCode = resources.GetResourceListHashCode();
-            var lockName = MakeLockName(hashCode) + ".Styles";
+            var cacheKey = MakeCacheKey(hashCode) + ".Styles";
 
-            return _lockingCacheManager.Get(lockName, ctx =>
+            return _cacheService.Get(cacheKey, () =>
             {
                 if (!_cacheFileService.Exists(hashCode))
                 {
                     Combine(resources, hashCode, ResourceType.Style, settings);
                 }
 
-                _combinatorEventMonitor.MonitorCacheEmptied(ctx);
+                _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
 
                 return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode), settings.ResourceDomain);
-            }, () => resources);
+            });
         }
 
         public IList<ResourceRequiredContext> CombineScripts(
@@ -86,9 +86,9 @@ namespace Piedone.Combinator.Services
                 (location) =>
                 {
                     var locationHashCode = hashCode + (int)location;
-                    var lockName = MakeLockName(locationHashCode) + ".Scripts";
+                    var cacheKey = MakeCacheKey(locationHashCode) + ".Scripts";
 
-                    var combinedResourcesAtLocation = _lockingCacheManager.Get(lockName, ctx =>
+                    var combinedResourcesAtLocation = _cacheService.Get(cacheKey, () =>
                     {
                         if (!_cacheFileService.Exists(locationHashCode))
                         {
@@ -99,13 +99,13 @@ namespace Piedone.Combinator.Services
                             Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
                         }
 
-                        _combinatorEventMonitor.MonitorCacheEmptied(ctx);
+                        _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
 
                         var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode), settings.ResourceDomain);
                         combinedResources.SetLocation(location);
 
                         return combinedResources;
-                    }, () => filterScripts(location));
+                    });
 
                     combinedScripts = combinedScripts.Union(combinedResourcesAtLocation).ToList();
                 };
@@ -288,7 +288,7 @@ namespace Piedone.Combinator.Services
             return resources;
         }
 
-        private static string MakeLockName(int hashCode)
+        private static string MakeCacheKey(int hashCode)
         {
             return "Piedone.Combinator.CombinedResources." + hashCode.ToString();
         }

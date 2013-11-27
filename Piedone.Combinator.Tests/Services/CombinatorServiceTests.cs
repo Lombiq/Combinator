@@ -7,6 +7,7 @@ using Autofac;
 using Moq;
 using NUnit.Framework;
 using Orchard.Caching;
+using Orchard.Caching.Services;
 using Orchard.Tests.Utility;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
@@ -32,7 +33,7 @@ namespace Piedone.Combinator.Tests.Services
             builder.RegisterType<StubCacheFileService>().As<ICacheFileService>();
             builder.RegisterType<Signals>().As<ISignals>();
             builder.RegisterInstance(new StubResourceProcessingService()).As<IResourceProcessingService>();
-            builder.RegisterType<StubLockingCacheManager>().As<ILockingCacheManager>();
+            builder.RegisterType<StubCacheService>().As<ICacheService>();
 
             builder.RegisterType<CombinatorService>().As<ICombinatorService>();
 
@@ -264,11 +265,34 @@ namespace Piedone.Combinator.Tests.Services
             }
         }
 
-        private class StubLockingCacheManager : ILockingCacheManager
+        private class StubCacheService : ICacheService
         {
-            public TResult Get<TResult>(string key, Func<AcquireContext<string>, TResult> acquire, Func<TResult> fallback, TimeSpan timeout)
+            private readonly Dictionary<string, object> _entries;
+
+
+            public object Get(string key)
             {
-                return acquire(new AcquireContext<string>(key, null));
+                return _entries[key];
+            }
+
+            public void Put(string key, object value)
+            {
+                _entries[key] = value;
+            }
+
+            public void Put(string key, object value, TimeSpan validFor)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Remove(string key)
+            {
+                _entries.Remove(key);
+            }
+
+            public void Clear()
+            {
+                _entries.Clear();
             }
         }
 

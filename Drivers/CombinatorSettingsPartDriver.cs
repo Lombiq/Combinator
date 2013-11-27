@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Dynamic;
 using System.Text.RegularExpressions;
 using Orchard.ContentManagement;
 using Orchard.ContentManagement.Drivers;
@@ -50,7 +51,7 @@ namespace Piedone.Combinator.Drivers
         // POST
         protected override DriverResult Editor(CombinatorSettingsPart part, IUpdateModel updater, dynamic shapeHelper)
         {
-            var formerSettings = new CombinatorSettingsPart();
+            dynamic formerSettings = new ExpandoObject();
             formerSettings.CombinationExcludeRegex = part.CombinationExcludeRegex;
             formerSettings.CombineCdnResources = part.CombineCdnResources;
             formerSettings.ResourceDomain = part.ResourceDomain;

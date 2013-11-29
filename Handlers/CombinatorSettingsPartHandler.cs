@@ -40,10 +40,10 @@ namespace Piedone.Combinator
         {
             if (context.ContentItem.ContentType != "Site")
                 return;
+
             base.GetItemMetadata(context);
-            var groupInfo = new GroupInfo(T("Combinator")); // Addig a new group to the "Settings" menu.
-            groupInfo.Id = "Combinator";
-            context.Metadata.EditorGroupInfo.Add(groupInfo);
+
+            context.Metadata.EditorGroupInfo.Add(new GroupInfo(T("Combinator")) { Id = "Combinator" });
         }
     }
 }

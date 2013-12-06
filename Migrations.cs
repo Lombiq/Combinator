@@ -32,7 +32,7 @@ namespace Piedone.Combinator.Migrations
                 )
             .AlterTable(typeof(CombinedFileRecord).Name,
                 table => table
-                    .CreateIndex("File", new string[] { "HashCode" })
+                    .CreateIndex("File", new [] { "HashCode" })
             );
 
 

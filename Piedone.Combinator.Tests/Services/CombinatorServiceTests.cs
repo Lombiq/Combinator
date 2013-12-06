@@ -267,12 +267,12 @@ namespace Piedone.Combinator.Tests.Services
 
         private class StubCacheService : ICacheService
         {
-            private readonly Dictionary<string, object> _entries;
+            private readonly Dictionary<string, object> _entries = new Dictionary<string,object>();
 
 
             public object Get(string key)
             {
-                return _entries[key];
+                return _entries.ContainsKey(key) ? _entries[key] : null;
             }
 
             public void Put(string key, object value)
@@ -287,7 +287,7 @@ namespace Piedone.Combinator.Tests.Services
 
             public void Remove(string key)
             {
-                _entries.Remove(key);
+               if (_entries.ContainsKey(key)) _entries.Remove(key);
             }
 
             public void Clear()

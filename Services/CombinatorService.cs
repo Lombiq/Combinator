@@ -246,7 +246,17 @@ namespace Piedone.Combinator.Services
                             }
                         }
 
+                        // Nesting resources in such blocks is needed because some syntax is valid if in its own file but not anymore
+                        // when bundled.
+                        if (resourceType == ResourceType.JavaScript) combinedContent.Append("{");
+                        combinedContent.Append(Environment.NewLine);
+
                         _resourceProcessingService.ProcessResource(resource, combinedContent, settings);
+
+                        combinedContent.Append(Environment.NewLine);
+                        if (resourceType == ResourceType.JavaScript) combinedContent.Append("}");
+                        combinedContent.Append(Environment.NewLine);
+
                         resourcesInCombination.Add(resource);
                     }
                     else

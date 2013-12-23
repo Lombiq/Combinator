@@ -15,6 +15,8 @@ using Orchard.Tests.Utility;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
 using System.Linq;
+using Piedone.Combinator.Tests.Stubs;
+using Orchard.Caching.Services;
 
 namespace Piedone.Combinator.Tests.Services
 {
@@ -43,8 +45,7 @@ namespace Piedone.Combinator.Tests.Services
             builder.RegisterInstance(new StubStorageProvider(new ShellSettings { Name = ShellSettings.DefaultName })).As<IStorageProvider>();
             builder.RegisterGeneric(typeof(Repository<>)).As(typeof(IRepository<>));
             builder.RegisterInstance(_clock).As<IClock>();
-            builder.RegisterType<StubCacheManager>().As<ICacheManager>();
-            builder.RegisterType<Signals>().As<ISignals>();
+            builder.RegisterType<StubCacheService>().As<ICacheService>();
 
             builder.Register(c =>
                 {

@@ -109,6 +109,7 @@
     <Compile Include="Services\CombinatorServiceTests.cs" />
     <Compile Include="Services\ResourceFileServiceTests.cs" />
     <Compile Include="Services\ResourceProcessorServiceTests.cs" />
+    <Compile Include="Stubs\StubCacheService.cs" />
     <Compile Include="Stubs\StubMinificationService.cs" />
     <Compile Include="Stubs\StubResourceFileService.cs" />
     <Compile Include="TestHelpers\CombinatorResourceHelper.cs" />

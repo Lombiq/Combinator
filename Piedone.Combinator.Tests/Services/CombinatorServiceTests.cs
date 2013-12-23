@@ -11,6 +11,7 @@ using Orchard.Caching.Services;
 using Orchard.Tests.Utility;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using Piedone.Combinator.Tests.Stubs;
 using Piedone.HelpfulLibraries.Tasks;
 
 namespace Piedone.Combinator.Tests.Services
@@ -31,7 +32,6 @@ namespace Piedone.Combinator.Tests.Services
             builder.RegisterAutoMocking(MockBehavior.Loose);
 
             builder.RegisterType<StubCacheFileService>().As<ICacheFileService>();
-            builder.RegisterType<Signals>().As<ISignals>();
             builder.RegisterInstance(new StubResourceProcessingService()).As<IResourceProcessingService>();
             builder.RegisterType<StubCacheService>().As<ICacheService>();
 
@@ -265,36 +265,6 @@ namespace Piedone.Combinator.Tests.Services
             }
         }
 
-        private class StubCacheService : ICacheService
-        {
-            private readonly Dictionary<string, object> _entries = new Dictionary<string,object>();
-
-
-            public object Get(string key)
-            {
-                return _entries.ContainsKey(key) ? _entries[key] : null;
-            }
-
-            public void Put(string key, object value)
-            {
-                _entries[key] = value;
-            }
-
-            public void Put(string key, object value, TimeSpan validFor)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void Remove(string key)
-            {
-               if (_entries.ContainsKey(key)) _entries.Remove(key);
-            }
-
-            public void Clear()
-            {
-                _entries.Clear();
-            }
-        }
 
         //public class StubSmartResource : CombinatorResource
         //{

@@ -18,7 +18,7 @@ using Piedone.Combinator.Models;
 namespace Piedone.Combinator.Services
 {
     [OrchardFeature("Piedone.Combinator")]
-    public class CacheFileService : ICacheFileService
+    public class CacheFileService : ICacheFileService, ICombinatorCacheManipulationEventHandler
     {
         private readonly IStorageProvider _storageProvider;
         private readonly IRepository<CombinedFileRecord> _fileRepository;
@@ -185,6 +185,11 @@ namespace Piedone.Combinator.Services
             }
 
             _combinatorEventHandler.CacheEmptied();
+        }
+
+        void ICombinatorCacheManipulationEventHandler.EmptyCache()
+        {
+            Empty();
         }
 
         public void WriteSpriteStream(string fileName, SpriteStreamWriter streamWriter)

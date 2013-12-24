@@ -133,6 +133,7 @@
     <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Drivers\CombinatorSettingsPartDriver.cs" />
     <Compile Include="EventHandlers\CombinatorEventMonitor.cs" />
+    <Compile Include="EventHandlers\ICombinatorCacheManipulationEventHandler.cs" />
     <Compile Include="EventHandlers\ICombinatorEventHandler.cs" />
     <Compile Include="EventHandlers\ICombinatorEventMonitor.cs" />
     <Compile Include="EventHandlers\ICombinatorResourceEventHandler.cs" />

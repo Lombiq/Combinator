@@ -35,13 +35,13 @@ namespace Piedone.Combinator.Models
 
         public bool MinifyResources
         {
-            get { return this.Retrieve(x => x.MinifyResources); }
+            get { return this.Retrieve(x => x.MinifyResources, true); }
             set { this.Store(x => x.MinifyResources, value); }
         }
 
         public string MinificationExcludeRegex
         {
-            get { return this.Retrieve(x => x.MinificationExcludeRegex); }
+            get { return this.Retrieve(x => x.MinificationExcludeRegex, ".min"); }
             set { this.Store(x => x.MinificationExcludeRegex, value); }
         }
 
@@ -53,7 +53,7 @@ namespace Piedone.Combinator.Models
 
         public int EmbeddedImagesMaxSizeKB
         {
-            get { return this.Retrieve(x => x.EmbeddedImagesMaxSizeKB); }
+            get { return this.Retrieve(x => x.EmbeddedImagesMaxSizeKB, 15); }
             set { this.Store(x => x.EmbeddedImagesMaxSizeKB, value); }
         }
 

@@ -33,17 +33,17 @@ namespace Piedone.Combinator
                 {
                     var part = _siteService.GetSiteSettings().As<CombinatorSettingsPart>();
 
-                    part.CombinationExcludeRegex = (string)reader["CombinationExcludeRegex"];
+                    part.CombinationExcludeRegex = reader["CombinationExcludeRegex"] as string;
                     part.CombineCdnResources = (bool)reader["CombineCdnResources"];
-                    part.ResourceDomain = (string)reader["ResourceDomain"];
+                    part.ResourceDomain = reader["ResourceDomain"] as string;
                     part.EnableForAdmin = (bool)reader["EnableForAdmin"];
                     part.MinifyResources = (bool)reader["MinifyResources"];
-                    part.MinificationExcludeRegex = (string)reader["MinificationExcludeRegex"];
+                    part.MinificationExcludeRegex = reader["MinificationExcludeRegex"] as string;
                     part.EmbedCssImages = (bool)reader["EmbedCssImages"];
                     part.EmbeddedImagesMaxSizeKB = (int)reader["EmbeddedImagesMaxSizeKB"];
-                    part.EmbedCssImagesStylesheetExcludeRegex = (string)reader["EmbedCssImagesStylesheetExcludeRegex"];
+                    part.EmbedCssImagesStylesheetExcludeRegex = reader["EmbedCssImagesStylesheetExcludeRegex"] as string;
                     part.GenerateImageSprites = (bool)reader["GenerateImageSprites"];
-                    part.ResourceSetRegexes = (string)reader["ResourceSetRegexes"];
+                    part.ResourceSetRegexes = reader["ResourceSetRegexes"] as string;
                 });
 
             _upgradeService.ExecuteReader("DROP TABLE " + _upgradeService.GetPrefixedTableName("Piedone_Combinator_CombinatorSettingsPartRecord"), null);

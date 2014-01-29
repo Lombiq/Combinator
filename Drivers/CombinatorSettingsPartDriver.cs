@@ -6,6 +6,7 @@ using Orchard.ContentManagement.Drivers;
 using Orchard.ContentManagement.Handlers;
 using Orchard.Environment.Extensions;
 using Orchard.Localization;
+using Orchard.UI.Notify;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
@@ -17,6 +18,7 @@ namespace Piedone.Combinator.Drivers
     {
         private readonly ICacheFileService _cacheFileService;
         private readonly ICombinatorEventHandler _combinatorEventHandler;
+        private readonly INotifier _notifier;
 
         protected override string Prefix
         {
@@ -28,10 +30,12 @@ namespace Piedone.Combinator.Drivers
 
         public CombinatorSettingsPartDriver(
             ICacheFileService cacheFileService,
-            ICombinatorEventHandler combinatorEventHandler)
+            ICombinatorEventHandler combinatorEventHandler,
+            INotifier notifier)
         {
             _cacheFileService = cacheFileService;
             _combinatorEventHandler = combinatorEventHandler;
+            _notifier = notifier;
 
             T = NullLocalizer.Instance;
         }
@@ -77,20 +81,36 @@ namespace Piedone.Combinator.Drivers
                 || part.GenerateImageSprites != formerSettings.GenerateImageSprites
                 || (part.ResourceSetRegexes != formerSettings.ResourceSetRegexes))
             {
-                // Not emptying the cache would cause inconsistencies
-                _cacheFileService.Empty();
 
-                if (!string.IsNullOrEmpty(part.CombinationExcludeRegex)) TestRegex(part.CombinationExcludeRegex, T("combination exclude regex"), updater);
-                if (!string.IsNullOrEmpty(part.MinificationExcludeRegex)) TestRegex(part.MinificationExcludeRegex, T("minification exclude regex"), updater);
-                if (!string.IsNullOrEmpty(part.EmbedCssImagesStylesheetExcludeRegex)) TestRegex(part.EmbedCssImagesStylesheetExcludeRegex, T("embedded css images exclude regex"), updater);
+
+                var regexesAreValid = true;
+                if (!string.IsNullOrEmpty(part.CombinationExcludeRegex))
+                {
+                    if (!TestRegex(part.CombinationExcludeRegex, T("combination exclude regex"), updater)) regexesAreValid = false;
+                }
+                if (!string.IsNullOrEmpty(part.MinificationExcludeRegex))
+                {
+                    if (!TestRegex(part.MinificationExcludeRegex, T("minification exclude regex"), updater)) regexesAreValid = false;
+                }
+                if (!string.IsNullOrEmpty(part.EmbedCssImagesStylesheetExcludeRegex))
+                {
+                    if (!TestRegex(part.EmbedCssImagesStylesheetExcludeRegex, T("embedded css images exclude regex"), updater)) regexesAreValid = false;
+                }
                 if (!string.IsNullOrEmpty(part.ResourceSetRegexes))
                 {
                     int i = 1;
                     foreach (var regex in part.ResourceSetRegexesEnumerable)
                     {
-                        TestRegex(regex, T("resource set regexes #{0}", i.ToString()), updater);
+                        if (!TestRegex(regex, T("resource set regexes #{0}", i.ToString()), updater)) regexesAreValid = false;
                         i++;
                     }
+                }
+
+                if (regexesAreValid)
+                {
+                    // Not emptying the cache would cause inconsistencies
+                    _cacheFileService.Empty();
+                    _notifier.Information(T("Combinator cache emptied.")); 
                 }
             }
 
@@ -100,7 +120,7 @@ namespace Piedone.Combinator.Drivers
         }
 
 
-        private void TestRegex(string pattern, LocalizedString fieldName, IUpdateModel updater)
+        private bool TestRegex(string pattern, LocalizedString fieldName, IUpdateModel updater)
         {
             try
             {
@@ -109,7 +129,10 @@ namespace Piedone.Combinator.Drivers
             catch (ArgumentException ex)
             {
                 updater.AddModelError("Combinator." + fieldName.TextHint + "Malformed", T("There was a problem with the regex for {0} you provided: {1}", fieldName.Text, ex.Message));
+                return false;
             }
+
+            return true;
         }
     }
 }

@@ -208,6 +208,7 @@ namespace Piedone.Combinator.Services
                 var resource = combinatorResources[i];
                 var previousResource = (i != 0) ? combinatorResources[i - 1] : null;
                 var absoluteUrlString = "";
+                var saveOriginalResource = false;
 
                 try
                 {
@@ -253,13 +254,18 @@ namespace Piedone.Combinator.Services
 
                         _resourceProcessingService.ProcessResource(resource, combinedContent, settings);
 
+                        // This can be because e.g. it's a CDN resource and CDN combination is disabled.
+                        if (resource.IsOriginal) saveOriginalResource = true;
+
                         combinedContent.Append(Environment.NewLine);
                         if (resourceType == ResourceType.JavaScript) combinedContent.Append("}");
                         combinedContent.Append(Environment.NewLine);
 
                         resourcesInCombination.Add(resource);
                     }
-                    else
+                    else saveOriginalResource = true;
+
+                    if (saveOriginalResource)
                     {
                         // This is a fully excluded resource
                         if (previousResource != null) saveCombination(previousResource, resourcesInCombination, hashCode);

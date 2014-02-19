@@ -13,6 +13,7 @@ using Orchard.UI.Resources;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
+using Piedone.HelpfulLibraries.Utilities;
 
 namespace Piedone.Combinator.Services
 {
@@ -188,7 +189,7 @@ namespace Piedone.Combinator.Services
                         // Overriding the url for the resource in this resource list with the url of the set.
                         combinedResource.IsOriginal = true;
                         var set = _cacheFileService.GetCombinedResources(bundleHashCode).Single(); // Should be one resource
-                        combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToProtocolRelative());
+                        combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
                         combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;
                         AddTimestampToUrl(combinedResource);
                     }
@@ -313,7 +314,7 @@ namespace Piedone.Combinator.Services
         {
             var uriBuilder = new UriBuilder(resource.AbsoluteUrl);
             uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
-            var urlString = resource.IsCdnResource ? uriBuilder.Uri.ToProtocolRelative() : uriBuilder.Uri.PathAndQuery.ToString();
+            var urlString = resource.IsCdnResource ? uriBuilder.Uri.ToStringWithoutScheme() : uriBuilder.Uri.PathAndQuery.ToString();
             resource.RequiredContext.Resource.SetUrl(urlString);
         }
     }

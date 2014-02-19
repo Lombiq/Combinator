@@ -143,7 +143,6 @@
     <Compile Include="Extensions\RequireSettingsExtensions.cs" />
     <Compile Include="Extensions\ResourceDefinitionExtensions.cs" />
     <Compile Include="Extensions\ResourceListExtensions.cs" />
-    <Compile Include="Extensions\UriExtensions.cs" />
     <Compile Include="Handlers\CombinatorSettingsPartHandler.cs" />
     <Compile Include="Migrations.cs" />
     <Compile Include="CombinedResourceManager.cs" />

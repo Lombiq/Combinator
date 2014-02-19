@@ -12,6 +12,7 @@ using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.SpriteGenerator;
+using Piedone.HelpfulLibraries.Utilities;
 
 namespace Piedone.Combinator.Services
 {
@@ -192,7 +193,7 @@ namespace Piedone.Combinator.Services
                             {
                                 Terms = new List<Term>
                                         {
-                                            new Term { Type = TermType.Url, Value = backgroundImage.Url.ToProtocolRelative() }
+                                            new Term { Type = TermType.Url, Value = backgroundImage.Url.ToStringWithoutScheme() }
                                         }
                             }
                         };
@@ -233,7 +234,7 @@ namespace Piedone.Combinator.Services
                 {
                     if (Uri.IsWellFormedUriString(urlTerm.Value, UriKind.Absolute)) return;
 
-                    urlTerm.Value = new Uri(baseUrl, urlTerm.Value).ToProtocolRelative();
+                    urlTerm.Value = new Uri(baseUrl, urlTerm.Value).ToStringWithoutScheme();
                 });
         }
 
@@ -275,7 +276,7 @@ namespace Piedone.Combinator.Services
 
                     if (Uri.IsWellFormedUriString(url, UriKind.Absolute)) return url;
 
-                    return "url(\"" + new Uri(baseUrl, url).ToProtocolRelative() + "\")";
+                    return "url(\"" + new Uri(baseUrl, url).ToStringWithoutScheme() + "\")";
                 });
         }
 
@@ -333,7 +334,7 @@ namespace Piedone.Combinator.Services
                     string uriString = "";
                     if (uri.Scheme != "data")
                     {
-                        if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToProtocolRelative();
+                        if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToStringWithoutScheme();
                         else uriString = uri.PathAndQuery;
                     }
                     else
@@ -392,7 +393,7 @@ namespace Piedone.Combinator.Services
                     {
                         string uriString = "";
 
-                        if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToProtocolRelative();
+                        if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToStringWithoutScheme();
                         else uriString = uri.PathAndQuery;
 
                         urlTerm.Value = uriString;

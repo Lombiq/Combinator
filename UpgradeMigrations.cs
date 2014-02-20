@@ -35,7 +35,6 @@ namespace Piedone.Combinator
 
                     part.CombinationExcludeRegex = reader["CombinationExcludeRegex"] as string;
                     part.CombineCdnResources = (bool)reader["CombineCdnResources"];
-                    part.ResourceDomain = reader["ResourceDomain"] as string;
                     part.EnableForAdmin = (bool)reader["EnableForAdmin"];
                     part.MinifyResources = (bool)reader["MinifyResources"];
                     part.MinificationExcludeRegex = reader["MinificationExcludeRegex"] as string;

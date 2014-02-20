@@ -10,6 +10,7 @@ using Orchard.UI.Notify;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using Piedone.HelpfulLibraries.Utilities;
 
 namespace Piedone.Combinator.Drivers
 {
@@ -58,7 +59,7 @@ namespace Piedone.Combinator.Drivers
             dynamic formerSettings = new ExpandoObject();
             formerSettings.CombinationExcludeRegex = part.CombinationExcludeRegex;
             formerSettings.CombineCdnResources = part.CombineCdnResources;
-            formerSettings.ResourceDomain = part.ResourceDomain;
+            formerSettings.ResourceBaseUrl = part.ResourceBaseUrl;
             formerSettings.MinifyResources = part.MinifyResources;
             formerSettings.MinificationExcludeRegex = part.MinificationExcludeRegex;
             formerSettings.EmbedCssImages = part.EmbedCssImages;
@@ -72,7 +73,7 @@ namespace Piedone.Combinator.Drivers
 
             if (part.CombinationExcludeRegex != formerSettings.CombinationExcludeRegex
                 || part.CombineCdnResources != formerSettings.CombineCdnResources
-                || part.ResourceDomain != formerSettings.ResourceDomain
+                || part.ResourceBaseUrl != formerSettings.ResourceBaseUrl
                 || part.MinifyResources != formerSettings.MinifyResources
                 || (part.MinifyResources && part.MinificationExcludeRegex != formerSettings.MinificationExcludeRegex)
                 || part.EmbedCssImages != formerSettings.EmbedCssImages
@@ -81,32 +82,41 @@ namespace Piedone.Combinator.Drivers
                 || part.GenerateImageSprites != formerSettings.GenerateImageSprites
                 || (part.ResourceSetRegexes != formerSettings.ResourceSetRegexes))
             {
+                var valuesAreValid = true;
 
+                try
+                {
+                    UriHelper.CreateUri(part.ResourceBaseUrl);
+                }
+                catch (UriFormatException ex)
+                {
+                    valuesAreValid = false;
+                    updater.AddModelError("Combinator.ResourceBaseUrlMalformed", T("The resource base URL you provided is invalid: {0}", ex.Message));
+                }
 
-                var regexesAreValid = true;
                 if (!string.IsNullOrEmpty(part.CombinationExcludeRegex))
                 {
-                    if (!TestRegex(part.CombinationExcludeRegex, T("combination exclude regex"), updater)) regexesAreValid = false;
+                    if (!TestRegex(part.CombinationExcludeRegex, T("combination exclude regex"), updater)) valuesAreValid = false;
                 }
                 if (!string.IsNullOrEmpty(part.MinificationExcludeRegex))
                 {
-                    if (!TestRegex(part.MinificationExcludeRegex, T("minification exclude regex"), updater)) regexesAreValid = false;
+                    if (!TestRegex(part.MinificationExcludeRegex, T("minification exclude regex"), updater)) valuesAreValid = false;
                 }
                 if (!string.IsNullOrEmpty(part.EmbedCssImagesStylesheetExcludeRegex))
                 {
-                    if (!TestRegex(part.EmbedCssImagesStylesheetExcludeRegex, T("embedded css images exclude regex"), updater)) regexesAreValid = false;
+                    if (!TestRegex(part.EmbedCssImagesStylesheetExcludeRegex, T("embedded css images exclude regex"), updater)) valuesAreValid = false;
                 }
                 if (!string.IsNullOrEmpty(part.ResourceSetRegexes))
                 {
                     int i = 1;
                     foreach (var regex in part.ResourceSetRegexesEnumerable)
                     {
-                        if (!TestRegex(regex, T("resource set regexes #{0}", i.ToString()), updater)) regexesAreValid = false;
+                        if (!TestRegex(regex, T("resource set regexes #{0}", i.ToString()), updater)) valuesAreValid = false;
                         i++;
                     }
                 }
 
-                if (regexesAreValid)
+                if (valuesAreValid)
                 {
                     // Not emptying the cache would cause inconsistencies
                     _cacheFileService.Empty();

@@ -62,7 +62,7 @@ namespace Piedone.Combinator.Services
         }
 
 
-        public void Save(int hashCode, CombinatorResource resource)
+        public void Save(int hashCode, CombinatorResource resource, Uri resourceBaseUri)
         {
             var sliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
 
@@ -98,7 +98,7 @@ namespace Piedone.Combinator.Services
                     _storageProvider.DeleteFile(path);
 
                     testResource.Content = resource.Content;
-                    ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(testResource, _httpContextAccessor.Current().Request.Url);
+                    ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(testResource, resourceBaseUri);
 
                     using (var stream = _storageProvider.CreateFile(path).OpenWrite())
                     {

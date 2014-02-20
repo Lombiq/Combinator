@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace Piedone.Combinator.Models
 {
@@ -6,7 +7,7 @@ namespace Piedone.Combinator.Models
     {
         Regex CombinationExcludeFilter { get; }
         bool CombineCDNResources { get; }
-        string ResourceDomain { get; }
+        Uri ResourceBaseUri { get; }
         bool MinifyResources { get; }
         Regex MinificationExcludeFilter { get; }
         bool EmbedCssImages { get; }

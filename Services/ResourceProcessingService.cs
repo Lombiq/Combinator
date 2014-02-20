@@ -220,7 +220,7 @@ namespace Piedone.Combinator.Services
         }
 
 
-        public static void ConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUrl)
+        public static void ConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUri)
         {
             if (String.IsNullOrEmpty(resource.Content)) return;
 
@@ -233,8 +233,8 @@ namespace Piedone.Combinator.Services
                 (ruleSet, urlTerm) =>
                 {
                     if (Uri.IsWellFormedUriString(urlTerm.Value, UriKind.Absolute)) return;
-
-                    urlTerm.Value = new Uri(baseUrl, urlTerm.Value).ToStringWithoutScheme();
+                    
+                    urlTerm.Value = UriHelper.Combine(baseUri.ToStringWithoutScheme(), urlTerm.Value);
                 });
         }
 
@@ -265,7 +265,7 @@ namespace Piedone.Combinator.Services
 
         // This will be needed until ExCSS becomes mature
         #region Legacy Regex-based CSS processing
-        public static void RegexConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUrl)
+        public static void RegexConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUri)
         {
             if (String.IsNullOrEmpty(resource.Content)) return;
 
@@ -276,7 +276,7 @@ namespace Piedone.Combinator.Services
 
                     if (Uri.IsWellFormedUriString(url, UriKind.Absolute)) return url;
 
-                    return "url(\"" + new Uri(baseUrl, url).ToStringWithoutScheme() + "\")";
+                    return "url(\"" + UriHelper.Combine(baseUri.ToStringWithoutScheme(), url) + "\")";
                 });
         }
 

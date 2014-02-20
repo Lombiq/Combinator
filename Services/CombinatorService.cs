@@ -9,6 +9,7 @@ using Orchard.Environment.Extensions;
 using Orchard.Exceptions;
 using Orchard.Localization;
 using Orchard.Logging;
+using Orchard.Mvc;
 using Orchard.UI.Resources;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
@@ -25,6 +26,7 @@ namespace Piedone.Combinator.Services
         private readonly ICacheService _cacheService;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
         private readonly ICombinatorResourceManager _combinatorResourceManager;
+        private readonly IHttpContextAccessor _hca;
 
         public ILogger Logger { get; set; }
         public Localizer T { get; set; }
@@ -35,13 +37,15 @@ namespace Piedone.Combinator.Services
             IResourceProcessingService resourceProcessingService,
             ICacheService cacheService,
             ICombinatorEventMonitor combinatorEventMonitor,
-            ICombinatorResourceManager combinatorResourceManager)
+            ICombinatorResourceManager combinatorResourceManager,
+            IHttpContextAccessor hca)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
             _cacheService = cacheService;
             _combinatorEventMonitor = combinatorEventMonitor;
             _combinatorResourceManager = combinatorResourceManager;
+            _hca = hca;
 
             Logger = NullLogger.Instance;
             T = NullLocalizer.Instance;
@@ -64,7 +68,7 @@ namespace Piedone.Combinator.Services
 
                 _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
 
-                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode), settings.ResourceDomain);
+                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode), settings.ResourceBaseUri);
             });
         }
 
@@ -102,7 +106,7 @@ namespace Piedone.Combinator.Services
 
                         _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
 
-                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode), settings.ResourceDomain);
+                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode), settings.ResourceBaseUri);
                         combinedResources.SetLocation(location);
 
                         return combinedResources;
@@ -150,6 +154,7 @@ namespace Piedone.Combinator.Services
             }
 
             var combinedContent = new StringBuilder(1000);
+            var resourceBaseUri =  settings.ResourceBaseUri != null ? settings.ResourceBaseUri : _hca.Current().Request.Url;
 
             Action<CombinatorResource, List<CombinatorResource>, int> saveCombination =
                 (combinedResource, containedResources, bundleHashCode) =>
@@ -183,7 +188,7 @@ namespace Piedone.Combinator.Services
                     {
                         if (!_cacheFileService.Exists(bundleHashCode))
                         {
-                            _cacheFileService.Save(bundleHashCode, combinedResource);
+                            _cacheFileService.Save(bundleHashCode, combinedResource, resourceBaseUri);
                         }
 
                         // Overriding the url for the resource in this resource list with the url of the set.
@@ -194,7 +199,7 @@ namespace Piedone.Combinator.Services
                         AddTimestampToUrl(combinedResource);
                     }
 
-                    _cacheFileService.Save(hashCode, combinedResource);
+                    _cacheFileService.Save(hashCode, combinedResource, resourceBaseUri);
 
                     combinedContent.Clear();
                     containedResources.Clear();
@@ -287,7 +292,7 @@ namespace Piedone.Combinator.Services
         }
 
 
-        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources, string resourceDomain)
+        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources, Uri resourceBaseUri)
         {
             IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count);
 
@@ -296,7 +301,10 @@ namespace Piedone.Combinator.Services
                 if ((!resource.IsCdnResource && !resource.IsOriginal) || resource.IsRemoteStorageResource)
                 {
                     AddTimestampToUrl(resource);
-                    if (!String.IsNullOrEmpty(resourceDomain)) resource.RequiredContext.Resource.SetUrl(resourceDomain + resource.RequiredContext.Resource.Url);
+                    if (resourceBaseUri != null && !resource.IsRemoteStorageResource)
+                    {
+                        resource.RequiredContext.Resource.SetUrl(UriHelper.Combine(resourceBaseUri.ToStringWithoutScheme(), resource.RequiredContext.Resource.Url));
+                    }
                 }
 
                 resources.Add(resource.RequiredContext);

@@ -21,10 +21,10 @@ namespace Piedone.Combinator.Models
             set { this.Store(x => x.CombineCdnResources, value); }
         }
 
-        public string ResourceDomain
+        public string ResourceBaseUrl
         {
-            get { return this.Retrieve(x => x.ResourceDomain); }
-            set { this.Store(x => x.ResourceDomain, value); }
+            get { return this.Retrieve(x => x.ResourceBaseUrl); }
+            set { this.Store(x => x.ResourceBaseUrl, value); }
         }
 
         public bool EnableForAdmin

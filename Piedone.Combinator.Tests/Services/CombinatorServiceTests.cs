@@ -203,7 +203,7 @@ namespace Piedone.Combinator.Tests.Services
                 _resourceRepository = resourceRepository;
             }
 
-            public void Save(int hashCode, CombinatorResource resource)
+            public void Save(int hashCode, CombinatorResource resource, Uri resourceBaseUri)
             {
                 int count;
                 sliceCounts.TryGetValue(hashCode, out count);

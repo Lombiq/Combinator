@@ -119,10 +119,10 @@ namespace Piedone.Combinator.Tests.Services
         {
             var resource1 = _resourceRepository.NewResource(ResourceType.Style);
             resource1.Content = "test";
-            _cacheFileService.Save(_cssResourcesHashCode, resource1);
+            _cacheFileService.Save(_cssResourcesHashCode, resource1, null);
 
-            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript));
-            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript));
+            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript), null);
+            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript), null);
 
             ClearSession();
         }

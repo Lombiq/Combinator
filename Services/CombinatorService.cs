@@ -154,7 +154,7 @@ namespace Piedone.Combinator.Services
             }
 
             var combinedContent = new StringBuilder(1000);
-            var resourceBaseUri =  settings.ResourceBaseUri != null ? settings.ResourceBaseUri : _hca.Current().Request.Url;
+            var resourceBaseUri =  settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_hca.Current().Request.Url, "/");
 
             Action<CombinatorResource, List<CombinatorResource>, int> saveCombination =
                 (combinedResource, containedResources, bundleHashCode) =>

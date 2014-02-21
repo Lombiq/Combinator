@@ -81,6 +81,8 @@ namespace Piedone.Combinator.Services
             {
                 var path = MakePath(fileRecord);
 
+                if (_storageProvider.FileExists(path)) _storageProvider.DeleteFile(path);
+
                 using (var stream = _storageProvider.CreateFile(path).OpenWrite())
                 {
                     var bytes = Encoding.UTF8.GetBytes(resource.Content);

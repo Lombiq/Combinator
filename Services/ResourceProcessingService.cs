@@ -274,9 +274,12 @@ namespace Piedone.Combinator.Services
                 {
                     var url = match.Groups[1].ToString();
 
-                    if (url.StartsWith("//") || Uri.IsWellFormedUriString(url, UriKind.Absolute)) return url;
+                    if (!url.StartsWith("//") && !Uri.IsWellFormedUriString(url, UriKind.Absolute))
+                    {
+                        url = UriHelper.Combine(baseUri.ToStringWithoutScheme(), url);
+                    }
 
-                    return "url(\"" + UriHelper.Combine(baseUri.ToStringWithoutScheme(), url) + "\")";
+                    return "url(\"" + url + "\")";
                 });
         }
 

@@ -54,7 +54,7 @@ namespace Piedone.Combinator.Services
 
             _eventHandler.OnContentLoaded(resource);
 
-            if (String.IsNullOrEmpty(resource.Content)) return;
+            if (string.IsNullOrEmpty(resource.Content)) return;
 
             if (resource.Type == ResourceType.Style)
             {
@@ -222,7 +222,7 @@ namespace Piedone.Combinator.Services
 
         public static void ConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUri)
         {
-            if (String.IsNullOrEmpty(resource.Content)) return;
+            if (string.IsNullOrEmpty(resource.Content) || resource.Type != ResourceType.Style) return;
 
             var stylesheet = new StylesheetParser().Parse(resource.Content);
 
@@ -267,7 +267,7 @@ namespace Piedone.Combinator.Services
         #region Legacy Regex-based CSS processing
         public static void RegexConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUri)
         {
-            if (String.IsNullOrEmpty(resource.Content)) return;
+            if (string.IsNullOrEmpty(resource.Content) || resource.Type != ResourceType.Style) return;
 
             RegexProcessUrls(resource,
                 (match) =>
@@ -289,7 +289,7 @@ namespace Piedone.Combinator.Services
                     var extension = Path.GetExtension(url).ToLowerInvariant();
 
                     // This is a dumb check but otherwise we'd have to inspect the file thoroughly
-                    if (!String.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
+                    if (!string.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
                     {
                         var result = matchProcessor(url, extension, match);
                         if (result != null) return result;
@@ -430,7 +430,7 @@ namespace Piedone.Combinator.Services
                     var extension = Path.GetExtension(url).ToLowerInvariant();
 
                     // This is a dumb check but otherwise we'd have to inspect the file thoroughly
-                    if (!String.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
+                    if (!string.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
                     {
                         processor(ruleSet, urlTerm);
                     }

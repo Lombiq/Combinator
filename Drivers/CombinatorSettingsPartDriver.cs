@@ -84,14 +84,17 @@ namespace Piedone.Combinator.Drivers
             {
                 var valuesAreValid = true;
 
-                try
+                if (!string.IsNullOrEmpty(part.ResourceBaseUrl))
                 {
-                    UriHelper.CreateUri(part.ResourceBaseUrl);
-                }
-                catch (UriFormatException ex)
-                {
-                    valuesAreValid = false;
-                    updater.AddModelError("Combinator.ResourceBaseUrlMalformed", T("The resource base URL you provided is invalid: {0}", ex.Message));
+                    try
+                    {
+                        UriHelper.CreateUri(part.ResourceBaseUrl);
+                    }
+                    catch (UriFormatException ex)
+                    {
+                        valuesAreValid = false;
+                        updater.AddModelError("Combinator.ResourceBaseUrlMalformed", T("The resource base URL you provided is invalid: {0}", ex.Message));
+                    } 
                 }
 
                 if (!string.IsNullOrEmpty(part.CombinationExcludeRegex))

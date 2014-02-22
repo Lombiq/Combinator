@@ -232,7 +232,7 @@ namespace Piedone.Combinator.Services
                 stylesheet,
                 (ruleSet, urlTerm) =>
                 {
-                    if (Uri.IsWellFormedUriString(urlTerm.Value, UriKind.Absolute)) return;
+                    if (urlTerm.Value.StartsWith("//") || Uri.IsWellFormedUriString(urlTerm.Value, UriKind.Absolute)) return;
                     
                     urlTerm.Value = UriHelper.Combine(baseUri.ToStringWithoutScheme(), urlTerm.Value);
                 });
@@ -274,7 +274,7 @@ namespace Piedone.Combinator.Services
                 {
                     var url = match.Groups[1].ToString();
 
-                    if (Uri.IsWellFormedUriString(url, UriKind.Absolute)) return url;
+                    if (url.StartsWith("//") || Uri.IsWellFormedUriString(url, UriKind.Absolute)) return url;
 
                     return "url(\"" + UriHelper.Combine(baseUri.ToStringWithoutScheme(), url) + "\")";
                 });

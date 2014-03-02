@@ -79,14 +79,6 @@ namespace Piedone.Combinator.Services
             var hashCode = resources.GetResourceListHashCode();
             var combinedScripts = new List<ResourceRequiredContext>(2);
 
-            Func<ResourceLocation, List<ResourceRequiredContext>> filterScripts =
-                (location) =>
-                {
-                    return (from r in resources
-                            where r.Settings.Location == location
-                            select r).ToList();
-                };
-
             Action<ResourceLocation> combineScriptsAtLocation =
                 (location) =>
                 {
@@ -97,7 +89,22 @@ namespace Piedone.Combinator.Services
                     {
                         if (!_cacheFileService.Exists(locationHashCode))
                         {
-                            var scripts = filterScripts(location);
+                            Predicate<RequireSettings> locationFilter;
+
+                            // Making sure that scripts with unspecified location are treated equally to foot scripts. Theoretically
+                            // this isn't right (it can change what "unspecified" results in) but it deals with the lazyness of developers.
+                            if (location == ResourceLocation.Head)
+                            {
+                                locationFilter = s => s.Location == ResourceLocation.Head;
+                            }
+                            else
+                            {
+                                locationFilter = s => s.Location == ResourceLocation.Foot || s.Location == ResourceLocation.Unspecified;
+                            }
+
+                            var scripts = (from r in resources
+                                           where locationFilter(r.Settings)
+                                           select r).ToList();
 
                             if (scripts.Count == 0) return new List<ResourceRequiredContext>();
 
@@ -115,11 +122,8 @@ namespace Piedone.Combinator.Services
                     combinedScripts = combinedScripts.Union(combinedResourcesAtLocation).ToList();
                 };
 
-            // Scripts at different locations are processed separately
-            // Currently this will add two files at the foot if scripts with unspecified location are also included
             combineScriptsAtLocation(ResourceLocation.Head);
             combineScriptsAtLocation(ResourceLocation.Foot);
-            combineScriptsAtLocation(ResourceLocation.Unspecified);
 
             return combinedScripts;
         }
@@ -154,7 +158,7 @@ namespace Piedone.Combinator.Services
             }
 
             var combinedContent = new StringBuilder(1000);
-            var resourceBaseUri =  settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_hca.Current().Request.Url, "/");
+            var resourceBaseUri = settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_hca.Current().Request.Url, "/");
 
             Action<CombinatorResource, List<CombinatorResource>, int> saveCombination =
                 (combinedResource, containedResources, bundleHashCode) =>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Orchard.UI.Resources;
+using Piedone.HelpfulLibraries.Utilities;
 
 namespace Piedone.Combinator.Extensions
 {
@@ -22,7 +23,7 @@ namespace Piedone.Combinator.Extensions
 
         public static void SetUrlProtocolRelative(this ResourceDefinition resource, Uri url)
         {
-            resource.SetUrl(url.ToProtocolRelative());
+            resource.SetUrl(url.ToStringWithoutScheme());
         }
     }
 }

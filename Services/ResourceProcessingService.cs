@@ -12,6 +12,7 @@ using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.SpriteGenerator;
+using Piedone.HelpfulLibraries.Utilities;
 
 namespace Piedone.Combinator.Services
 {
@@ -53,7 +54,7 @@ namespace Piedone.Combinator.Services
 
             _eventHandler.OnContentLoaded(resource);
 
-            if (String.IsNullOrEmpty(resource.Content)) return;
+            if (string.IsNullOrEmpty(resource.Content)) return;
 
             if (resource.Type == ResourceType.Style)
             {
@@ -192,7 +193,7 @@ namespace Piedone.Combinator.Services
                             {
                                 Terms = new List<Term>
                                         {
-                                            new Term { Type = TermType.Url, Value = backgroundImage.Url.ToProtocolRelative() }
+                                            new Term { Type = TermType.Url, Value = backgroundImage.Url.ToStringWithoutScheme() }
                                         }
                             }
                         };
@@ -219,9 +220,9 @@ namespace Piedone.Combinator.Services
         }
 
 
-        public static void ConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUrl)
+        public static void ConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUri)
         {
-            if (String.IsNullOrEmpty(resource.Content)) return;
+            if (string.IsNullOrEmpty(resource.Content) || resource.Type != ResourceType.Style) return;
 
             var stylesheet = new StylesheetParser().Parse(resource.Content);
 
@@ -231,9 +232,9 @@ namespace Piedone.Combinator.Services
                 stylesheet,
                 (ruleSet, urlTerm) =>
                 {
-                    if (Uri.IsWellFormedUriString(urlTerm.Value, UriKind.Absolute)) return;
-
-                    urlTerm.Value = new Uri(baseUrl, urlTerm.Value).ToProtocolRelative();
+                    if (urlTerm.Value.StartsWith("//") || Uri.IsWellFormedUriString(urlTerm.Value, UriKind.Absolute)) return;
+                    
+                    urlTerm.Value = UriHelper.Combine(baseUri.ToStringWithoutScheme(), urlTerm.Value);
                 });
         }
 
@@ -264,18 +265,21 @@ namespace Piedone.Combinator.Services
 
         // This will be needed until ExCSS becomes mature
         #region Legacy Regex-based CSS processing
-        public static void RegexConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUrl)
+        public static void RegexConvertRelativeUrlsToAbsolute(CombinatorResource resource, Uri baseUri)
         {
-            if (String.IsNullOrEmpty(resource.Content)) return;
+            if (string.IsNullOrEmpty(resource.Content) || resource.Type != ResourceType.Style) return;
 
             RegexProcessUrls(resource,
                 (match) =>
                 {
                     var url = match.Groups[1].ToString();
 
-                    if (Uri.IsWellFormedUriString(url, UriKind.Absolute)) return url;
+                    if (!url.StartsWith("//") && !Uri.IsWellFormedUriString(url, UriKind.Absolute))
+                    {
+                        url = UriHelper.Combine(baseUri.ToStringWithoutScheme(), url);
+                    }
 
-                    return "url(\"" + new Uri(baseUrl, url).ToProtocolRelative() + "\")";
+                    return "url(\"" + url + "\")";
                 });
         }
 
@@ -288,7 +292,7 @@ namespace Piedone.Combinator.Services
                     var extension = Path.GetExtension(url).ToLowerInvariant();
 
                     // This is a dumb check but otherwise we'd have to inspect the file thoroughly
-                    if (!String.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
+                    if (!string.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
                     {
                         var result = matchProcessor(url, extension, match);
                         if (result != null) return result;
@@ -333,7 +337,7 @@ namespace Piedone.Combinator.Services
                     string uriString = "";
                     if (uri.Scheme != "data")
                     {
-                        if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToProtocolRelative();
+                        if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToStringWithoutScheme();
                         else uriString = uri.PathAndQuery;
                     }
                     else
@@ -392,7 +396,7 @@ namespace Piedone.Combinator.Services
                     {
                         string uriString = "";
 
-                        if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToProtocolRelative();
+                        if (resource.IsCdnResource || resource.AbsoluteUrl.Host != uri.Host) uriString = uri.ToStringWithoutScheme();
                         else uriString = uri.PathAndQuery;
 
                         urlTerm.Value = uriString;
@@ -429,7 +433,7 @@ namespace Piedone.Combinator.Services
                     var extension = Path.GetExtension(url).ToLowerInvariant();
 
                     // This is a dumb check but otherwise we'd have to inspect the file thoroughly
-                    if (!String.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
+                    if (!string.IsNullOrEmpty(extension) && ".jpg .jpeg .png .gif .tiff .bmp".Contains(extension))
                     {
                         processor(ruleSet, urlTerm);
                     }

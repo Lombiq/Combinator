@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using Orchard.Environment.Extensions;
 
 namespace Piedone.Combinator.Models
@@ -8,7 +9,7 @@ namespace Piedone.Combinator.Models
     {
         public Regex CombinationExcludeFilter { get; set; }
         public bool CombineCDNResources { get; set; }
-        public string ResourceDomain { get; set; }
+        public Uri ResourceBaseUri { get; set; }
         public bool MinifyResources { get; set; }
         public Regex MinificationExcludeFilter { get; set; }
         public bool EmbedCssImages { get; set; }

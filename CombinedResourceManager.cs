@@ -18,6 +18,7 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
 using System.Linq;
+using Piedone.HelpfulLibraries.Utilities;
 
 namespace Piedone.Combinator
 {
@@ -73,10 +74,13 @@ namespace Piedone.Combinator
 
             try
             {
+                Uri resourceBaseUri = null;
+                if (!string.IsNullOrEmpty(settingsPart.ResourceBaseUrl)) resourceBaseUri = UriHelper.CreateUri(settingsPart.ResourceBaseUrl);
+
                 var settings = new CombinatorSettings
                 {
                     CombineCDNResources = settingsPart.CombineCdnResources,
-                    ResourceDomain = settingsPart.ResourceDomain,
+                    ResourceBaseUri = resourceBaseUri,
                     EmbedCssImages = settingsPart.EmbedCssImages,
                     EmbeddedImagesMaxSizeKB = settingsPart.EmbeddedImagesMaxSizeKB,
                     GenerateImageSprites = settingsPart.GenerateImageSprites,

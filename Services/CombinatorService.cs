@@ -4,15 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Orchard;
+using Orchard.Caching.Services;
 using Orchard.Environment.Extensions;
 using Orchard.Exceptions;
 using Orchard.Localization;
 using Orchard.Logging;
+using Orchard.Mvc;
 using Orchard.UI.Resources;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
-using Piedone.HelpfulLibraries.Tasks;
+using Piedone.HelpfulLibraries.Utilities;
 
 namespace Piedone.Combinator.Services
 {
@@ -21,9 +23,10 @@ namespace Piedone.Combinator.Services
     {
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceProcessingService _resourceProcessingService;
-        private readonly ILockingCacheManager _lockingCacheManager;
+        private readonly ICacheService _cacheService;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
         private readonly ICombinatorResourceManager _combinatorResourceManager;
+        private readonly IHttpContextAccessor _hca;
 
         public ILogger Logger { get; set; }
         public Localizer T { get; set; }
@@ -32,15 +35,17 @@ namespace Piedone.Combinator.Services
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
-            ILockingCacheManager lockingCacheManager,
+            ICacheService cacheService,
             ICombinatorEventMonitor combinatorEventMonitor,
-            ICombinatorResourceManager combinatorResourceManager)
+            ICombinatorResourceManager combinatorResourceManager,
+            IHttpContextAccessor hca)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
-            _lockingCacheManager = lockingCacheManager;
+            _cacheService = cacheService;
             _combinatorEventMonitor = combinatorEventMonitor;
             _combinatorResourceManager = combinatorResourceManager;
+            _hca = hca;
 
             Logger = NullLogger.Instance;
             T = NullLocalizer.Instance;
@@ -52,19 +57,19 @@ namespace Piedone.Combinator.Services
             ICombinatorSettings settings)
         {
             var hashCode = resources.GetResourceListHashCode();
-            var lockName = MakeLockName(hashCode) + ".Styles";
+            var cacheKey = MakeCacheKey(hashCode) + ".Styles";
 
-            return _lockingCacheManager.Get(lockName, ctx =>
+            return _cacheService.Get(cacheKey, () =>
             {
                 if (!_cacheFileService.Exists(hashCode))
                 {
                     Combine(resources, hashCode, ResourceType.Style, settings);
                 }
 
-                _combinatorEventMonitor.MonitorCacheEmptied(ctx);
+                _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
 
-                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode), settings.ResourceDomain);
-            }, () => resources);
+                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode), settings.ResourceBaseUri);
+            });
         }
 
         public IList<ResourceRequiredContext> CombineScripts(
@@ -74,47 +79,51 @@ namespace Piedone.Combinator.Services
             var hashCode = resources.GetResourceListHashCode();
             var combinedScripts = new List<ResourceRequiredContext>(2);
 
-            Func<ResourceLocation, List<ResourceRequiredContext>> filterScripts =
-                (location) =>
-                {
-                    return (from r in resources
-                            where r.Settings.Location == location
-                            select r).ToList();
-                };
-
             Action<ResourceLocation> combineScriptsAtLocation =
                 (location) =>
                 {
                     var locationHashCode = hashCode + (int)location;
-                    var lockName = MakeLockName(locationHashCode) + ".Scripts";
+                    var cacheKey = MakeCacheKey(locationHashCode) + ".Scripts";
 
-                    var combinedResourcesAtLocation = _lockingCacheManager.Get(lockName, ctx =>
+                    var combinedResourcesAtLocation = _cacheService.Get(cacheKey, () =>
                     {
                         if (!_cacheFileService.Exists(locationHashCode))
                         {
-                            var scripts = filterScripts(location);
+                            Predicate<RequireSettings> locationFilter;
+
+                            // Making sure that scripts with unspecified location are treated equally to foot scripts. Theoretically
+                            // this isn't right (it can change what "unspecified" results in) but it deals with the lazyness of developers.
+                            if (location == ResourceLocation.Head)
+                            {
+                                locationFilter = s => s.Location == ResourceLocation.Head;
+                            }
+                            else
+                            {
+                                locationFilter = s => s.Location == ResourceLocation.Foot || s.Location == ResourceLocation.Unspecified;
+                            }
+
+                            var scripts = (from r in resources
+                                           where locationFilter(r.Settings)
+                                           select r).ToList();
 
                             if (scripts.Count == 0) return new List<ResourceRequiredContext>();
 
                             Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
                         }
 
-                        _combinatorEventMonitor.MonitorCacheEmptied(ctx);
+                        _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
 
-                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode), settings.ResourceDomain);
+                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode), settings.ResourceBaseUri);
                         combinedResources.SetLocation(location);
 
                         return combinedResources;
-                    }, () => filterScripts(location));
+                    });
 
                     combinedScripts = combinedScripts.Union(combinedResourcesAtLocation).ToList();
                 };
 
-            // Scripts at different locations are processed separately
-            // Currently this will add two files at the foot if scripts with unspecified location are also included
             combineScriptsAtLocation(ResourceLocation.Head);
             combineScriptsAtLocation(ResourceLocation.Foot);
-            combineScriptsAtLocation(ResourceLocation.Unspecified);
 
             return combinedScripts;
         }
@@ -149,6 +158,7 @@ namespace Piedone.Combinator.Services
             }
 
             var combinedContent = new StringBuilder(1000);
+            var resourceBaseUri = settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_hca.Current().Request.Url, "/");
 
             Action<CombinatorResource, List<CombinatorResource>, int> saveCombination =
                 (combinedResource, containedResources, bundleHashCode) =>
@@ -182,18 +192,18 @@ namespace Piedone.Combinator.Services
                     {
                         if (!_cacheFileService.Exists(bundleHashCode))
                         {
-                            _cacheFileService.Save(bundleHashCode, combinedResource);
+                            _cacheFileService.Save(bundleHashCode, combinedResource, resourceBaseUri);
                         }
 
                         // Overriding the url for the resource in this resource list with the url of the set.
                         combinedResource.IsOriginal = true;
                         var set = _cacheFileService.GetCombinedResources(bundleHashCode).Single(); // Should be one resource
-                        combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToProtocolRelative());
+                        combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
                         combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;
                         AddTimestampToUrl(combinedResource);
                     }
 
-                    _cacheFileService.Save(hashCode, combinedResource);
+                    _cacheFileService.Save(hashCode, combinedResource, resourceBaseUri);
 
                     combinedContent.Clear();
                     containedResources.Clear();
@@ -208,6 +218,7 @@ namespace Piedone.Combinator.Services
                 var resource = combinatorResources[i];
                 var previousResource = (i != 0) ? combinatorResources[i - 1] : null;
                 var absoluteUrlString = "";
+                var saveOriginalResource = false;
 
                 try
                 {
@@ -246,10 +257,25 @@ namespace Piedone.Combinator.Services
                             }
                         }
 
+                        // Nesting resources in such blocks is needed because some syntax is valid if in its own file but not anymore
+                        // when bundled.
+                        if (resourceType == ResourceType.JavaScript) combinedContent.Append("{");
+                        combinedContent.Append(Environment.NewLine);
+
                         _resourceProcessingService.ProcessResource(resource, combinedContent, settings);
+
+                        // This can be because e.g. it's a CDN resource and CDN combination is disabled.
+                        if (resource.IsOriginal) saveOriginalResource = true;
+
+                        combinedContent.Append(Environment.NewLine);
+                        if (resourceType == ResourceType.JavaScript) combinedContent.Append("}");
+                        combinedContent.Append(Environment.NewLine);
+
                         resourcesInCombination.Add(resource);
                     }
-                    else
+                    else saveOriginalResource = true;
+
+                    if (saveOriginalResource)
                     {
                         // This is a fully excluded resource
                         if (previousResource != null) saveCombination(previousResource, resourcesInCombination, hashCode);
@@ -270,7 +296,7 @@ namespace Piedone.Combinator.Services
         }
 
 
-        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources, string resourceDomain)
+        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources, Uri resourceBaseUri)
         {
             IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count);
 
@@ -279,7 +305,10 @@ namespace Piedone.Combinator.Services
                 if ((!resource.IsCdnResource && !resource.IsOriginal) || resource.IsRemoteStorageResource)
                 {
                     AddTimestampToUrl(resource);
-                    if (!String.IsNullOrEmpty(resourceDomain)) resource.RequiredContext.Resource.SetUrl(resourceDomain + resource.RequiredContext.Resource.Url);
+                    if (resourceBaseUri != null && !resource.IsRemoteStorageResource)
+                    {
+                        resource.RequiredContext.Resource.SetUrl(UriHelper.Combine(resourceBaseUri.ToStringWithoutScheme(), resource.RequiredContext.Resource.Url));
+                    }
                 }
 
                 resources.Add(resource.RequiredContext);
@@ -288,7 +317,7 @@ namespace Piedone.Combinator.Services
             return resources;
         }
 
-        private static string MakeLockName(int hashCode)
+        private static string MakeCacheKey(int hashCode)
         {
             return "Piedone.Combinator.CombinedResources." + hashCode.ToString();
         }
@@ -297,7 +326,7 @@ namespace Piedone.Combinator.Services
         {
             var uriBuilder = new UriBuilder(resource.AbsoluteUrl);
             uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
-            var urlString = resource.IsCdnResource ? uriBuilder.Uri.ToProtocolRelative() : uriBuilder.Uri.PathAndQuery.ToString();
+            var urlString = resource.IsCdnResource ? uriBuilder.Uri.ToStringWithoutScheme() : uriBuilder.Uri.PathAndQuery.ToString();
             resource.RequiredContext.Resource.SetUrl(urlString);
         }
     }

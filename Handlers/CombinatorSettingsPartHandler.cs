@@ -15,12 +15,9 @@ namespace Piedone.Combinator
         public Localizer T { get; set; }
 
 
-        public CombinatorSettingsPartHandler(
-            IRepository<CombinatorSettingsPartRecord> repository,
-            Work<ICacheFileService> cacheFileServiceWork)
+        public CombinatorSettingsPartHandler( Work<ICacheFileService> cacheFileServiceWork)
         {
             Filters.Add(new ActivatingFilter<CombinatorSettingsPart>("Site"));
-            Filters.Add(StorageFilter.For(repository));
 
             T = NullLocalizer.Instance;
 
@@ -36,10 +33,10 @@ namespace Piedone.Combinator
         {
             if (context.ContentItem.ContentType != "Site")
                 return;
+
             base.GetItemMetadata(context);
-            var groupInfo = new GroupInfo(T("Combinator")); // Addig a new group to the "Settings" menu.
-            groupInfo.Id = "Combinator";
-            context.Metadata.EditorGroupInfo.Add(groupInfo);
+
+            context.Metadata.EditorGroupInfo.Add(new GroupInfo(T("Combinator")) { Id = "Combinator" });
         }
     }
 }

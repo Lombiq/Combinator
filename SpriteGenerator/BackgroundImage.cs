@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using Piedone.Combinator.Extensions;
+using Piedone.HelpfulLibraries.Utilities;
 
 namespace Piedone.Combinator.SpriteGenerator
 {
@@ -14,7 +15,7 @@ namespace Piedone.Combinator.SpriteGenerator
         {
             var declaration = "";
 
-            if (Url != null) declaration += "background-image: url('" + Url.ToProtocolRelative() + "');";
+            if (Url != null) declaration += "background-image: url('" + Url.ToStringWithoutScheme() + "');";
             if (Position != null) declaration += "background-position:" + Position.X + "px " + Position.Y + "px;";
 
             return declaration;

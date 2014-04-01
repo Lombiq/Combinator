@@ -36,7 +36,7 @@ namespace Piedone.Combinator.Controllers
             if (_orchardServices.Authorizer.Authorize(StandardPermissions.SiteOwner))
             {
                 _cacheFileService.Empty();
-                _orchardServices.Notifier.Information(T("Cache emptied"));
+                _orchardServices.Notifier.Information(T("Combinator cache emptied."));
             }
 
             // Since we are calling this via AJAX, this is not necessary. But the AJAX implementation is not the best.

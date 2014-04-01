@@ -7,9 +7,11 @@ using Autofac;
 using Moq;
 using NUnit.Framework;
 using Orchard.Caching;
+using Orchard.Caching.Services;
 using Orchard.Tests.Utility;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
+using Piedone.Combinator.Tests.Stubs;
 using Piedone.HelpfulLibraries.Tasks;
 
 namespace Piedone.Combinator.Tests.Services
@@ -30,9 +32,8 @@ namespace Piedone.Combinator.Tests.Services
             builder.RegisterAutoMocking(MockBehavior.Loose);
 
             builder.RegisterType<StubCacheFileService>().As<ICacheFileService>();
-            builder.RegisterType<Signals>().As<ISignals>();
             builder.RegisterInstance(new StubResourceProcessingService()).As<IResourceProcessingService>();
-            builder.RegisterType<StubLockingCacheManager>().As<ILockingCacheManager>();
+            builder.RegisterType<StubCacheService>().As<ICacheService>();
 
             builder.RegisterType<CombinatorService>().As<ICombinatorService>();
 
@@ -202,7 +203,7 @@ namespace Piedone.Combinator.Tests.Services
                 _resourceRepository = resourceRepository;
             }
 
-            public void Save(int hashCode, CombinatorResource resource)
+            public void Save(int hashCode, CombinatorResource resource, Uri resourceBaseUri)
             {
                 int count;
                 sliceCounts.TryGetValue(hashCode, out count);
@@ -264,13 +265,6 @@ namespace Piedone.Combinator.Tests.Services
             }
         }
 
-        private class StubLockingCacheManager : ILockingCacheManager
-        {
-            public TResult Get<TResult>(string key, Func<AcquireContext<string>, TResult> acquire, Func<TResult> fallback, TimeSpan timeout)
-            {
-                return acquire(new AcquireContext<string>(key, null));
-            }
-        }
 
         //public class StubSmartResource : CombinatorResource
         //{

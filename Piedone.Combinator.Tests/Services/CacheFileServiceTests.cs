@@ -15,6 +15,8 @@ using Orchard.Tests.Utility;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
 using System.Linq;
+using Piedone.Combinator.Tests.Stubs;
+using Orchard.Caching.Services;
 
 namespace Piedone.Combinator.Tests.Services
 {
@@ -43,8 +45,7 @@ namespace Piedone.Combinator.Tests.Services
             builder.RegisterInstance(new StubStorageProvider(new ShellSettings { Name = ShellSettings.DefaultName })).As<IStorageProvider>();
             builder.RegisterGeneric(typeof(Repository<>)).As(typeof(IRepository<>));
             builder.RegisterInstance(_clock).As<IClock>();
-            builder.RegisterType<StubCacheManager>().As<ICacheManager>();
-            builder.RegisterType<Signals>().As<ISignals>();
+            builder.RegisterType<StubCacheService>().As<ICacheService>();
 
             builder.Register(c =>
                 {
@@ -118,10 +119,10 @@ namespace Piedone.Combinator.Tests.Services
         {
             var resource1 = _resourceRepository.NewResource(ResourceType.Style);
             resource1.Content = "test";
-            _cacheFileService.Save(_cssResourcesHashCode, resource1);
+            _cacheFileService.Save(_cssResourcesHashCode, resource1, null);
 
-            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript));
-            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript));
+            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript), null);
+            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript), null);
 
             ClearSession();
         }

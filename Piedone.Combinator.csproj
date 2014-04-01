@@ -12,7 +12,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Piedone.Combinator</RootNamespace>
     <AssemblyName>Piedone.Combinator</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -34,6 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -43,6 +44,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Autofac, Version=2.6.1.841, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
@@ -92,9 +94,13 @@
     <Reference Include="System.ComponentModel.DataAnnotations">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Mvc, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\lib\aspnetmvc\System.Web.Mvc.dll</HintPath>
@@ -127,6 +133,7 @@
     <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Drivers\CombinatorSettingsPartDriver.cs" />
     <Compile Include="EventHandlers\CombinatorEventMonitor.cs" />
+    <Compile Include="EventHandlers\ICombinatorCacheManipulationEventHandler.cs" />
     <Compile Include="EventHandlers\ICombinatorEventHandler.cs" />
     <Compile Include="EventHandlers\ICombinatorEventMonitor.cs" />
     <Compile Include="EventHandlers\ICombinatorResourceEventHandler.cs" />
@@ -136,13 +143,11 @@
     <Compile Include="Extensions\RequireSettingsExtensions.cs" />
     <Compile Include="Extensions\ResourceDefinitionExtensions.cs" />
     <Compile Include="Extensions\ResourceListExtensions.cs" />
-    <Compile Include="Extensions\UriExtensions.cs" />
     <Compile Include="Handlers\CombinatorSettingsPartHandler.cs" />
     <Compile Include="Migrations.cs" />
     <Compile Include="CombinedResourceManager.cs" />
     <Compile Include="Models\CombinatorResource.cs" />
     <Compile Include="Models\CombinatorSettings.cs" />
-    <Compile Include="Models\CombinatorSettingsPartRecord.cs" />
     <Compile Include="Models\CombinedFileRecord.cs" />
     <Compile Include="Models\CombinatorSettingsPart.cs" />
     <Compile Include="Models\ICombinatorSettings.cs" />
@@ -173,9 +178,7 @@
     <Compile Include="SpriteGenerator\Utility\OT.cs" />
     <Compile Include="SpriteGenerator\Utility\OTree.cs" />
     <Compile Include="SpriteGenerator\Utility\VerticalContour.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Views\Web.config" />
+    <Compile Include="UpgradeMigrations.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\EditorTemplates\Parts.CombinatorSettings.SiteSettings.cshtml" />
@@ -192,9 +195,17 @@
       <Project>{9916839C-39FC-4CEB-A5AF-89CA7E87119F}</Project>
       <Name>Orchard.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Orchard.Caching\Orchard.Caching.csproj">
+      <Project>{7528bf74-25c7-4abe-883a-443b4eec4776}</Project>
+      <Name>Orchard.Caching</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Piedone.HelpfulLibraries\Piedone.HelpfulLibraries.csproj">
       <Project>{ea61ad10-39d6-41a9-b12b-227f50c54158}</Project>
       <Name>Piedone.HelpfulLibraries</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Upgrade\Upgrade.csproj">
+      <Project>{8a9fdb57-342d-49c2-bafc-d885aae5cc7c}</Project>
+      <Name>Upgrade</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

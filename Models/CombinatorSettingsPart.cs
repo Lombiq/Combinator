@@ -7,72 +7,72 @@ using Orchard.Environment.Extensions;
 namespace Piedone.Combinator.Models
 {
     [OrchardFeature("Piedone.Combinator")]
-    public class CombinatorSettingsPart : ContentPart<CombinatorSettingsPartRecord>
+    public class CombinatorSettingsPart : ContentPart
     {
         public string CombinationExcludeRegex
         {
-            get { return Record.CombinationExcludeRegex; }
-            set { Record.CombinationExcludeRegex = value; }
+            get { return this.Retrieve(x => x.CombinationExcludeRegex); }
+            set { this.Store(x => x.CombinationExcludeRegex, value); }
         }
 
         public bool CombineCdnResources
         {
-            get { return Record.CombineCdnResources; }
-            set { Record.CombineCdnResources = value; }
+            get { return this.Retrieve(x => x.CombineCdnResources); }
+            set { this.Store(x => x.CombineCdnResources, value); }
         }
 
-        public string ResourceDomain
+        public string ResourceBaseUrl
         {
-            get { return Record.ResourceDomain; }
-            set { Record.ResourceDomain = value; }
+            get { return this.Retrieve(x => x.ResourceBaseUrl); }
+            set { this.Store(x => x.ResourceBaseUrl, value); }
         }
 
         public bool EnableForAdmin
         {
-            get { return Record.EnableForAdmin; }
-            set { Record.EnableForAdmin = value; }
+            get { return this.Retrieve(x => x.EnableForAdmin); }
+            set { this.Store(x => x.EnableForAdmin, value); }
         }
 
         public bool MinifyResources
         {
-            get { return Record.MinifyResources; }
-            set { Record.MinifyResources = value; }
+            get { return this.Retrieve(x => x.MinifyResources, true); }
+            set { this.Store(x => x.MinifyResources, value); }
         }
 
         public string MinificationExcludeRegex
         {
-            get { return Record.MinificationExcludeRegex; }
-            set { Record.MinificationExcludeRegex = value; }
+            get { return this.Retrieve(x => x.MinificationExcludeRegex, ".min"); }
+            set { this.Store(x => x.MinificationExcludeRegex, value); }
         }
 
         public bool EmbedCssImages
         {
-            get { return Record.EmbedCssImages; }
-            set { Record.EmbedCssImages = value; }
+            get { return this.Retrieve(x => x.EmbedCssImages); }
+            set { this.Store(x => x.EmbedCssImages, value); }
         }
 
         public int EmbeddedImagesMaxSizeKB
         {
-            get { return Record.EmbeddedImagesMaxSizeKB; }
-            set { Record.EmbeddedImagesMaxSizeKB = value; }
+            get { return this.Retrieve(x => x.EmbeddedImagesMaxSizeKB, 15); }
+            set { this.Store(x => x.EmbeddedImagesMaxSizeKB, value); }
         }
 
         public string EmbedCssImagesStylesheetExcludeRegex
         {
-            get { return Record.EmbedCssImagesStylesheetExcludeRegex; }
-            set { Record.EmbedCssImagesStylesheetExcludeRegex = value; }
+            get { return this.Retrieve(x => x.EmbedCssImagesStylesheetExcludeRegex); }
+            set { this.Store(x => x.EmbedCssImagesStylesheetExcludeRegex, value); }
         }
 
         public bool GenerateImageSprites
         {
-            get { return Record.GenerateImageSprites; }
-            set { Record.GenerateImageSprites = value; }
+            get { return this.Retrieve(x => x.GenerateImageSprites); }
+            set { this.Store(x => x.GenerateImageSprites, value); }
         }
 
         public string ResourceSetRegexes
         {
-            get { return Record.ResourceSetRegexes; }
-            set { Record.ResourceSetRegexes = value; }
+            get { return this.Retrieve(x => x.ResourceSetRegexes); }
+            set { this.Store(x => x.ResourceSetRegexes, value); }
         }
 
         public IEnumerable<string> ResourceSetRegexesEnumerable

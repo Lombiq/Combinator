@@ -32,24 +32,8 @@ namespace Piedone.Combinator.Migrations
                 )
             .AlterTable(typeof(CombinedFileRecord).Name,
                 table => table
-                    .CreateIndex("File", new string[] { "HashCode" })
+                    .CreateIndex("File", new [] { "HashCode" })
             );
-
-            SchemaBuilder.CreateTable(typeof(CombinatorSettingsPartRecord).Name,
-                table => table
-                    .ContentPartRecord()
-                    .Column<string>("CombinationExcludeRegex", column => column.Unlimited())
-                    .Column<bool>("CombineCdnResources")
-                    .Column<string>("ResourceDomain")
-                    .Column<bool>("EnableForAdmin")
-                    .Column<bool>("MinifyResources")
-                    .Column<string>("MinificationExcludeRegex", column => column.Unlimited())
-                    .Column<bool>("EmbedCssImages")
-                    .Column<int>("EmbeddedImagesMaxSizeKB")
-                    .Column<string>("EmbedCssImagesStylesheetExcludeRegex", column => column.Unlimited())
-                    .Column<bool>("GenerateImageSprites")
-                    .Column<string>("ResourceSetRegexes", column => column.Unlimited())
-                );
 
 
             return 11;
@@ -57,7 +41,7 @@ namespace Piedone.Combinator.Migrations
 
         public int UpdateFrom1()
         {
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+            SchemaBuilder.AlterTable("CombinatorSettingsPartRecord",
                 table =>
                 {
                     table.AddColumn<bool>("MinifyResources");
@@ -71,7 +55,7 @@ namespace Piedone.Combinator.Migrations
 
         public int UpdateFrom2()
         {
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+            SchemaBuilder.AlterTable("CombinatorSettingsPartRecord",
                 table => table
                     .AddColumn<string>("CombinationExcludeRegex")
                 );
@@ -86,7 +70,7 @@ namespace Piedone.Combinator.Migrations
 
         public int UpdateFrom3()
         {
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+            SchemaBuilder.AlterTable("CombinatorSettingsPartRecord",
                 table =>
                 {
                     table.AddColumn<bool>("EmbedCssImages");
@@ -101,7 +85,7 @@ namespace Piedone.Combinator.Migrations
 
         public int UpdateFrom4()
         {
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+            SchemaBuilder.AlterTable("CombinatorSettingsPartRecord",
                 table => table
                     .AddColumn<string>("ResourceSetRegexes")
                 );
@@ -111,7 +95,7 @@ namespace Piedone.Combinator.Migrations
 
         public int UpdateFrom5()
         {
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+            SchemaBuilder.AlterTable("CombinatorSettingsPartRecord",
                 table => table
                     .AddColumn<bool>("EnableForAdmin")
                 );
@@ -121,7 +105,7 @@ namespace Piedone.Combinator.Migrations
 
         public int UpdateFrom6()
         {
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+            SchemaBuilder.AlterTable("CombinatorSettingsPartRecord",
                 table =>
                 {
                     table.AlterColumn("CombinationExcludeRegex", column => column.WithType(DbType.String).Unlimited());
@@ -139,7 +123,7 @@ namespace Piedone.Combinator.Migrations
         {
             _cacheFileService.Empty();
 
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+            SchemaBuilder.AlterTable("CombinatorSettingsPartRecord",
                 table =>
                 {
                     table.DropColumn("CombineCDNResources");
@@ -152,7 +136,7 @@ namespace Piedone.Combinator.Migrations
 
         public int UpdateFrom8()
         {
-            SchemaBuilder.AlterTable(typeof(CombinatorSettingsPartRecord).Name,
+            SchemaBuilder.AlterTable("CombinatorSettingsPartRecord",
                 table =>
                 {
                     table.AddColumn<bool>("GenerateImageSprites");

@@ -1,52 +1,50 @@
 ﻿using Orchard.Caching;
+using Orchard.Caching.Services;
 using Orchard.Environment.Extensions;
+using Piedone.HelpfulLibraries.Utilities;
 
 namespace Piedone.Combinator.EventHandlers
 {
     [OrchardFeature("Piedone.Combinator")]
     public class CombinatorEventMonitor : ICombinatorEventMonitor, ICombinatorEventHandler
     {
-        private readonly ISignals _signals;
+        private readonly ICacheService _cacheService;
 
-        private const string ConfigurationChangedSignal = "Piedone.Combinator.ConfigurationChangedSignal";
-        private const string CacheEmptiedSignal = "Piedone.Combinator.CacheEmptiedSignal";
-        private const string BundleChangedSignal = "Piedone.Combinator.BundleChangedSignal.";
-
-
-        public CombinatorEventMonitor(ISignals signals)
+        
+        public CombinatorEventMonitor(ICacheService cacheService)
         {
-            _signals = signals;
+            _cacheService = cacheService;
         }
 
 
-        public void MonitorConfigurationChanged(IAcquireContext acquireContext)
+        public void MonitorConfigurationChanged(string cacheKey)
         {
-            acquireContext.Monitor(_signals.When(ConfigurationChangedSignal));
+            _cacheService.Monitor("Piedone.Combinator.ConfigurationChanged", cacheKey);
         }
 
-        public void MonitorCacheEmptied(IAcquireContext acquireContext)
+        public void MonitorCacheEmptied(string cacheKey)
         {
-            acquireContext.Monitor(_signals.When(CacheEmptiedSignal));
+            _cacheService.Monitor("Piedone.Combinator.CacheEmptied", cacheKey);
         }
 
-        public void MonitorBundleChanged(IAcquireContext acquireContext, int hashCode)
+        public void MonitorBundleChanged(string cacheKey, int hashCode)
         {
-            acquireContext.Monitor(_signals.When(BundleChangedSignal + hashCode.ToString()));
+            _cacheService.Monitor("Piedone.Combinator.BundleChanged." + hashCode, cacheKey);
         }
 
         public void ConfigurationChanged()
         {
-            _signals.Trigger(ConfigurationChangedSignal);
+            _cacheService.Trigger("Piedone.Combinator.ConfigurationChanged");
         }
 
         public void CacheEmptied()
         {
-            _signals.Trigger(CacheEmptiedSignal);
+            _cacheService.Trigger("Piedone.Combinator.CacheEmptied");
         }
 
         public void BundleChanged(int hashCode)
         {
-            _signals.Trigger(BundleChangedSignal + hashCode.ToString());
+            _cacheService.Trigger("Piedone.Combinator.BundleChanged");
         }
     }
 }

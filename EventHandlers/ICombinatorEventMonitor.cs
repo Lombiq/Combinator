@@ -5,8 +5,8 @@ namespace Piedone.Combinator.EventHandlers
 {
     public interface ICombinatorEventMonitor : IDependency
     {
-        void MonitorConfigurationChanged(IAcquireContext acquireContext);
-        void MonitorCacheEmptied(IAcquireContext acquireContext);
-        void MonitorBundleChanged(IAcquireContext acquireContext, int hashCode);
+        void MonitorConfigurationChanged(string cacheKey);
+        void MonitorCacheEmptied(string cacheKey);
+        void MonitorBundleChanged(string cacheKey, int hashCode);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Orchard.Data.Conventions;
 using Orchard.Environment.Extensions;
 
 namespace Piedone.Combinator.Models
@@ -7,7 +8,7 @@ namespace Piedone.Combinator.Models
     public class CombinedFileRecord
     {
         public virtual int Id { get; set; }
-        public virtual int HashCode { get; set; }
+        public virtual string Fingerprint { get; set; }
         public virtual int Slice { get; set; }
         public virtual ResourceType Type { get; set; }
         public virtual DateTime? LastUpdatedUtc { get; set; }

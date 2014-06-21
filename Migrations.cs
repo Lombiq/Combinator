@@ -24,7 +24,7 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.CreateTable(typeof(CombinedFileRecord).Name,
                 table => table
                     .Column<int>("Id", column => column.PrimaryKey().Identity())
-                    .Column<int>("HashCode", column => column.NotNull())
+                    .Column<string>("Fingerprint", column => column.NotNull().WithLength(1024))
                     .Column<int>("Slice")
                     .Column<string>("Type")
                     .Column<DateTime>("LastUpdatedUtc")
@@ -32,11 +32,11 @@ namespace Piedone.Combinator.Migrations
                 )
             .AlterTable(typeof(CombinedFileRecord).Name,
                 table => table
-                    .CreateIndex("File", new [] { "HashCode" })
+                    .CreateIndex("FileFingerprint", new[] { "Fingerprint" })
             );
 
 
-            return 11;
+            return 13;
         }
 
         public int UpdateFrom1()
@@ -164,6 +164,34 @@ namespace Piedone.Combinator.Migrations
 
             return 11;
         }
+
+        // Swapping the HashCode column with Fingerprint happens in two steps to avoid backwards-incompatible schema changes in one version.
+        public int UpdateFrom11()
+        {
+            _cacheFileService.Empty();
+
+            SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
+                table =>
+                {
+                    table.AddColumn<string>("Fingerprint", column => column.NotNull().WithLength(1024));
+                    table.CreateIndex("FileFingerprint", new[] { "Fingerprint" });
+                });
+
+
+            return 12;
+        }
+
+        // When uncommenting this also the return value of Create() should be modified.
+        //public int UpdateFrom12()
+        //{
+        //    _cacheFileService.Empty();
+
+        //    SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
+        //        table => table.DropColumn("HashCode"));
+
+
+        //    return 13;
+        //}
 
 
         public void Uninstall()

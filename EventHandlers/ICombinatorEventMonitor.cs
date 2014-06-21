@@ -7,6 +7,6 @@ namespace Piedone.Combinator.EventHandlers
     {
         void MonitorConfigurationChanged(string cacheKey);
         void MonitorCacheEmptied(string cacheKey);
-        void MonitorBundleChanged(string cacheKey, int hashCode);
+        void MonitorBundleChanged(string cacheKey, string fingerprint);
     }
 }

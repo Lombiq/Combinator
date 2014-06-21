@@ -23,6 +23,9 @@ namespace Piedone.Combinator.Tests.Services
     [TestFixture]
     public class CacheFileServiceTests : DatabaseEnabledTestsBase
     {
+        private const string _jsResourceFingerprint = "664456";
+        private const string _cssResourcesFingerprint = "1151";
+
         private ResourceRepository _resourceRepository;
         private ICacheFileService _cacheFileService;
 
@@ -76,16 +79,16 @@ namespace Piedone.Combinator.Tests.Services
             // Todo: adjust mocking that CombinatorResource's context can be filled and so the GetCombinedResources() method tested
             // if it returns the correct data
 
-            Assert.That(_container.Resolve<IStorageProvider>().GetFile("_PiedoneModules/Combinator/Styles/" + _cssResourcesHashCode + "-1.css"), Is.Not.Null);
+            Assert.That(_container.Resolve<IStorageProvider>().GetFile("_PiedoneModules/Combinator/Styles/" + _cssResourcesFingerprint + "-1.css"), Is.Not.Null);
 
-            var resources = _cacheFileService.GetCombinedResources(_jsResourcesHashCode, false);
+            var resources = _cacheFileService.GetCombinedResources(_jsResourceFingerprint, false);
 
             Assert.That(resources, Is.Not.Null);
             Assert.That(resources.Count, Is.EqualTo(2));
 
             Assert.That(_cacheFileService.GetCount(), Is.EqualTo(3));
 
-            Assert.That(_cacheFileService.Exists(_cssResourcesHashCode, false), Is.True);
+            Assert.That(_cacheFileService.Exists(_cssResourcesFingerprint, false), Is.True);
         }
 
         //[Test]
@@ -106,23 +109,20 @@ namespace Piedone.Combinator.Tests.Services
             _cacheFileService.Empty();
             ClearSession();
 
-            Assert.That(_cacheFileService.GetCombinedResources(_cssResourcesHashCode, false).Count, Is.EqualTo(0));
-            Assert.That(_cacheFileService.GetCombinedResources(_jsResourcesHashCode, false).Count, Is.EqualTo(0));
+            Assert.That(_cacheFileService.GetCombinedResources(_cssResourcesFingerprint, false).Count, Is.EqualTo(0));
+            Assert.That(_cacheFileService.GetCombinedResources(_jsResourceFingerprint, false).Count, Is.EqualTo(0));
             Assert.That(_cacheFileService.GetCount(), Is.EqualTo(0));
         }
 
-
-        private const int _jsResourcesHashCode = 664456;
-        private const int _cssResourcesHashCode = 1151;
 
         private void SaveTestResources()
         {
             var resource1 = _resourceRepository.NewResource(ResourceType.Style);
             resource1.Content = "test";
-            _cacheFileService.Save(_cssResourcesHashCode, resource1, null, false);
+            _cacheFileService.Save(_cssResourcesFingerprint, resource1, null, false);
 
-            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript), null, false);
-            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript), null, false);
+            _cacheFileService.Save(_jsResourceFingerprint, _resourceRepository.NewResource(ResourceType.JavaScript), null, false);
+            _cacheFileService.Save(_jsResourceFingerprint, _resourceRepository.NewResource(ResourceType.JavaScript), null, false);
 
             ClearSession();
         }

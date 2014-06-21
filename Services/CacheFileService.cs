@@ -69,18 +69,18 @@ namespace Piedone.Combinator.Services
         }
 
 
-        public void Save(int hashCode, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare)
+        public void Save(string fingerprint, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare)
         {
-            if (useResourceShare && CallOnDefaultShell(cacheFileService => cacheFileService.Save(hashCode, resource, resourceBaseUri, false)))
+            if (useResourceShare && CallOnDefaultShell(cacheFileService => cacheFileService.Save(fingerprint, resource, resourceBaseUri, false)))
             {
                 return;
             }
 
-            var sliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
+            var sliceCount = _fileRepository.Count(file => file.Fingerprint == fingerprint);
 
             var fileRecord = new CombinedFileRecord()
             {
-                HashCode = hashCode,
+                Fingerprint = fingerprint,
                 Slice = ++sliceCount,
                 Type = resource.Type,
                 LastUpdatedUtc = _clock.UtcNow,
@@ -122,24 +122,24 @@ namespace Piedone.Combinator.Services
                 }
             }
 
-            _combinatorEventHandler.BundleChanged(hashCode);
+            _combinatorEventHandler.BundleChanged(fingerprint);
         }
 
-        public IList<CombinatorResource> GetCombinedResources(int hashCode, bool useResourceShare)
+        public IList<CombinatorResource> GetCombinedResources(string fingerprint, bool useResourceShare)
         {
             IList<CombinatorResource> sharedResources = new List<CombinatorResource>();
             if (useResourceShare)
             {
-                CallOnDefaultShell(cacheFileService => sharedResources = cacheFileService.GetCombinedResources(hashCode, false));
+                CallOnDefaultShell(cacheFileService => sharedResources = cacheFileService.GetCombinedResources(fingerprint, false));
             }
 
-            var cacheKey = MakeCacheKey("GetCombinedResources." + hashCode);
+            var cacheKey = MakeCacheKey("GetCombinedResources." + fingerprint);
             return _cacheService.Get(cacheKey, () =>
             {
                 _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
-                _combinatorEventMonitor.MonitorBundleChanged(cacheKey, hashCode);
+                _combinatorEventMonitor.MonitorBundleChanged(cacheKey, fingerprint);
 
-                var files = _fileRepository.Fetch(file => file.HashCode == hashCode).ToList();
+                var files = _fileRepository.Fetch(file => file.Fingerprint == fingerprint).ToList();
                 var fileCount = files.Count;
 
                 var resources = new List<CombinatorResource>(fileCount);
@@ -165,23 +165,23 @@ namespace Piedone.Combinator.Services
             });
         }
 
-        public bool Exists(int hashCode, bool useResourceShare)
+        public bool Exists(string fingerprint, bool useResourceShare)
         {
             var exists = false;
-            if (useResourceShare && CallOnDefaultShell(cacheFileService => exists = cacheFileService.Exists(hashCode, false)))
+            if (useResourceShare && CallOnDefaultShell(cacheFileService => exists = cacheFileService.Exists(fingerprint, false)))
             {
                 // Because resources were excluded from resource sharing in this set this set could be stored locally, not shared.
                 // Thus we fall back to local storage.
                 if (exists) return true;
             }
 
-            var cacheKey = MakeCacheKey("Exists." + hashCode);
+            var cacheKey = MakeCacheKey("Exists." + fingerprint);
             return _cacheService.Get(cacheKey, () =>
             {
                 _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
-                _combinatorEventMonitor.MonitorBundleChanged(cacheKey, hashCode);
+                _combinatorEventMonitor.MonitorBundleChanged(cacheKey, fingerprint);
                 // Maybe also check if the file exists?
-                return _fileRepository.Count(file => file.HashCode == hashCode) != 0;
+                return _fileRepository.Count(file => file.Fingerprint == fingerprint) != 0;
             });
         }
 

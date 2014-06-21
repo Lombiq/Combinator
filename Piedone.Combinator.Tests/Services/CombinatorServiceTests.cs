@@ -193,7 +193,7 @@ namespace Piedone.Combinator.Tests.Services
 
         private class StubCacheFileService : ICacheFileService
         {
-            private Dictionary<int, int> sliceCounts = new Dictionary<int, int>();
+            private Dictionary<string, int> sliceCounts = new Dictionary<string, int>();
             private readonly ISignals _signals;
             private readonly ResourceRepository _resourceRepository;
 
@@ -203,13 +203,13 @@ namespace Piedone.Combinator.Tests.Services
                 _resourceRepository = resourceRepository;
             }
 
-            public void Save(int hashCode, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare)
+            public void Save(string fingerprint, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare)
             {
                 int count;
-                sliceCounts.TryGetValue(hashCode, out count);
-                sliceCounts[hashCode] = ++count;
+                sliceCounts.TryGetValue(fingerprint, out count);
+                sliceCounts[fingerprint] = ++count;
 
-                var sliceName = hashCode + "-" + count;
+                var sliceName = fingerprint + "-" + count;
 
                 if (!resource.IsOriginal)
                 {
@@ -225,14 +225,14 @@ namespace Piedone.Combinator.Tests.Services
                 _resourceRepository.SaveResource(sliceName, resource);
             }
 
-            public IList<CombinatorResource> GetCombinedResources(int hashCode, bool useResourceShare)
+            public IList<CombinatorResource> GetCombinedResources(string fingerprint, bool useResourceShare)
             {
                 return (from r in _resourceRepository.Resources 
-                        where r.Key.Contains(hashCode.ToString() + "-")
+                        where r.Key.Contains(fingerprint + "-")
                         select r.Value).ToList();
             }
 
-            public bool Exists(int hashCode, bool useResourceShare)
+            public bool Exists(string fingerprint, bool useResourceShare)
             {
                 return false;
             }
@@ -242,7 +242,7 @@ namespace Piedone.Combinator.Tests.Services
                 throw new NotImplementedException();
             }
 
-            public void Delete(int hashCode)
+            public void Delete(string fingerprint)
             {
                 throw new NotImplementedException();
             }

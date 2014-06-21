@@ -27,9 +27,9 @@ namespace Piedone.Combinator.EventHandlers
             _cacheService.Monitor("Piedone.Combinator.CacheEmptied", cacheKey);
         }
 
-        public void MonitorBundleChanged(string cacheKey, int hashCode)
+        public void MonitorBundleChanged(string cacheKey, string fingerprint)
         {
-            _cacheService.Monitor("Piedone.Combinator.BundleChanged." + hashCode, cacheKey);
+            _cacheService.Monitor("Piedone.Combinator.BundleChanged." + fingerprint, cacheKey);
         }
 
         public void ConfigurationChanged()
@@ -42,9 +42,9 @@ namespace Piedone.Combinator.EventHandlers
             _cacheService.Trigger("Piedone.Combinator.CacheEmptied");
         }
 
-        public void BundleChanged(int hashCode)
+        public void BundleChanged(string fingerprint)
         {
-            _cacheService.Trigger("Piedone.Combinator.BundleChanged." + hashCode);
+            _cacheService.Trigger("Piedone.Combinator.BundleChanged." + fingerprint);
         }
     }
 }

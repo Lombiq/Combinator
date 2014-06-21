@@ -10,9 +10,9 @@ namespace Piedone.Combinator.Services
 
     public interface ICacheFileService : IDependency
     {
-        void Save(int hashCode, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare);
-        IList<CombinatorResource> GetCombinedResources(int hashCode, bool useResourceShare);
-        bool Exists(int hashCode, bool useResourceShare);
+        void Save(string fingerprint, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare);
+        IList<CombinatorResource> GetCombinedResources(string fingerprint, bool useResourceShare);
+        bool Exists(string fingerprint, bool useResourceShare);
         int GetCount();
         void Empty();
         void WriteSpriteStream(string fileName, SpriteStreamWriter streamWriter);

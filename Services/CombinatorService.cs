@@ -56,7 +56,7 @@ namespace Piedone.Combinator.Services
             IList<ResourceRequiredContext> resources,
             ICombinatorSettings settings)
         {
-            var hashCode = resources.GetResourceListHashCode();
+            var hashCode = resources.GetResourceListFingerprint(settings);
             var cacheKey = MakeCacheKey(hashCode) + ".Styles";
 
             // The result is in the cache of this shell although the resource list can come from the Default tenant in case of resource
@@ -102,7 +102,7 @@ namespace Piedone.Combinator.Services
                                    where locationFilter(r.Settings)
                                    select r).ToList();
 
-                    var hashCode = scripts.GetResourceListHashCode();
+                    var hashCode = scripts.GetResourceListFingerprint(settings);
                     var cacheKey = MakeCacheKey(hashCode) + ".Scripts";
 
                     var combinedResourcesAtLocation = _cacheService.Get(cacheKey, () =>
@@ -136,11 +136,11 @@ namespace Piedone.Combinator.Services
         /// Combines (and minifies) the content of resources and saves the combinations
         /// </summary>
         /// <param name="resources">Resources to combine</param>
-        /// <param name="hashCode">Just so it shouldn't be recalculated</param>
+        /// <param name="fingerprint">Just so it shouldn't be recalculated</param>
         /// <param name="resourceType">Type of the resources</param>
         /// <param name="settings">Combination settings</param>
         /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened)</exception>
-        private void Combine(IList<ResourceRequiredContext> resources, int hashCode, ResourceType resourceType, ICombinatorSettings settings)
+        private void Combine(IList<ResourceRequiredContext> resources, string fingerprint, ResourceType resourceType, ICombinatorSettings settings)
         {
             if (resources.Count == 0) return;
 
@@ -173,7 +173,7 @@ namespace Piedone.Combinator.Services
 
                     if (!containedResources.Any()) containedResources = new List<CombinatorResource> { combinedResource };
 
-                    var bundleHashCode = containedResources.GetCombinatorResourceListHashCode();
+                    var bundleFingerprint = containedResources.GetCombinatorResourceListFingerprint(settings);
 
                     var useResourceSharing = settings.EnableResourceSharing;
                     if (useResourceSharing && settings.ResourceSharingExcludeFilter != null)
@@ -207,23 +207,23 @@ namespace Piedone.Combinator.Services
 
 
                     // We save a bundle now. First the bundle should be saved separately under its unique name, then for this resource list.
-                    if (bundleHashCode != hashCode)
+                    if (bundleFingerprint != fingerprint)
                     {
-                        if (!_cacheFileService.Exists(bundleHashCode, useResourceSharing))
+                        if (!_cacheFileService.Exists(bundleFingerprint, useResourceSharing))
                         {
-                            _cacheFileService.Save(bundleHashCode, combinedResource, resourceBaseUri, useResourceSharing);
+                            _cacheFileService.Save(bundleFingerprint, combinedResource, resourceBaseUri, useResourceSharing);
                         }
 
                         // Overriding the url for the resource in this resource list with the url of the set.
                         combinedResource.IsOriginal = true;
-                        var z = _cacheFileService.GetCombinedResources(bundleHashCode, useResourceSharing);
-                        var set = _cacheFileService.GetCombinedResources(bundleHashCode, useResourceSharing).Single(); // Should be one resource
+                        var z = _cacheFileService.GetCombinedResources(bundleFingerprint, useResourceSharing);
+                        var set = _cacheFileService.GetCombinedResources(bundleFingerprint, useResourceSharing).Single(); // Should be one resource
                         combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
                         combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;
                         AddTimestampToUrl(combinedResource);
                     }
 
-                    _cacheFileService.Save(hashCode, combinedResource, resourceBaseUri, useResourceSharing);
+                    _cacheFileService.Save(fingerprint, combinedResource, resourceBaseUri, useResourceSharing);
 
                     combinedContent.Clear();
                     containedResources.Clear();
@@ -337,9 +337,9 @@ namespace Piedone.Combinator.Services
             return resources;
         }
 
-        private static string MakeCacheKey(int hashCode)
+        private static string MakeCacheKey(string fingerprint)
         {
-            return "Piedone.Combinator.CombinedResources." + hashCode.ToString();
+            return "Piedone.Combinator.CombinedResources." + fingerprint.ToString();
         }
 
         private static void AddTimestampToUrl(CombinatorResource resource)

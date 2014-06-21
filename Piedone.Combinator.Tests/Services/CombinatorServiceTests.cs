@@ -203,7 +203,7 @@ namespace Piedone.Combinator.Tests.Services
                 _resourceRepository = resourceRepository;
             }
 
-            public void Save(int hashCode, CombinatorResource resource, Uri resourceBaseUri)
+            public void Save(int hashCode, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare)
             {
                 int count;
                 sliceCounts.TryGetValue(hashCode, out count);
@@ -225,14 +225,14 @@ namespace Piedone.Combinator.Tests.Services
                 _resourceRepository.SaveResource(sliceName, resource);
             }
 
-            public IList<CombinatorResource> GetCombinedResources(int hashCode)
+            public IList<CombinatorResource> GetCombinedResources(int hashCode, bool useResourceShare)
             {
                 return (from r in _resourceRepository.Resources 
                         where r.Key.Contains(hashCode.ToString() + "-")
                         select r.Value).ToList();
             }
 
-            public bool Exists(int hashCode)
+            public bool Exists(int hashCode, bool useResourceShare)
             {
                 return false;
             }

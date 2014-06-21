@@ -78,14 +78,14 @@ namespace Piedone.Combinator.Tests.Services
 
             Assert.That(_container.Resolve<IStorageProvider>().GetFile("_PiedoneModules/Combinator/Styles/" + _cssResourcesHashCode + "-1.css"), Is.Not.Null);
 
-            var resources = _cacheFileService.GetCombinedResources(_jsResourcesHashCode);
+            var resources = _cacheFileService.GetCombinedResources(_jsResourcesHashCode, false);
 
             Assert.That(resources, Is.Not.Null);
             Assert.That(resources.Count, Is.EqualTo(2));
 
             Assert.That(_cacheFileService.GetCount(), Is.EqualTo(3));
 
-            Assert.That(_cacheFileService.Exists(_cssResourcesHashCode), Is.True);
+            Assert.That(_cacheFileService.Exists(_cssResourcesHashCode, false), Is.True);
         }
 
         //[Test]
@@ -106,8 +106,8 @@ namespace Piedone.Combinator.Tests.Services
             _cacheFileService.Empty();
             ClearSession();
 
-            Assert.That(_cacheFileService.GetCombinedResources(_cssResourcesHashCode).Count, Is.EqualTo(0));
-            Assert.That(_cacheFileService.GetCombinedResources(_jsResourcesHashCode).Count, Is.EqualTo(0));
+            Assert.That(_cacheFileService.GetCombinedResources(_cssResourcesHashCode, false).Count, Is.EqualTo(0));
+            Assert.That(_cacheFileService.GetCombinedResources(_jsResourcesHashCode, false).Count, Is.EqualTo(0));
             Assert.That(_cacheFileService.GetCount(), Is.EqualTo(0));
         }
 
@@ -119,10 +119,10 @@ namespace Piedone.Combinator.Tests.Services
         {
             var resource1 = _resourceRepository.NewResource(ResourceType.Style);
             resource1.Content = "test";
-            _cacheFileService.Save(_cssResourcesHashCode, resource1, null);
+            _cacheFileService.Save(_cssResourcesHashCode, resource1, null, false);
 
-            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript), null);
-            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript), null);
+            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript), null, false);
+            _cacheFileService.Save(_jsResourcesHashCode, _resourceRepository.NewResource(ResourceType.JavaScript), null, false);
 
             ClearSession();
         }

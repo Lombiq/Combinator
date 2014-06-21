@@ -171,6 +171,8 @@ namespace Piedone.Combinator.Services
                     // Don't save emtpy resources
                     if (combinedContent.Length == 0 && !combinedResource.IsOriginal) return;
 
+                    if (!containedResources.Any()) containedResources = new List<CombinatorResource> { combinedResource };
+
                     var bundleHashCode = containedResources.GetCombinatorResourceListHashCode();
 
                     var useResourceSharing = settings.EnableResourceSharing;
@@ -204,7 +206,7 @@ namespace Piedone.Combinator.Services
                     }
 
 
-                    // We save a resource set now. First the bundle should be saved separately under its unique name, then for this resource list.
+                    // We save a bundle now. First the bundle should be saved separately under its unique name, then for this resource list.
                     if (bundleHashCode != hashCode)
                     {
                         if (!_cacheFileService.Exists(bundleHashCode, useResourceSharing))
@@ -214,6 +216,7 @@ namespace Piedone.Combinator.Services
 
                         // Overriding the url for the resource in this resource list with the url of the set.
                         combinedResource.IsOriginal = true;
+                        var z = _cacheFileService.GetCombinedResources(bundleHashCode, useResourceSharing);
                         var set = _cacheFileService.GetCombinedResources(bundleHashCode, useResourceSharing).Single(); // Should be one resource
                         combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
                         combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;

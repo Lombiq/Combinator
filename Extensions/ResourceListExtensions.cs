@@ -7,9 +7,9 @@ namespace Piedone.Combinator.Extensions
 {
     public static class ResourceListExtensions
     {
-        public static int GetResourceListHashCode<T>(this IList<T> resources) where T : ResourceRequiredContext
+        public static int GetResourceListHashCode<T>(this IEnumerable<T> resources) where T : ResourceRequiredContext
         {
-            var key = "";
+            var key = string.Empty;
 
             resources.ToList().ForEach(resource => key += resource.Resource.GetFullPath() + "__");
 
@@ -22,9 +22,9 @@ namespace Piedone.Combinator.Extensions
             return resources;
         }
 
-        public static int GetCombinatorResourceListHashCode<T>(this IList<T> resources) where T : CombinatorResource
+        public static int GetCombinatorResourceListHashCode<T>(this IEnumerable<T> resources) where T : CombinatorResource
         {
-            return resources.Select(resource => resource.RequiredContext).ToList().GetResourceListHashCode();
+            return resources.Select(resource => resource.RequiredContext).GetResourceListHashCode();
         }
     }
 }

@@ -84,12 +84,14 @@ namespace Piedone.Combinator
                     EmbedCssImages = settingsPart.EmbedCssImages,
                     EmbeddedImagesMaxSizeKB = settingsPart.EmbeddedImagesMaxSizeKB,
                     GenerateImageSprites = settingsPart.GenerateImageSprites,
-                    MinifyResources = settingsPart.MinifyResources
+                    MinifyResources = settingsPart.MinifyResources,
+                    EnableResourceSharing = settingsPart.EnableResourceSharing
                 };
 
                 if (!String.IsNullOrEmpty(settingsPart.CombinationExcludeRegex)) settings.CombinationExcludeFilter = new Regex(settingsPart.CombinationExcludeRegex);
                 if (!String.IsNullOrEmpty(settingsPart.EmbedCssImagesStylesheetExcludeRegex)) settings.EmbedCssImagesStylesheetExcludeFilter = new Regex(settingsPart.EmbedCssImagesStylesheetExcludeRegex);
                 if (!String.IsNullOrEmpty(settingsPart.MinificationExcludeRegex)) settings.MinificationExcludeFilter = new Regex(settingsPart.MinificationExcludeRegex);
+                if (!String.IsNullOrEmpty(settingsPart.ResourceSharingExcludeRegex)) settings.ResourceSharingExcludeFilter = new Regex(settingsPart.ResourceSharingExcludeRegex);
 
                 if (!String.IsNullOrEmpty(settingsPart.ResourceSetRegexes))
                 {

@@ -59,16 +59,20 @@ namespace Piedone.Combinator.Services
             var hashCode = resources.GetResourceListHashCode();
             var cacheKey = MakeCacheKey(hashCode) + ".Styles";
 
+            // The result is in the cache of this shell although the resource list can come from the Default tenant in case of resource
+            // sharing. Now shared resources won't be re-processed when the cache is emptied here (since they're in the cache of Default)
+            // but a cache empty on Default won't invalidate this cache... So in effect a cache empty on Default also requires a cache
+            // empty on all tenants too. This could be made better somehow.
             return _cacheService.Get(cacheKey, () =>
             {
-                if (!_cacheFileService.Exists(hashCode))
+                if (!_cacheFileService.Exists(hashCode, settings.EnableResourceSharing))
                 {
                     Combine(resources, hashCode, ResourceType.Style, settings);
                 }
 
                 _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
 
-                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode), settings.ResourceBaseUri);
+                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode, settings.EnableResourceSharing), settings.ResourceBaseUri);
             });
         }
 
@@ -76,44 +80,43 @@ namespace Piedone.Combinator.Services
             IList<ResourceRequiredContext> resources,
             ICombinatorSettings settings)
         {
-            var hashCode = resources.GetResourceListHashCode();
             var combinedScripts = new List<ResourceRequiredContext>(2);
 
             Action<ResourceLocation> combineScriptsAtLocation =
                 (location) =>
                 {
-                    var locationHashCode = hashCode + (int)location;
-                    var cacheKey = MakeCacheKey(locationHashCode) + ".Scripts";
+                    Predicate<RequireSettings> locationFilter;
+
+                    // Making sure that scripts with unspecified location are treated equally to foot scripts. Theoretically
+                    // this isn't right (it can change what "unspecified" results in) but it deals with the lazyness of developers.
+                    if (location == ResourceLocation.Head)
+                    {
+                        locationFilter = s => s.Location == ResourceLocation.Head;
+                    }
+                    else
+                    {
+                        locationFilter = s => s.Location == ResourceLocation.Foot || s.Location == ResourceLocation.Unspecified;
+                    }
+
+                    var scripts = (from r in resources
+                                   where locationFilter(r.Settings)
+                                   select r).ToList();
+
+                    var hashCode = scripts.GetResourceListHashCode();
+                    var cacheKey = MakeCacheKey(hashCode) + ".Scripts";
 
                     var combinedResourcesAtLocation = _cacheService.Get(cacheKey, () =>
                     {
-                        if (!_cacheFileService.Exists(locationHashCode))
+                        if (!_cacheFileService.Exists(hashCode, settings.EnableResourceSharing))
                         {
-                            Predicate<RequireSettings> locationFilter;
-
-                            // Making sure that scripts with unspecified location are treated equally to foot scripts. Theoretically
-                            // this isn't right (it can change what "unspecified" results in) but it deals with the lazyness of developers.
-                            if (location == ResourceLocation.Head)
-                            {
-                                locationFilter = s => s.Location == ResourceLocation.Head;
-                            }
-                            else
-                            {
-                                locationFilter = s => s.Location == ResourceLocation.Foot || s.Location == ResourceLocation.Unspecified;
-                            }
-
-                            var scripts = (from r in resources
-                                           where locationFilter(r.Settings)
-                                           select r).ToList();
-
                             if (scripts.Count == 0) return new List<ResourceRequiredContext>();
 
-                            Combine(scripts, locationHashCode, ResourceType.JavaScript, settings);
+                            Combine(scripts, hashCode, ResourceType.JavaScript, settings);
                         }
 
                         _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
 
-                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(locationHashCode), settings.ResourceBaseUri);
+                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode, settings.EnableResourceSharing), settings.ResourceBaseUri);
                         combinedResources.SetLocation(location);
 
                         return combinedResources;
@@ -160,13 +163,27 @@ namespace Piedone.Combinator.Services
             var combinedContent = new StringBuilder(1000);
             var resourceBaseUri = settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_hca.Current().Request.Url, "/");
 
-            Action<CombinatorResource, List<CombinatorResource>, int> saveCombination =
-                (combinedResource, containedResources, bundleHashCode) =>
+            Action<CombinatorResource, List<CombinatorResource>> saveCombination =
+                (combinedResource, containedResources) =>
                 {
                     if (combinedResource == null) return;
 
                     // Don't save emtpy resources
                     if (combinedContent.Length == 0 && !combinedResource.IsOriginal) return;
+
+                    var bundleHashCode = containedResources.GetCombinatorResourceListHashCode();
+
+                    var useResourceSharing = settings.EnableResourceSharing;
+                    if (useResourceSharing && settings.ResourceSharingExcludeFilter != null)
+                    {
+                        foreach (var resource in containedResources)
+                        {
+                            if (useResourceSharing)
+                            {
+                                useResourceSharing = !settings.ResourceSharingExcludeFilter.IsMatch(resource.AbsoluteUrl.ToString());
+                            }
+                        }
+                    }
 
                     if (!combinedResource.IsOriginal)
                     {
@@ -187,23 +204,23 @@ namespace Piedone.Combinator.Services
                     }
 
 
-                    // We save a bundle now. First the bundle should be saved separately under its unique name, then for this resource list.
+                    // We save a resource set now. First the bundle should be saved separately under its unique name, then for this resource list.
                     if (bundleHashCode != hashCode)
                     {
-                        if (!_cacheFileService.Exists(bundleHashCode))
+                        if (!_cacheFileService.Exists(bundleHashCode, useResourceSharing))
                         {
-                            _cacheFileService.Save(bundleHashCode, combinedResource, resourceBaseUri);
+                            _cacheFileService.Save(bundleHashCode, combinedResource, resourceBaseUri, useResourceSharing);
                         }
 
                         // Overriding the url for the resource in this resource list with the url of the set.
                         combinedResource.IsOriginal = true;
-                        var set = _cacheFileService.GetCombinedResources(bundleHashCode).Single(); // Should be one resource
+                        var set = _cacheFileService.GetCombinedResources(bundleHashCode, useResourceSharing).Single(); // Should be one resource
                         combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
                         combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;
                         AddTimestampToUrl(combinedResource);
                     }
 
-                    _cacheFileService.Save(hashCode, combinedResource, resourceBaseUri);
+                    _cacheFileService.Save(hashCode, combinedResource, resourceBaseUri, useResourceSharing);
 
                     combinedContent.Clear();
                     containedResources.Clear();
@@ -230,14 +247,14 @@ namespace Piedone.Combinator.Services
                         if (previousResource != null
                             && (!previousResource.SettingsEqual(resource) || (previousResource.IsCdnResource != resource.IsCdnResource && !settings.CombineCDNResources)))
                         {
-                            saveCombination(previousResource, resourcesInCombination, hashCode);
+                            saveCombination(previousResource, resourcesInCombination);
                         }
 
                         // If this resource is in a different set than the previous, they can't be combined
                         if (currentSetRegex != null && !currentSetRegex.IsMatch(absoluteUrlString))
                         {
                             currentSetRegex = null;
-                            saveCombination(previousResource, resourcesInCombination, resourcesInCombination.GetCombinatorResourceListHashCode());
+                            saveCombination(previousResource, resourcesInCombination);
                         }
 
                         // Calculate if this resource is in a set
@@ -253,7 +270,7 @@ namespace Piedone.Combinator.Services
                             // The previous resource is in a different set or in no set so it can't be combined with this resource
                             if (currentSetRegex != null && previousResource != null && resourcesInCombination.Any())
                             {
-                                saveCombination(previousResource, resourcesInCombination, hashCode);
+                                saveCombination(previousResource, resourcesInCombination);
                             }
                         }
 
@@ -278,9 +295,9 @@ namespace Piedone.Combinator.Services
                     if (saveOriginalResource)
                     {
                         // This is a fully excluded resource
-                        if (previousResource != null) saveCombination(previousResource, resourcesInCombination, hashCode);
+                        if (previousResource != null) saveCombination(previousResource, resourcesInCombination);
                         resource.IsOriginal = true;
-                        saveCombination(resource, resourcesInCombination, hashCode);
+                        saveCombination(resource, resourcesInCombination);
                         combinatorResources[i] = null; // So previous resource detection works correctly
                     }
                 }
@@ -292,7 +309,7 @@ namespace Piedone.Combinator.Services
             }
 
 
-            saveCombination(combinatorResources[combinatorResources.Count - 1], resourcesInCombination, hashCode);
+            saveCombination(combinatorResources[combinatorResources.Count - 1], resourcesInCombination);
         }
 
 

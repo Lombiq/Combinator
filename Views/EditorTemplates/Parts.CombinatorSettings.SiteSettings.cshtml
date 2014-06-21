@@ -2,12 +2,20 @@
 
 @{
     Script.Require("jQuery").AtFoot();
+
+    var isDefaultTenant = WorkContext.Resolve<Orchard.Environment.Configuration.ShellSettings>().Name == Orchard.Environment.Configuration.ShellSettings.DefaultName;
 }
 
 <h1>
     @Html.TitleForPage(T(" Combinator Settings ").Text)
 </h1>
-<span class="hint">@T("There are currently {0} combined resource files cached.", Model.CacheFileCount)</span>
+<span class="hint">
+    @T("There are currently {0} combined resource files cached.", Model.CacheFileCount)
+    @if (Model.EnableResourceSharing)
+    {
+        @T("Since resource sharing is enabled common cache files are stored and thus also counted on the Default tenant. The cache for these files can also be emptied only on the Default tenant.")
+    }
+</span>
 <fieldset>
     <legend>@T("General Settings")</legend>
     <ol>
@@ -90,6 +98,26 @@
         </li>
     </ol>
 </fieldset>
+@if (!isDefaultTenant)
+{
+    <fieldset>
+        <legend>@T("Resource sharing")</legend>
+        <ol>
+            <li>
+                @Html.EditorFor(m => m.EnableResourceSharing)
+                <label for="@Html.FieldIdFor(m => m.EnableResourceSharing)" class="forcheckbox">@T("Enable resource sharing among tenants")</label>
+                @Html.ValidationMessageFor(m => m.EnableResourceSharing)
+                <span class="hint">@T("When used in a multi-tenant application if this is enabled then processed resources are shared among tenants through the Default tenant, resulting in less processing (as each set of resources will be only processed once for every tenant). You only have to enable this on sub-tenants. This will only work if Combinator is enabled on the Default tenant.")</span>
+            </li>
+            <li>
+                @Html.LabelFor(m => m.ResourceSharingExcludeRegex, T("Exclude from resource sharing"))
+                @Html.TextBoxFor(m => m.ResourceSharingExcludeRegex, new { @class = "text large" })
+                @Html.ValidationMessageFor(m => m.ResourceSharingExcludeRegex)
+                <span class="hint">@T("Sets of resources that contain a matched file won't be shared among tenants. Use this to exclude files that are unique to this tenant, e.g. custom stylesheets stored in Media.")</span>
+            </li>
+        </ol>
+    </fieldset>
+}
 <fieldset>
     <legend>@T("Resource Sets")</legend>
     <ol>

@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Orchard;
 using Orchard.Caching;
 using Orchard.Caching.Services;
 using Orchard.Data;
+using Orchard.Environment;
+using Orchard.Environment.Configuration;
 using Orchard.Environment.Extensions;
 using Orchard.Exceptions;
 using Orchard.FileSystems.Media;
@@ -14,12 +17,14 @@ using Orchard.Services;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
+using Autofac;
 
 namespace Piedone.Combinator.Services
 {
     [OrchardFeature("Piedone.Combinator")]
     public class CacheFileService : ICacheFileService, ICombinatorCacheManipulationEventHandler
     {
+        private readonly IOrchardHost _orchardHost;
         private readonly IStorageProvider _storageProvider;
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly ICombinatorResourceManager _combinatorResourceManager;
@@ -41,6 +46,7 @@ namespace Piedone.Combinator.Services
 
 
         public CacheFileService(
+            IOrchardHost orchardHost,
             IStorageProvider storageProvider,
             IRepository<CombinedFileRecord> fileRepository,
             ICombinatorResourceManager combinatorResourceManager,
@@ -50,6 +56,7 @@ namespace Piedone.Combinator.Services
             ICacheService cacheService,
             ICombinatorEventMonitor combinatorEventMonitor)
         {
+            _orchardHost = orchardHost;
             _storageProvider = storageProvider;
             _fileRepository = fileRepository;
             _combinatorResourceManager = combinatorResourceManager;
@@ -62,8 +69,13 @@ namespace Piedone.Combinator.Services
         }
 
 
-        public void Save(int hashCode, CombinatorResource resource, Uri resourceBaseUri)
+        public void Save(int hashCode, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare)
         {
+            if (useResourceShare && CallOnDefaultShell(cacheFileService => cacheFileService.Save(hashCode, resource, resourceBaseUri, false)))
+            {
+                return;
+            }
+
             var sliceCount = _fileRepository.Count(file => file.HashCode == hashCode);
 
             var fileRecord = new CombinedFileRecord()
@@ -113,15 +125,21 @@ namespace Piedone.Combinator.Services
             _combinatorEventHandler.BundleChanged(hashCode);
         }
 
-        public IList<CombinatorResource> GetCombinedResources(int hashCode)
+        public IList<CombinatorResource> GetCombinedResources(int hashCode, bool useResourceShare)
         {
+            IList<CombinatorResource> sharedResources = new List<CombinatorResource>();
+            if (useResourceShare)
+            {
+                CallOnDefaultShell(cacheFileService => sharedResources = cacheFileService.GetCombinedResources(hashCode, false));
+            }
+
             var cacheKey = MakeCacheKey("GetCombinedResources." + hashCode);
             return _cacheService.Get(cacheKey, () =>
             {
                 _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
                 _combinatorEventMonitor.MonitorBundleChanged(cacheKey, hashCode);
 
-                var files = GetRecords(hashCode);
+                var files = _fileRepository.Fetch(file => file.HashCode == hashCode).ToList();
                 var fileCount = files.Count;
 
                 var resources = new List<CombinatorResource>(fileCount);
@@ -141,12 +159,22 @@ namespace Piedone.Combinator.Services
                     resources.Add(resource);
                 }
 
-                return resources;
+                // This way if a set of resources contains shared and local resources in two resource sets then both will be returned.
+                // Issue: the order is not necessarily correctly kept... But this should be a rare case. Should be solved eventually.
+                return sharedResources.Union(resources).ToList();
             });
         }
 
-        public bool Exists(int hashCode)
+        public bool Exists(int hashCode, bool useResourceShare)
         {
+            var exists = false;
+            if (useResourceShare && CallOnDefaultShell(cacheFileService => exists = cacheFileService.Exists(hashCode, false)))
+            {
+                // Because resources were excluded from resource sharing in this set this set could be stored locally, not shared.
+                // Thus we fall back to local storage.
+                if (exists) return true;
+            }
+
             var cacheKey = MakeCacheKey("Exists." + hashCode);
             return _cacheService.Get(cacheKey, () =>
             {
@@ -165,7 +193,15 @@ namespace Piedone.Combinator.Services
         public void Empty()
         {
             var files = _fileRepository.Table.ToList();
-            DeleteFiles(files);
+
+            foreach (var file in files)
+            {
+                _fileRepository.Delete(file);
+                if (_storageProvider.FileExists(MakePath(file)))
+                {
+                    _storageProvider.DeleteFile(MakePath(file));
+                }
+            }
 
             // We don't check if there were any files in a DB here, we try to delete even if there weren't. This adds robustness: with emptying the cache
             // everything can be reset, even if the user or a deploy process manipulated the DB or the file system.
@@ -207,21 +243,24 @@ namespace Piedone.Combinator.Services
             }
         }
 
-
-        private List<CombinedFileRecord> GetRecords(int hashCode)
+        //private ResourceSharingContext CreateResourceSharingContext(bool useResourceShare)
+        //{
+        //    if (useResourceShare)
+        //    {
+        //        var shellContext = _orchardHost.GetShellContext(new ShellSettings { Name = ShellSettings.DefaultName });
+        //        return new ResourceSharingContext(shellContext.LifetimeScope.Resolve<IWorkContextAccessor>().CreateWorkContextScope());
+        //    }
+        //}
+        private bool CallOnDefaultShell(Action<ICacheFileService> cacheFileServiceCall)
         {
-            return _fileRepository.Fetch(file => file.HashCode == hashCode).ToList();
-        }
-
-        private void DeleteFiles(List<CombinedFileRecord> files)
-        {
-            foreach (var file in files)
+            var shellContext = _orchardHost.GetShellContext(new ShellSettings { Name = ShellSettings.DefaultName });
+            if (shellContext == null) throw new InvalidOperationException("The Default tenant's shell context does not exist. This most possibly indicates that the shell is not running. Combinator resource sharing needs the Default tenant to run.");
+            using (var wc = shellContext.LifetimeScope.Resolve<IWorkContextAccessor>().CreateWorkContextScope())
             {
-                _fileRepository.Delete(file);
-                if (_storageProvider.FileExists(MakePath(file)))
-                {
-                    _storageProvider.DeleteFile(MakePath(file));
-                }
+                ICacheFileService cacheFileService;
+                if (!wc.TryResolve<ICacheFileService>(out cacheFileService)) return false;
+                cacheFileServiceCall(cacheFileService);
+                return true;
             }
         }
 
@@ -249,5 +288,23 @@ namespace Piedone.Combinator.Services
         {
             return CachePrefix + name;
         }
+
+
+        //private class ResourceSharingContext : IDisposable
+        //{
+        //    private readonly IWorkContextScope _wc;
+
+
+        //    public ResourceSharingContext(IWorkContextScope wc)
+        //    {
+        //        _wc = wc;
+        //    }
+
+
+        //    public void Dispose()
+        //    {
+        //        if (_wc != null) _wc.Dispose();
+        //    }
+        //}
     }
 }

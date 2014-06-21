@@ -44,7 +44,7 @@ namespace Piedone.Combinator.EventHandlers
 
         public void BundleChanged(int hashCode)
         {
-            _cacheService.Trigger("Piedone.Combinator.BundleChanged");
+            _cacheService.Trigger("Piedone.Combinator.BundleChanged." + hashCode);
         }
     }
 }

@@ -14,6 +14,8 @@ namespace Piedone.Combinator.Models
         int EmbeddedImagesMaxSizeKB { get; }
         Regex EmbedCssImagesStylesheetExcludeFilter { get; }
         bool GenerateImageSprites { get; }
+        bool EnableResourceSharing { get; }
+        Regex ResourceSharingExcludeFilter { get; }
         Regex[] ResourceSetFilters { get; }
     }
 }

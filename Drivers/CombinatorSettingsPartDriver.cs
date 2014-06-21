@@ -66,6 +66,8 @@ namespace Piedone.Combinator.Drivers
                         formerSettings.EmbeddedImagesMaxSizeKB = part.EmbeddedImagesMaxSizeKB;
                         formerSettings.EmbedCssImagesStylesheetExcludeRegex = part.EmbedCssImagesStylesheetExcludeRegex;
                         formerSettings.GenerateImageSprites = part.GenerateImageSprites;
+                        formerSettings.EnableResourceSharing = part.EnableResourceSharing;
+                        formerSettings.ResourceSharingExcludeRegex = part.ResourceSharingExcludeRegex;
                         formerSettings.ResourceSetRegexes = part.ResourceSetRegexes;
 
                         updater.TryUpdateModel(part, Prefix, null, null);
@@ -80,6 +82,8 @@ namespace Piedone.Combinator.Drivers
                             || (part.EmbedCssImages && part.EmbeddedImagesMaxSizeKB != formerSettings.EmbeddedImagesMaxSizeKB)
                             || (part.EmbedCssImages && part.EmbedCssImagesStylesheetExcludeRegex != formerSettings.EmbedCssImagesStylesheetExcludeRegex)
                             || part.GenerateImageSprites != formerSettings.GenerateImageSprites
+                            || part.EnableResourceSharing != formerSettings.EnableResourceSharing
+                            || part.ResourceSharingExcludeRegex != formerSettings.ResourceSharingExcludeRegex
                             || (part.ResourceSetRegexes != formerSettings.ResourceSetRegexes))
                         {
                             var valuesAreValid = true;
@@ -108,6 +112,10 @@ namespace Piedone.Combinator.Drivers
                             if (!string.IsNullOrEmpty(part.EmbedCssImagesStylesheetExcludeRegex))
                             {
                                 if (!TestRegex(part.EmbedCssImagesStylesheetExcludeRegex, T("embedded css images exclude regex"), updater)) valuesAreValid = false;
+                            }
+                            if (!string.IsNullOrEmpty(part.ResourceSharingExcludeRegex))
+                            {
+                                if (!TestRegex(part.ResourceSharingExcludeRegex, T("resource sharing exclude regex"), updater)) valuesAreValid = false;
                             }
                             if (!string.IsNullOrEmpty(part.ResourceSetRegexes))
                             {

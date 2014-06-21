@@ -69,6 +69,21 @@ namespace Piedone.Combinator.Models
             set { this.Store(x => x.GenerateImageSprites, value); }
         }
 
+        public bool EnableResourceSharing
+        {
+            get { return this.Retrieve(x => x.EnableResourceSharing); }
+            set { this.Store(x => x.EnableResourceSharing, value); }
+        }
+
+        private readonly LazyField<string> _resourceSharingExcludeRegexDefault = new LazyField<string>();
+        internal LazyField<string> ResourceSharingExcludeRegexDefaultField { get { return _resourceSharingExcludeRegexDefault; } }
+
+        public string ResourceSharingExcludeRegex
+        {
+            get { return this.Retrieve(x => x.ResourceSharingExcludeRegex, ResourceSharingExcludeRegexDefaultField.Value); }
+            set { this.Store(x => x.ResourceSharingExcludeRegex, value); }
+        }
+
         public string ResourceSetRegexes
         {
             get { return this.Retrieve(x => x.ResourceSetRegexes); }

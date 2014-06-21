@@ -5,6 +5,9 @@ using Piedone.Combinator.Models;
 
 namespace Piedone.Combinator.Services
 {
+    /// <summary>
+    /// Main service for processing stylesheets and scripts through Combinator.
+    /// </summary>
     public interface ICombinatorService : IDependency
     {
         IList<ResourceRequiredContext> CombineStylesheets(IList<ResourceRequiredContext> resources, ICombinatorSettings settings);

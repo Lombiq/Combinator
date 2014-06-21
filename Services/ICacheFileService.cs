@@ -8,6 +8,10 @@ namespace Piedone.Combinator.Services
 {
     public delegate void SpriteStreamWriter(Stream stream, string publicUrl);
 
+
+    /// <summary>
+    /// Service for managing static cache files, i.e. processed static resoruces.
+    /// </summary>
     public interface ICacheFileService : IDependency
     {
         void Save(string fingerprint, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare);

@@ -11,6 +11,7 @@ namespace Piedone.Combinator.Models
         public virtual int Slice { get; set; }
         public virtual ResourceType Type { get; set; }
         public virtual DateTime? LastUpdatedUtc { get; set; }
+        [StringLengthMax]
         public virtual string Settings { get; set; }
     }
 }

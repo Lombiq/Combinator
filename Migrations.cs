@@ -168,12 +168,10 @@ namespace Piedone.Combinator.Migrations
         // Swapping the HashCode column with Fingerprint happens in two steps to avoid backwards-incompatible schema changes in one version.
         public int UpdateFrom11()
         {
-            _cacheFileService.Empty();
-
             SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
                 table =>
                 {
-                    table.AddColumn<string>("Fingerprint", column => column.NotNull().WithLength(1024));
+                    table.AddColumn<string>("Fingerprint", column => column.NotNull().WithLength(1024).WithDefault(string.Empty));
                     table.CreateIndex("FileFingerprint", new[] { "Fingerprint" });
                 });
 
@@ -181,10 +179,10 @@ namespace Piedone.Combinator.Migrations
             return 12;
         }
 
-        // When uncommenting this also the return value of Create() should be modified.
         //public int UpdateFrom12()
         //{
-        //    _cacheFileService.Empty();
+        //    SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
+        //        table => table.DropIndex("File"));
 
         //    SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
         //        table => table.DropColumn("HashCode"));

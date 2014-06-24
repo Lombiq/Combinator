@@ -179,17 +179,17 @@ namespace Piedone.Combinator.Migrations
             return 12;
         }
 
-        //public int UpdateFrom12()
-        //{
-        //    SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
-        //        table => table.DropIndex("File"));
+        public int UpdateFrom12()
+        {
+            SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
+                table => table.DropIndex("File"));
 
-        //    SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
-        //        table => table.DropColumn("HashCode"));
+            SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
+                table => table.DropColumn("HashCode"));
 
 
-        //    return 13;
-        //}
+            return 13;
+        }
 
 
         public void Uninstall()

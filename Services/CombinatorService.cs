@@ -200,7 +200,17 @@ namespace Piedone.Combinator.Services
                             "/*" + Environment.NewLine
                             + "Resource bundle created by Combinator (http://combinator.codeplex.com/)" + Environment.NewLine + Environment.NewLine
                             + "Resources in this bundle:" + Environment.NewLine
-                            + String.Join(Environment.NewLine, containedResources.Select(resource => "- " + resource.AbsoluteUrl.ToString()).ToArray())
+                            + String.Join(Environment.NewLine, containedResources.Select(resource =>
+                                {
+                                    var url = resource.AbsoluteUrl.ToString();
+                                    if (useResourceSharing && !resource.IsCdnResource && !resource.IsRemoteStorageResource)
+                                    {
+                                        var uriBuilder = new UriBuilder(url);
+                                        uriBuilder.Host = "DefaultTenant";
+                                        url = uriBuilder.Uri.ToStringWithoutScheme();
+                                    }
+                                    return "- " + url;
+                                }))
                             + Environment.NewLine + "*/"
                             + Environment.NewLine + Environment.NewLine + Environment.NewLine + combinedResource.Content;
                     }

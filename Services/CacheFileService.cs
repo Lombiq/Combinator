@@ -243,14 +243,6 @@ namespace Piedone.Combinator.Services
             }
         }
 
-        //private ResourceSharingContext CreateResourceSharingContext(bool useResourceShare)
-        //{
-        //    if (useResourceShare)
-        //    {
-        //        var shellContext = _orchardHost.GetShellContext(new ShellSettings { Name = ShellSettings.DefaultName });
-        //        return new ResourceSharingContext(shellContext.LifetimeScope.Resolve<IWorkContextAccessor>().CreateWorkContextScope());
-        //    }
-        //}
         private bool CallOnDefaultShell(Action<ICacheFileService> cacheFileServiceCall)
         {
             var shellContext = _orchardHost.GetShellContext(new ShellSettings { Name = ShellSettings.DefaultName });

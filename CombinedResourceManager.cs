@@ -34,7 +34,6 @@ namespace Piedone.Combinator
         private readonly IShapeTableLocator _shapeTableLocator;
         private readonly IThemeManager _themeManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ICombinatorEventMonitor _combinatorEventMonitor;
 
         public ILogger Logger { get; set; }
 
@@ -45,8 +44,7 @@ namespace Piedone.Combinator
             ICombinatorService combinatorService,
             IShapeTableLocator shapeTableLocator,
             IThemeManager themeManager,
-            IHttpContextAccessor httpContextAccessor,
-            ICombinatorEventMonitor combinatorEventMonitor)
+            IHttpContextAccessor httpContextAccessor)
             : base(resourceProviders)
         {
             _siteService = siteService;
@@ -54,7 +52,6 @@ namespace Piedone.Combinator
             _shapeTableLocator = shapeTableLocator;
             _themeManager = themeManager;
             _httpContextAccessor = httpContextAccessor;
-            _combinatorEventMonitor = combinatorEventMonitor;
 
             Logger = NullLogger.Instance;
         }

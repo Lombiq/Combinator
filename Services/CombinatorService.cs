@@ -23,8 +23,6 @@ namespace Piedone.Combinator.Services
     {
         private readonly ICacheFileService _cacheFileService;
         private readonly IResourceProcessingService _resourceProcessingService;
-        private readonly ICacheService _cacheService;
-        private readonly ICombinatorEventMonitor _combinatorEventMonitor;
         private readonly ICombinatorResourceManager _combinatorResourceManager;
         private readonly IHttpContextAccessor _hca;
 
@@ -35,15 +33,11 @@ namespace Piedone.Combinator.Services
         public CombinatorService(
             ICacheFileService cacheFileService,
             IResourceProcessingService resourceProcessingService,
-            ICacheService cacheService,
-            ICombinatorEventMonitor combinatorEventMonitor,
             ICombinatorResourceManager combinatorResourceManager,
             IHttpContextAccessor hca)
         {
             _cacheFileService = cacheFileService;
             _resourceProcessingService = resourceProcessingService;
-            _cacheService = cacheService;
-            _combinatorEventMonitor = combinatorEventMonitor;
             _combinatorResourceManager = combinatorResourceManager;
             _hca = hca;
 
@@ -57,23 +51,13 @@ namespace Piedone.Combinator.Services
             ICombinatorSettings settings)
         {
             var hashCode = resources.GetResourceListFingerprint(settings);
-            var cacheKey = MakeCacheKey(hashCode) + ".Styles";
 
-            // The result is in the cache of this shell although the resource list can come from the Default tenant in case of resource
-            // sharing. Now shared resources won't be re-processed when the cache is emptied here (since they're in the cache of Default)
-            // but a cache empty on Default won't invalidate this cache... So in effect a cache empty on Default also requires a cache
-            // empty on all tenants too. This could be made better somehow.
-            return _cacheService.Get(cacheKey, () =>
+            if (!_cacheFileService.Exists(hashCode, settings.EnableResourceSharing))
             {
-                if (!_cacheFileService.Exists(hashCode, settings.EnableResourceSharing))
-                {
-                    Combine(resources, hashCode, ResourceType.Style, settings);
-                }
+                Combine(resources, hashCode, ResourceType.Style, settings);
+            }
 
-                _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
-
-                return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode, settings.EnableResourceSharing), settings.ResourceBaseUri);
-            });
+            return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode, settings.EnableResourceSharing), settings.ResourceBaseUri);
         }
 
         public IList<ResourceRequiredContext> CombineScripts(
@@ -103,24 +87,21 @@ namespace Piedone.Combinator.Services
                                    select r).ToList();
 
                     var hashCode = scripts.GetResourceListFingerprint(settings);
-                    var cacheKey = MakeCacheKey(hashCode) + ".Scripts";
 
-                    var combinedResourcesAtLocation = _cacheService.Get(cacheKey, () =>
+                    IList<ResourceRequiredContext> combinedResourcesAtLocation;
+
+                    if (!scripts.Any()) combinedResourcesAtLocation = new List<ResourceRequiredContext>();
+                    else
                     {
                         if (!_cacheFileService.Exists(hashCode, settings.EnableResourceSharing))
                         {
-                            if (scripts.Count == 0) return new List<ResourceRequiredContext>();
-
                             Combine(scripts, hashCode, ResourceType.JavaScript, settings);
                         }
 
-                        _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
+                        combinedResourcesAtLocation = ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode, settings.EnableResourceSharing), settings.ResourceBaseUri);
+                        combinedResourcesAtLocation.SetLocation(location);
+                    }
 
-                        var combinedResources = ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode, settings.EnableResourceSharing), settings.ResourceBaseUri);
-                        combinedResources.SetLocation(location);
-
-                        return combinedResources;
-                    });
 
                     combinedScripts = combinedScripts.Union(combinedResourcesAtLocation).ToList();
                 };
@@ -231,7 +212,7 @@ namespace Piedone.Combinator.Services
                         combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;
                         if (IsOwnedResource(combinedResource))
                         {
-                            AddTimestampToUrl(combinedResource); 
+                            AddTimestampToUrl(combinedResource);
                         }
                     }
 
@@ -347,11 +328,6 @@ namespace Piedone.Combinator.Services
             }
 
             return resources;
-        }
-
-        private static string MakeCacheKey(string fingerprint)
-        {
-            return "Piedone.Combinator.CombinedResources." + fingerprint.ToString();
         }
 
         private static void AddTimestampToUrl(CombinatorResource resource)

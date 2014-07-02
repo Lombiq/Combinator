@@ -226,7 +226,6 @@ namespace Piedone.Combinator.Services
 
                         // Overriding the url for the resource in this resource list with the url of the set.
                         combinedResource.IsOriginal = true;
-                        var z = _cacheFileService.GetCombinedResources(bundleFingerprint, useResourceSharing);
                         var set = _cacheFileService.GetCombinedResources(bundleFingerprint, useResourceSharing).Single(); // Should be one resource
                         combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
                         combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;

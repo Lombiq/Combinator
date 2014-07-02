@@ -229,7 +229,10 @@ namespace Piedone.Combinator.Services
                         var set = _cacheFileService.GetCombinedResources(bundleFingerprint, useResourceSharing).Single(); // Should be one resource
                         combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
                         combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;
-                        AddTimestampToUrl(combinedResource);
+                        if (IsOwnedResource(combinedResource))
+                        {
+                            AddTimestampToUrl(combinedResource); 
+                        }
                     }
 
                     _cacheFileService.Save(fingerprint, combinedResource, resourceBaseUri, useResourceSharing);
@@ -331,7 +334,7 @@ namespace Piedone.Combinator.Services
 
             foreach (var resource in combinedResources)
             {
-                if ((!resource.IsCdnResource && !resource.IsOriginal) || resource.IsRemoteStorageResource)
+                if (IsOwnedResource(resource))
                 {
                     AddTimestampToUrl(resource);
                     if (resourceBaseUri != null && !resource.IsRemoteStorageResource)
@@ -357,6 +360,11 @@ namespace Piedone.Combinator.Services
             uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
             var urlString = resource.IsCdnResource ? uriBuilder.Uri.ToStringWithoutScheme() : uriBuilder.Uri.PathAndQuery.ToString();
             resource.RequiredContext.Resource.SetUrl(urlString);
+        }
+
+        private static bool IsOwnedResource(CombinatorResource resource)
+        {
+            return (!resource.IsCdnResource && !resource.IsOriginal) || resource.IsRemoteStorageResource;
         }
     }
 }

@@ -217,7 +217,7 @@ namespace Piedone.Combinator.Services
 
 
                     // We save a bundle now. First the bundle should be saved separately under its unique name, then for this resource list.
-                    if (bundleFingerprint != fingerprint)
+                    if (bundleFingerprint != fingerprint && containedResources.Count > 1)
                     {
                         if (!_cacheFileService.Exists(bundleFingerprint, useResourceSharing))
                         {

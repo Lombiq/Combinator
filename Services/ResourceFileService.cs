@@ -75,12 +75,19 @@ namespace Piedone.Combinator.Services
         {
             using (var wc = new WebClient())
             {
-                var byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
                 var content = new UTF8Encoding(false).GetString(wc.DownloadData(resource.AbsoluteUrl));
-                if (content.StartsWith(byteOrderMarkUtf8)) // Stripping "?"s from the beginning of css commments "/*"
+
+                // Stripping "?"s from the beginning of css commments "/*"
+                if (resource.Type == ResourceType.Style)
                 {
-                    content = content.Remove(0, byteOrderMarkUtf8.Length);
+                    var byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
+                    if (content.StartsWith(byteOrderMarkUtf8))
+                    {
+                        content = content.Remove(0, byteOrderMarkUtf8.Length);
+                    } 
                 }
+
+
                 return content;
             }
         }

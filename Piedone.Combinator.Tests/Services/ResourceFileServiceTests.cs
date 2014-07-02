@@ -73,7 +73,7 @@ namespace Piedone.Combinator.Tests.Services
             var resource = _resourceRepository.NewResource(ResourceType.JavaScript);
             resource.FillRequiredContext("RemoteResourceTest", "https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js");
             _resourceFileService.LoadResourceContent(resource);
-            Assert.That(resource.Content.Length, Is.EqualTo(248234));
+            Assert.That(resource.Content.Length, Is.EqualTo(248235));
         }
 
         [Test]

@@ -197,27 +197,7 @@ namespace Piedone.Combinator.Services
             foreach (var file in files)
             {
                 _fileRepository.Delete(file);
-                if (_storageProvider.FileExists(MakePath(file)))
-                {
-                    _storageProvider.DeleteFile(MakePath(file));
-                }
             }
-
-            // We don't check if there were any files in a DB here, we try to delete even if there weren't. This adds robustness: with emptying the cache
-            // everything can be reset, even if the user or a deploy process manipulated the DB or the file system.
-            // Also removing files and subfolders separately is necessary as just removing the root folder would yield a directory not empty exception.
-            if (_storageProvider.FolderExists(_scriptsPath))
-            {
-                _storageProvider.DeleteFolder(_scriptsPath);
-                Thread.Sleep(300); // This is to ensure we don't get an "access denied" when deleting the root folder 
-            }
-
-            if (_storageProvider.FolderExists(_stylesPath))
-            {
-                _storageProvider.DeleteFolder(_stylesPath);
-                Thread.Sleep(300);
-            }
-
 
             if (_storageProvider.FolderExists(_rootPath))
             {

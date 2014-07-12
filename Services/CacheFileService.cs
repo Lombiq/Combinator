@@ -38,10 +38,10 @@ namespace Piedone.Combinator.Services
         private const string CachePrefix = "Piedone.Combinator.";
         #endregion
 
-        #region Static file caching fields
-        private const string _rootPath = "_PiedoneModules/Combinator/";
-        private const string _stylesPath = _rootPath + "Styles/";
-        private const string _scriptsPath = _rootPath + "Scripts/";
+        #region Static file caching properties
+        private string RootPath { get { return _storageProvider.Combine("_PiedoneModules", "Combinator"); } }
+        private string StylesPath { get { return _storageProvider.Combine(RootPath, "Styles"); } }
+        private string ScriptsPath { get { return _storageProvider.Combine(RootPath, "Scripts"); } }
         #endregion
 
 
@@ -199,9 +199,9 @@ namespace Piedone.Combinator.Services
                 _fileRepository.Delete(file);
             }
 
-            if (_storageProvider.FolderExists(_rootPath))
+            if (_storageProvider.FolderExists(RootPath))
             {
-                _storageProvider.DeleteFolder(_rootPath);
+                _storageProvider.DeleteFolder(RootPath);
             }
 
             _combinatorEventHandler.CacheEmptied();
@@ -214,7 +214,7 @@ namespace Piedone.Combinator.Services
 
         public void WriteSpriteStream(string fileName, SpriteStreamWriter streamWriter)
         {
-            var path = _stylesPath + "Sprites/" + fileName;
+            var path = StylesPath + "Sprites/" + fileName;
             var spriteFile = _storageProvider.CreateFile(path);
             var publicUrl = _storageProvider.GetPublicUrl(path);
             using (var stream = spriteFile.OpenWrite())
@@ -236,47 +236,29 @@ namespace Piedone.Combinator.Services
             }
         }
 
-
-        private static string MakePath(CombinedFileRecord file)
+        private string MakePath(CombinedFileRecord file)
         {
             // Maybe others will come, therefore the architecture
             string extension = "";
             string folderPath = "";
             if (file.Type == ResourceType.JavaScript)
             {
-                folderPath = _scriptsPath;
+                folderPath = ScriptsPath;
                 extension = "js";
             }
             else if (file.Type == ResourceType.Style)
             {
-                folderPath = _stylesPath;
+                folderPath = StylesPath;
                 extension = "css";
             }
 
-            return folderPath + file.GetFileName() + "." + extension;
+            return _storageProvider.Combine(folderPath, file.GetFileName() + "." + extension);
         }
+
 
         private static string MakeCacheKey(string name)
         {
             return CachePrefix + name;
         }
-
-
-        //private class ResourceSharingContext : IDisposable
-        //{
-        //    private readonly IWorkContextScope _wc;
-
-
-        //    public ResourceSharingContext(IWorkContextScope wc)
-        //    {
-        //        _wc = wc;
-        //    }
-
-
-        //    public void Dispose()
-        //    {
-        //        if (_wc != null) _wc.Dispose();
-        //    }
-        //}
     }
 }

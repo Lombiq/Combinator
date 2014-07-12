@@ -311,9 +311,14 @@ namespace Piedone.Combinator.Services
         }
 
 
-        private static IList<ResourceRequiredContext> ProcessCombinedResources(IList<CombinatorResource> combinedResources, Uri resourceBaseUri)
+        private static IList<ResourceRequiredContext> ProcessCombinedResources(IEnumerable<CombinatorResource> combinedResources, Uri resourceBaseUri)
         {
-            IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count);
+            // This is really an inline Distinct(), see: http://stackoverflow.com/a/4158364/220230
+            // Making the list distinct is needed so if there are duplicated resources because of simultaneous processing then resources
+            // are still no included multiple times.
+            combinedResources = combinedResources.GroupBy(resource => resource.AbsoluteUrl).Select(group => group.First());
+
+            IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count());
 
             foreach (var resource in combinedResources)
             {

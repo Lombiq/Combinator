@@ -78,8 +78,9 @@ namespace Piedone.Combinator.Tests.Services
         {
             // Todo: adjust mocking that CombinatorResource's context can be filled and so the GetCombinedResources() method tested
             // if it returns the correct data
-
-            Assert.That(_container.Resolve<IStorageProvider>().GetFile("_PiedoneModules/Combinator/Styles/" + _cssResourcesFingerprint + "-1.css"), Is.Not.Null);
+            
+            var storageProvider = _container.Resolve<IStorageProvider>();
+            Assert.That(storageProvider.GetFile(storageProvider.Combine("_PiedoneModules", storageProvider.Combine("Combinator", storageProvider.Combine("Styles", _cssResourcesFingerprint + "-1.css")))), Is.Not.Null);
 
             var resources = _cacheFileService.GetCombinedResources(_jsResourceFingerprint, false);
 
@@ -135,12 +136,14 @@ namespace Piedone.Combinator.Tests.Services
             public List<string> SavedStreams { get; set; }
             public List<string> CreatedFiles { get; set; }
 
+
             public StubStorageProvider(ShellSettings settings)
             {
                 FileSystemStorageProvider = new FileSystemStorageProvider(settings);
                 SavedStreams = new List<string>();
                 CreatedFiles = new List<string>();
             }
+
 
             public string GetPublicUrl(string path)
             {
@@ -237,15 +240,18 @@ namespace Piedone.Combinator.Tests.Services
             }
         }
 
+
         private class StubStorageFolder : IStorageFolder
         {
             public string Path { get; set; }
             public string Name { get; set; }
 
+
             public StubStorageFolder(string name)
             {
                 Name = name;
             }
+
 
             public string GetPath()
             {

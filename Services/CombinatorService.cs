@@ -315,7 +315,7 @@ namespace Piedone.Combinator.Services
         {
             // This is really an inline Distinct(), see: http://stackoverflow.com/a/4158364/220230
             // Making the list distinct is needed so if there are duplicated resources because of simultaneous processing then resources
-            // are still no included multiple times.
+            // are still not included multiple times.
             combinedResources = combinedResources.GroupBy(resource => resource.AbsoluteUrl).Select(group => group.First());
 
             IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count());

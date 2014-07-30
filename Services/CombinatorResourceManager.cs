@@ -35,7 +35,7 @@ namespace Piedone.Combinator.Services
             return _jsonConverter.Serialize(
                 new SerializableSettings()
                 {
-                    Url = resource.IsOriginal ? resource.AbsoluteUrl : null,
+                    Url = resource.IsOriginal ? !resource.IsCdnResource && !resource.IsRemoteStorageResource ? resource.RelativeUrl : resource.AbsoluteUrl : null,
                     Culture = settings.Culture,
                     Condition = settings.Condition,
                     Attributes = settings.Attributes

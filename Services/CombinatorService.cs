@@ -207,14 +207,33 @@ namespace Piedone.Combinator.Services
 
                         // Overriding the url for the resource in this resource list with the url of the set.
                         combinedResource.IsOriginal = true;
+
                         // The following should fetch one result theoretically but can more if the above Exists()-Save() happens
                         // in multiple requests at the same time.
                         var set = _cacheFileService.GetCombinedResources(bundleFingerprint, useResourceSharing).First();
-                        combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
+
                         combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;
-                        if (IsOwnedResource(combinedResource))
+
+                        if (IsOwnedResource(set))
                         {
+                            if (settings.ResourceBaseUri != null && !set.IsRemoteStorageResource)
+                            {
+                                combinedResource.RequiredContext.Resource.SetUrl(UriHelper.Combine(resourceBaseUri.ToStringWithoutScheme(), set.AbsoluteUrl.PathAndQuery));
+                            }
+                            else if (set.IsRemoteStorageResource)
+                            {
+                                combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
+                            }
+                            else
+                            {
+                                combinedResource.RequiredContext.Resource.SetUrl(set.RelativeUrl.ToString());
+                            }
+
                             AddTimestampToUrl(combinedResource);
+                        }
+                        else
+                        {
+                            combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
                         }
                     }
 
@@ -246,6 +265,7 @@ namespace Piedone.Combinator.Services
                             && (!previousResource.SettingsEqual(resource) || (previousResource.IsCdnResource != resource.IsCdnResource && !settings.CombineCDNResources)))
                         {
                             saveCombination(previousResource, resourcesInCombination);
+                            previousResource = null; // So it doesn't get combined again in if (saveOriginalResource) below.
                         }
 
                         // If this resource is in a different set than the previous, they can't be combined

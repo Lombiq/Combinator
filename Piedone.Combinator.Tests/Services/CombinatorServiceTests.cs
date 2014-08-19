@@ -39,7 +39,7 @@ namespace Piedone.Combinator.Tests.Services
 
             _container = builder.Build();
 
-            
+
             _resourceRepository = new ResourceRepository(_container);
 
             builder = new ContainerBuilder();
@@ -156,6 +156,18 @@ namespace Piedone.Combinator.Tests.Services
         }
 
         [Test]
+        public void ResourceBaseUriIsApplied()
+        {
+            _resourceRepository.FillWithTestStyles();
+
+            var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings() { ResourceBaseUri = new Uri("http://static") });
+
+            Assert.That(combinedResources.Count, Is.EqualTo(4));
+            Assert.That(combinedResources[1].Resource.Url, Is.StringStarting("//static"));
+            Assert.That(combinedResources[3].Resource.Url, Is.StringStarting("//static"));
+        }
+
+        [Test]
         public void SpriteGenerationRuns()
         {
             _resourceRepository.Clear();
@@ -181,6 +193,12 @@ namespace Piedone.Combinator.Tests.Services
         {
             public void ProcessResource(CombinatorResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
             {
+                if (resource.IsCdnResource && !settings.CombineCDNResources)
+                {
+                    resource.IsOriginal = true;
+                    return;
+                }
+
                 resource.Content = "processed: " + resource.Content;
                 combinedContent.Append(resource.Content);
             }
@@ -211,23 +229,37 @@ namespace Piedone.Combinator.Tests.Services
 
                 var sliceName = fingerprint + "-" + count;
 
+                var savedResource = _resourceRepository.NewResource(resource.Type);
+
+                var requiredContext = resource.RequiredContext;
+
+                savedResource.IsOriginal = resource.IsOriginal;
+                savedResource.LastUpdatedUtc = DateTime.UtcNow;
+                savedResource.FillRequiredContext(
+                    requiredContext.Resource.Name,
+                    requiredContext.Resource.Url,
+                    requiredContext.Settings.Culture,
+                    requiredContext.Settings.Condition,
+                    requiredContext.Settings.Attributes);
+                savedResource.Content = resource.Content;
+
+
                 if (!resource.IsOriginal)
                 {
                     var url = "/Media/Default/_PiedoneModules/Combinator/";
                     if (resource.Type == ResourceType.Style) url += "Styles/" + sliceName + ".css";
                     else if (resource.Type == ResourceType.JavaScript) url += "Scripts/" + sliceName + ".js";
 
-                    resource.RequiredContext.Resource.SetUrl(url);
+                    savedResource.RequiredContext.Resource.SetUrl(url);
                 }
 
-                resource.LastUpdatedUtc = DateTime.UtcNow;
 
-                _resourceRepository.SaveResource(sliceName, resource);
+                _resourceRepository.SaveResource(sliceName, savedResource);
             }
 
             public IList<CombinatorResource> GetCombinedResources(string fingerprint, bool useResourceShare)
             {
-                return (from r in _resourceRepository.Resources 
+                return (from r in _resourceRepository.Resources
                         where r.Key.Contains(fingerprint + "-")
                         select r.Value).ToList();
             }

@@ -92,18 +92,6 @@ namespace Piedone.Combinator.Tests.Services
             Assert.That(_cacheFileService.Exists(_cssResourcesFingerprint, false), Is.True);
         }
 
-        //[Test]
-        //public void DeletionShouldDelete()
-        //{
-        //    SaveTestResources();
-
-        //    _cacheFileService.Delete(_cssResourcesHashCode);
-        //    ClearSession();
-
-        //    Assert.That(_cacheFileService.GetCombinedResources(_cssResourcesHashCode).Count, Is.EqualTo(0));
-        //    Assert.That(_cacheFileService.GetCount(), Is.EqualTo(1));
-        //}
-
         [Test]
         public void EmtpyShouldDeleteAll()
         {

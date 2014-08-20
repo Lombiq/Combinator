@@ -128,8 +128,8 @@ namespace Piedone.Combinator.Tests.Services
             var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings() { CombineCDNResources = false });
 
             Assert.That(combinedResources.Count, Is.EqualTo(4));
-            Assert.That(combinedResources[0].Resource.Name, Is.EqualTo("http://google.com/style.css")); // Url is a combined one, because of StubResourceProcessingService
-            Assert.That(combinedResources[2].Resource.Name, Is.EqualTo("http://google.com/style2.css"));
+            Assert.That(combinedResources[0].Resource.Url, Is.EqualTo("//google.com/style.css"));
+            Assert.That(combinedResources[2].Resource.Url, Is.EqualTo("//google.com/style2.css"));
         }
 
         [Test]
@@ -160,7 +160,7 @@ namespace Piedone.Combinator.Tests.Services
         {
             _resourceRepository.FillWithTestStyles();
 
-            var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings() { ResourceBaseUri = new Uri("http://static") });
+            var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings { ResourceBaseUri = new Uri("http://static") });
 
             Assert.That(combinedResources.Count, Is.EqualTo(4));
             Assert.That(combinedResources[1].Resource.Url, Is.StringStarting("//static"));

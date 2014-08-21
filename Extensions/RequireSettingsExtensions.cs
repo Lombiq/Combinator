@@ -16,6 +16,7 @@ namespace Piedone.Combinator.Extensions
             return settings.StringifyAttributes() == other.StringifyAttributes();
         }
 
+
         private static string StringifyAttributes(this RequireSettings settings)
         {
             if (!settings.HasAttributes) return "";

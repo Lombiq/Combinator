@@ -136,7 +136,8 @@ namespace Piedone.Combinator.Services
                     resource.Resource.GetFullPath(),
                     resource.Settings.Culture,
                     resource.Settings.Condition,
-                    resource.Settings.Attributes);
+                    resource.Settings.Attributes,
+                    resource.Resource.TagBuilder.Attributes);
 
                 combinatorResources.Add(combinatorResource);
             }

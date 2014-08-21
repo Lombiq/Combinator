@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using Orchard.UI.Resources;
 using Piedone.HelpfulLibraries.Utilities;
 
@@ -24,6 +25,25 @@ namespace Piedone.Combinator.Extensions
         public static void SetUrlProtocolRelative(this ResourceDefinition resource, Uri url)
         {
             resource.SetUrl(url.ToStringWithoutScheme());
+        }
+
+        public static bool TagAttributesEqual(this ResourceDefinition resource, ResourceDefinition other)
+        {
+            return resource.StringifyAttributes() == other.StringifyAttributes();
+        }
+
+
+        private static string StringifyAttributes(this ResourceDefinition resource)
+        {
+            if (resource.TagBuilder.Attributes.Count == 0) return "";
+
+            var sb = new StringBuilder();
+            foreach (var item in resource.TagBuilder.Attributes)
+            {
+                sb.Append(item.Key + "-" + item.Value);
+            }
+
+            return sb.ToString();
         }
     }
 }

@@ -136,7 +136,7 @@ namespace Piedone.Combinator.Models
         }
 
 
-        public void FillRequiredContext(string name, string url, string culture = "", string condition = "", Dictionary<string, string> attributes = null)
+        public void FillRequiredContext(string name, string url, string culture = "", string condition = "", Dictionary<string, string> attributes = null, IDictionary<string, string> tagAttributes = null)
         {
             var requiredContext = new ResourceRequiredContext();
             var resourceManifest = new ResourceManifest();
@@ -150,6 +150,8 @@ namespace Piedone.Combinator.Models
                 Attributes = attributes != null ? new Dictionary<string, string>(attributes) : new Dictionary<string, string>()
             };
             RequiredContext = requiredContext;
+
+            if (tagAttributes != null) requiredContext.Resource.TagBuilder.MergeAttributes(tagAttributes);
         }
 
         public bool SettingsEqual(CombinatorResource other)
@@ -165,7 +167,8 @@ namespace Piedone.Combinator.Models
             return
                 settings.Culture == otherSettings.Culture
                 && settings.Condition == otherSettings.Condition
-                && settings.AttributesEqual(otherSettings);
+                && settings.AttributesEqual(otherSettings)
+                && RequiredContext.Resource.TagAttributesEqual(other.RequiredContext.Resource);
         }
     }
 }

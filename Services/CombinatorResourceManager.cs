@@ -38,7 +38,8 @@ namespace Piedone.Combinator.Services
                     Url = resource.IsOriginal ? !resource.IsCdnResource && !resource.IsRemoteStorageResource ? resource.RelativeUrl : resource.AbsoluteUrl : null,
                     Culture = settings.Culture,
                     Condition = settings.Condition,
-                    Attributes = settings.Attributes
+                    Attributes = settings.Attributes,
+                    TagAttributes = resource.RequiredContext.Resource.TagBuilder.Attributes
                 });
         }
 
@@ -59,6 +60,8 @@ namespace Piedone.Combinator.Services
             resourceSettings.Culture = settings.Culture;
             resourceSettings.Condition = settings.Condition;
             resourceSettings.Attributes = settings.Attributes;
+
+            resource.RequiredContext.Resource.TagBuilder.MergeAttributes(settings.TagAttributes, true);
         }
 
 
@@ -68,6 +71,7 @@ namespace Piedone.Combinator.Services
             public string Culture { get; set; }
             public string Condition { get; set; }
             public Dictionary<string, string> Attributes { get; set; }
+            public IDictionary<string, string> TagAttributes { get; set; }
         }
     }
 }

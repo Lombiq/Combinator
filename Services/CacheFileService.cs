@@ -215,6 +215,7 @@ namespace Piedone.Combinator.Services
         public void WriteSpriteStream(string fileName, SpriteStreamWriter streamWriter)
         {
             var path = StylesPath + "Sprites/" + fileName;
+            if (_storageProvider.FileExists(path)) _storageProvider.DeleteFile(path);
             var spriteFile = _storageProvider.CreateFile(path);
             var publicUrl = _storageProvider.GetPublicUrl(path);
             using (var stream = spriteFile.OpenWrite())

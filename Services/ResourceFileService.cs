@@ -75,20 +75,8 @@ namespace Piedone.Combinator.Services
         {
             using (var wc = new WebClient())
             {
-                var content = new UTF8Encoding(false).GetString(wc.DownloadData(resource.AbsoluteUrl));
-
-                // Stripping "?"s from the beginning of css commments "/*"
-                if (resource.Type == ResourceType.Style)
-                {
-                    var byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
-                    if (content.StartsWith(byteOrderMarkUtf8))
-                    {
-                        content = content.Remove(0, byteOrderMarkUtf8.Length);
-                    } 
-                }
-
-
-                return content;
+                // This strips the UTF8 BOM automatically, see: http://stackoverflow.com/a/1317795/220230
+                return Encoding.UTF8.GetString(wc.DownloadData(resource.AbsoluteUrl));
             }
         }
     }

@@ -146,6 +146,44 @@ namespace Piedone.Combinator.Drivers
                 .OnGroup("Combinator");
         }
 
+        protected override void Exporting(CombinatorSettingsPart part, ExportContentContext context)
+        {
+            var element = context.Element(part.PartDefinition.Name);
+
+            element.SetAttributeValue("CombinationExcludeRegex", part.CombinationExcludeRegex);
+            element.SetAttributeValue("CombineCdnResources", part.CombineCdnResources);
+            element.SetAttributeValue("ResourceBaseUrl", part.ResourceBaseUrl);
+            element.SetAttributeValue("EnableForAdmin", part.EnableForAdmin);
+            element.SetAttributeValue("MinifyResources", part.MinifyResources);
+            element.SetAttributeValue("MinificationExcludeRegex", part.MinificationExcludeRegex);
+            element.SetAttributeValue("EmbedCssImages", part.EmbedCssImages);
+            element.SetAttributeValue("EmbeddedImagesMaxSizeKB", part.EmbeddedImagesMaxSizeKB);
+            element.SetAttributeValue("EmbedCssImagesStylesheetExcludeRegex", part.EmbedCssImagesStylesheetExcludeRegex);
+            element.SetAttributeValue("GenerateImageSprites", part.GenerateImageSprites);
+            element.SetAttributeValue("EnableResourceSharing", part.EnableResourceSharing);
+            element.SetAttributeValue("ResourceSharingExcludeRegex", part.ResourceSharingExcludeRegex);
+            element.SetAttributeValue("ResourceSetRegexes", part.ResourceSetRegexes);
+        }
+
+        protected override void Importing(CombinatorSettingsPart part, ImportContentContext context)
+        {
+            var partName = part.PartDefinition.Name;
+
+            context.ImportAttribute(partName, "CombinationExcludeRegex", value => part.CombinationExcludeRegex = value);
+            context.ImportAttribute(partName, "CombineCdnResources", value => part.CombineCdnResources = bool.Parse(value));
+            context.ImportAttribute(partName, "ResourceBaseUrl", value => part.ResourceBaseUrl = value);
+            context.ImportAttribute(partName, "EnableForAdmin", value => part.EnableForAdmin = bool.Parse(value));
+            context.ImportAttribute(partName, "MinifyResources", value => part.MinifyResources = bool.Parse(value));
+            context.ImportAttribute(partName, "MinificationExcludeRegex", value => part.MinificationExcludeRegex = value);
+            context.ImportAttribute(partName, "EmbedCssImages", value => part.EmbedCssImages = bool.Parse(value));
+            context.ImportAttribute(partName, "EmbeddedImagesMaxSizeKB", value => part.EmbeddedImagesMaxSizeKB = int.Parse(value));
+            context.ImportAttribute(partName, "EmbedCssImagesStylesheetExcludeRegex", value => part.EmbedCssImagesStylesheetExcludeRegex = value);
+            context.ImportAttribute(partName, "GenerateImageSprites", value => part.GenerateImageSprites = bool.Parse(value));
+            context.ImportAttribute(partName, "EnableResourceSharing", value => part.EnableResourceSharing = bool.Parse(value));
+            context.ImportAttribute(partName, "ResourceSharingExcludeRegex", value => part.ResourceSharingExcludeRegex = value);
+            context.ImportAttribute(partName, "ResourceSetRegexes", value => part.ResourceSetRegexes = value);
+        }
+
 
         private bool TestRegex(string pattern, LocalizedString fieldName, IUpdateModel updater)
         {

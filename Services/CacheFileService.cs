@@ -76,11 +76,11 @@ namespace Piedone.Combinator.Services
                 return;
             }
 
-            var sliceCount = _fileRepository.Count(file => file.Fingerprint == fingerprint);
+            var sliceCount = _fileRepository.Count(file => file.Fingerprint == ConvertFingerprintToStorageFormat(fingerprint));
 
             var fileRecord = new CombinedFileRecord()
             {
-                Fingerprint = fingerprint,
+                Fingerprint = ConvertFingerprintToStorageFormat(fingerprint),
                 Slice = ++sliceCount,
                 Type = resource.Type,
                 LastUpdatedUtc = _clock.UtcNow,
@@ -139,7 +139,7 @@ namespace Piedone.Combinator.Services
                 _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
                 _combinatorEventMonitor.MonitorBundleChanged(cacheKey, fingerprint);
 
-                var files = _fileRepository.Fetch(file => file.Fingerprint == fingerprint).ToList();
+                var files = _fileRepository.Fetch(file => file.Fingerprint == ConvertFingerprintToStorageFormat(fingerprint)).ToList();
                 var fileCount = files.Count;
 
                 var resources = new List<CombinatorResource>(fileCount);
@@ -181,7 +181,7 @@ namespace Piedone.Combinator.Services
                 _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
                 _combinatorEventMonitor.MonitorBundleChanged(cacheKey, fingerprint);
                 // Maybe also check if the file exists?
-                return _fileRepository.Count(file => file.Fingerprint == fingerprint) != 0;
+                return _fileRepository.Count(file => file.Fingerprint == ConvertFingerprintToStorageFormat(fingerprint)) != 0;
             });
         }
 
@@ -260,6 +260,11 @@ namespace Piedone.Combinator.Services
         private static string MakeCacheKey(string name)
         {
             return CachePrefix + name;
+        }
+
+        private static string ConvertFingerprintToStorageFormat(string fingerprint)
+        {
+            return fingerprint.GetHashCode().ToString();
         }
     }
 }

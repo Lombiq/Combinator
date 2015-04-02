@@ -50,14 +50,14 @@ namespace Piedone.Combinator.Services
             IList<ResourceRequiredContext> resources,
             ICombinatorSettings settings)
         {
-            var hashCode = resources.GetResourceListFingerprint(settings);
+            var fingerprint = resources.GetResourceListFingerprint(settings);
 
-            if (!_cacheFileService.Exists(hashCode, settings.EnableResourceSharing))
+            if (!_cacheFileService.Exists(fingerprint, settings.EnableResourceSharing))
             {
-                Combine(resources, hashCode, ResourceType.Style, settings);
+                Combine(resources, fingerprint, ResourceType.Style, settings);
             }
 
-            return ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode, settings.EnableResourceSharing), settings.ResourceBaseUri);
+            return ProcessCombinedResources(_cacheFileService.GetCombinedResources(fingerprint, settings.EnableResourceSharing), settings.ResourceBaseUri);
         }
 
         public IList<ResourceRequiredContext> CombineScripts(
@@ -86,19 +86,19 @@ namespace Piedone.Combinator.Services
                                    where locationFilter(r.Settings)
                                    select r).ToList();
 
-                    var hashCode = scripts.GetResourceListFingerprint(settings);
+                    var fingerprint = scripts.GetResourceListFingerprint(settings);
 
                     IList<ResourceRequiredContext> combinedResourcesAtLocation;
 
                     if (!scripts.Any()) combinedResourcesAtLocation = new List<ResourceRequiredContext>();
                     else
                     {
-                        if (!_cacheFileService.Exists(hashCode, settings.EnableResourceSharing))
+                        if (!_cacheFileService.Exists(fingerprint, settings.EnableResourceSharing))
                         {
-                            Combine(scripts, hashCode, ResourceType.JavaScript, settings);
+                            Combine(scripts, fingerprint, ResourceType.JavaScript, settings);
                         }
 
-                        combinedResourcesAtLocation = ProcessCombinedResources(_cacheFileService.GetCombinedResources(hashCode, settings.EnableResourceSharing), settings.ResourceBaseUri);
+                        combinedResourcesAtLocation = ProcessCombinedResources(_cacheFileService.GetCombinedResources(fingerprint, settings.EnableResourceSharing), settings.ResourceBaseUri);
                         combinedResourcesAtLocation.SetLocation(location);
                     }
 

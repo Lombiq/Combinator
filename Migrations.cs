@@ -24,7 +24,7 @@ namespace Piedone.Combinator.Migrations
             SchemaBuilder.CreateTable(typeof(CombinedFileRecord).Name,
                 table => table
                     .Column<int>("Id", column => column.PrimaryKey().Identity())
-                    .Column<string>("Fingerprint", column => column.NotNull().WithLength(1024))
+                    .Column<string>("Fingerprint", column => column.NotNull().WithLength(50))
                     .Column<int>("Slice")
                     .Column<string>("Type")
                     .Column<DateTime>("LastUpdatedUtc")
@@ -36,7 +36,7 @@ namespace Piedone.Combinator.Migrations
             );
 
 
-            return 13;
+            return 14;
         }
 
         public int UpdateFrom1()
@@ -149,17 +149,14 @@ namespace Piedone.Combinator.Migrations
 
         public int UpdateFrom9()
         {
-            // Changing cache file folder
-            _cacheFileService.Empty();
-
+            // Cache empty call removed as it causes exception with certain versions.
 
             return 10;
         }
 
         public int UpdateFrom10()
         {
-            // Cache files are now in a hidden folder in Media
-            _cacheFileService.Empty();
+            // Cache empty call removed as it causes exception with certain versions.
 
 
             return 11;
@@ -189,6 +186,26 @@ namespace Piedone.Combinator.Migrations
 
 
             return 13;
+        }
+
+        public int UpdateFrom13()
+        {
+            // Cannot alter a column that is part of a key or an index.
+            SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
+                table => table.DropIndex("FileFingerprint")
+                );
+
+            SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
+                table => table.AlterColumn("Fingerprint", column => column.WithType(DbType.String).WithLength(50))
+                );
+
+            SchemaBuilder.AlterTable(typeof(CombinedFileRecord).Name,
+                table => table
+                    .CreateIndex("FileFingerprint", new[] { "Fingerprint" })
+                );
+
+
+            return 14;
         }
 
 

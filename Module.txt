@@ -3,7 +3,7 @@ AntiForgery: enabled
 Author: Piedone
 Website: http://combinator.codeplex.com
 Version: 2.0
-OrchardVersion: 1.8.2
+OrchardVersion: 1.9.0
 Description: Combines and minifies external stylesheets and javascript files. Minifications uses the YUI Compressor (http://yuicompressor.codeplex.com/), the original code for sprite generation is from Sprite Generator (http://spritegenerator.codeplex.com/) and stylesheets are parsed with ExCSS (https://github.com/TylerBrinks/ExCSS).
 Features:
     Piedone.Combinator:

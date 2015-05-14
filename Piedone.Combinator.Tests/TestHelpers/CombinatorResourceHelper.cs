@@ -15,7 +15,7 @@ namespace Piedone.Combinator.Tests.TestHelpers
         {
             // CombinatorResource and CombinatorResourceManager are not mocked currently. Although this is generally bad, for proper mocking a big part of
             // the class would have to be replicated here...
-            builder.RegisterInstance(new StubHttpContextAccessor() { StubContext = new StubHttpContext() }).As<IHttpContextAccessor>();
+            builder.RegisterInstance(new StubHttpContextAccessor(new StubHttpContext())).As<IHttpContextAccessor>();
             builder.RegisterType<StubJsonConverter>().As<IJsonConverter>();
             builder.RegisterType<CombinatorResourceManager>().As<ICombinatorResourceManager>();
         }

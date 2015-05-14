@@ -36,5 +36,20 @@ namespace Piedone.Combinator.Tests.Stubs
         {
             _entries.Clear();
         }
+
+        public object GetObject<T>(string key)
+        {
+            return _entries.ContainsKey(key) ? _entries[key] : null;
+        }
+
+        public void Put<T>(string key, T value)
+        {
+            _entries[key] = value;
+        }
+
+        public void Put<T>(string key, T value, TimeSpan validFor)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

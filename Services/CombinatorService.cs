@@ -173,7 +173,7 @@ namespace Piedone.Combinator.Services
                     {
                         combinedResource.Content = combinedContent.ToString();
 
-                        if (combinedResource.Type == ResourceType.Style && !String.IsNullOrEmpty(combinedResource.Content) && settings.GenerateImageSprites)
+                        if (combinedResource.Type == ResourceType.Style && !string.IsNullOrEmpty(combinedResource.Content) && settings.GenerateImageSprites)
                         {
                             _resourceProcessingService.ReplaceCssImagesWithSprite(combinedResource);
                         }
@@ -182,7 +182,7 @@ namespace Piedone.Combinator.Services
                             "/*" + Environment.NewLine
                             + "Resource bundle created by Combinator (http://combinator.codeplex.com/)" + Environment.NewLine + Environment.NewLine
                             + "Resources in this bundle:" + Environment.NewLine
-                            + String.Join(Environment.NewLine, containedResources.Select(resource =>
+                            + string.Join(Environment.NewLine, containedResources.Select(resource =>
                                 {
                                     var url = resource.AbsoluteUrl.ToString();
                                     if (useResourceSharing && !resource.IsCdnResource && !resource.IsRemoteStorageResource)

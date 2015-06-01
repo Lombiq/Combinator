@@ -15,7 +15,7 @@ namespace Piedone.Combinator.Extensions
         /// </summary>
         public static string GetFullPath(this ResourceDefinition resource)
         {
-            if (String.IsNullOrEmpty(resource.Url)) return resource.UrlCdn;
+            if (string.IsNullOrEmpty(resource.Url)) return resource.UrlCdn;
 
             if (resource.Url.Contains("~")) return resource.Url;
 

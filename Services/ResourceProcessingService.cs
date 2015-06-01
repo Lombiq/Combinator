@@ -80,7 +80,7 @@ namespace Piedone.Combinator.Services
             if (settings.MinifyResources && (settings.MinificationExcludeFilter == null || !settings.MinificationExcludeFilter.IsMatch(absoluteUrlString)))
             {
                 MinifyResourceContent(resource);
-                if (String.IsNullOrEmpty(resource.Content)) return;
+                if (string.IsNullOrEmpty(resource.Content)) return;
             }
 
             _eventHandler.OnContentProcessed(resource);

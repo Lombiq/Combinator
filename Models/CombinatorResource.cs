@@ -17,7 +17,7 @@ namespace Piedone.Combinator.Models
             get
             {
                 var fullPath = RequiredContext.Resource.GetFullPath();
-                if (String.IsNullOrEmpty(fullPath)) return "";
+                if (string.IsNullOrEmpty(fullPath)) return "";
 
                 if (fullPath.StartsWith("//"))
                 {
@@ -58,7 +58,7 @@ namespace Piedone.Combinator.Models
         {
             get
             {
-                if (String.IsNullOrEmpty(NormalizedFullPath)) return "~/";
+                if (string.IsNullOrEmpty(NormalizedFullPath)) return "~/";
                 return VirtualPathUtility.ToAppRelative(NormalizedFullPath, ApplicationPath);
             }
         }
@@ -110,7 +110,7 @@ namespace Piedone.Combinator.Models
 
         public bool IsConditional
         {
-            get { return !String.IsNullOrEmpty(RequiredContext.Settings.Condition); }
+            get { return !string.IsNullOrEmpty(RequiredContext.Settings.Condition); }
         }
 
         private readonly ResourceType _type;
@@ -141,7 +141,7 @@ namespace Piedone.Combinator.Models
             var requiredContext = new ResourceRequiredContext();
             var resourceManifest = new ResourceManifest();
             requiredContext.Resource = resourceManifest.DefineResource(Type.ToStringType(), name);
-            if (!String.IsNullOrEmpty(url)) requiredContext.Resource.SetUrl(url);
+            if (!string.IsNullOrEmpty(url)) requiredContext.Resource.SetUrl(url);
             requiredContext.Settings = new RequireSettings
             {
                 Name = name,

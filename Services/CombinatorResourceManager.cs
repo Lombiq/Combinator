@@ -45,7 +45,7 @@ namespace Piedone.Combinator.Services
 
         public void DeserializeSettings(string serialization, CombinatorResource resource)
         {
-            if (String.IsNullOrEmpty(serialization)) return;
+            if (string.IsNullOrEmpty(serialization)) return;
 
             var settings = _jsonConverter.Deserialize<SerializableSettings>(serialization);
 

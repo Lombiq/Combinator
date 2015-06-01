@@ -89,7 +89,7 @@ namespace Piedone.Combinator.Services
 
             _fileRepository.Create(fileRecord);
 
-            if (!String.IsNullOrEmpty(resource.Content))
+            if (!string.IsNullOrEmpty(resource.Content))
             {
                 var path = MakePath(fileRecord);
 

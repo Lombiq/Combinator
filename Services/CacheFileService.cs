@@ -18,6 +18,7 @@ using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using Autofac;
+using System.Web.Mvc;
 
 namespace Piedone.Combinator.Services
 {
@@ -28,7 +29,7 @@ namespace Piedone.Combinator.Services
         private readonly IStorageProvider _storageProvider;
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly ICombinatorResourceManager _combinatorResourceManager;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly UrlHelper _urlHelper;
         private readonly IClock _clock;
         private readonly ICombinatorEventHandler _combinatorEventHandler;
 
@@ -50,7 +51,7 @@ namespace Piedone.Combinator.Services
             IStorageProvider storageProvider,
             IRepository<CombinedFileRecord> fileRepository,
             ICombinatorResourceManager combinatorResourceManager,
-            IHttpContextAccessor httpContextAccessor,
+            UrlHelper urlHelper,
             IClock clock,
             ICombinatorEventHandler combinatorEventHandler,
             ICacheService cacheService,
@@ -60,7 +61,7 @@ namespace Piedone.Combinator.Services
             _storageProvider = storageProvider;
             _fileRepository = fileRepository;
             _combinatorResourceManager = combinatorResourceManager;
-            _httpContextAccessor = httpContextAccessor;
+            _urlHelper = urlHelper;
             _clock = clock;
             _combinatorEventHandler = combinatorEventHandler;
 
@@ -69,9 +70,9 @@ namespace Piedone.Combinator.Services
         }
 
 
-        public void Save(string fingerprint, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare)
+        public void Save(string fingerprint, CombinatorResource resource, ICombinatorSettings settings)
         {
-            if (useResourceShare && CallOnDefaultShell(cacheFileService => cacheFileService.Save(fingerprint, resource, resourceBaseUri, false)))
+            if (settings.EnableResourceSharing && CallOnDefaultShell(cacheFileService => cacheFileService.Save(fingerprint, resource, new CombinatorSettings(settings) { EnableResourceSharing = false })))
             {
                 return;
             }
@@ -95,42 +96,55 @@ namespace Piedone.Combinator.Services
 
                 if (_storageProvider.FileExists(path)) _storageProvider.DeleteFile(path);
 
+                var relativeUrlsBaseUri = settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_urlHelper.RequestContext.HttpContext.Request.Url, _urlHelper.Content("~/")); 
+                if (resource.IsRemoteStorageResource)
+                {
+                    ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(resource, relativeUrlsBaseUri);
+                }
+
                 using (var stream = _storageProvider.CreateFile(path).OpenWrite())
                 {
                     var bytes = Encoding.UTF8.GetBytes(resource.Content);
                     stream.Write(bytes, 0, bytes.Length);
                 }
 
-                // This is needed to adjust relative paths if the resource is stored in a remote storage provider.
-                // Why the double-saving? Before saving the file there is no reliable way to tell whether the storage public url will be a
-                // remote one or not...
-                var testResource = _combinatorResourceManager.ResourceFactory(resource.Type);
-                testResource.FillRequiredContext("TestCombinedResource", _storageProvider.GetPublicUrl(path));
-                _combinatorResourceManager.DeserializeSettings(fileRecord.Settings, testResource);
-                if (testResource.IsRemoteStorageResource)
+                if (!resource.IsRemoteStorageResource)
                 {
-                    _storageProvider.DeleteFile(path);
-
-                    testResource.Content = resource.Content;
-                    ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(testResource, resourceBaseUri);
-
-                    using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                    // This is needed to adjust relative paths if the resource is stored in a remote storage provider.
+                    // Why the double-saving? Before saving the file there is no reliable way to tell whether the storage public url will be a
+                    // remote one or not...
+                    var testResource = _combinatorResourceManager.ResourceFactory(resource.Type);
+                    testResource.FillRequiredContext("TestCombinedResource", _storageProvider.GetPublicUrl(path));
+                    _combinatorResourceManager.DeserializeSettings(fileRecord.Settings, testResource);
+                    testResource.IsRemoteStorageResource = settings.RemoteStorageUrlPattern != null && settings.RemoteStorageUrlPattern.IsMatch(testResource.AbsoluteUrl.ToString());
+                    if (testResource.IsRemoteStorageResource)
                     {
-                        var bytes = Encoding.UTF8.GetBytes(testResource.Content);
-                        stream.Write(bytes, 0, bytes.Length);
-                    }
+                        _storageProvider.DeleteFile(path);
+
+                        testResource.Content = resource.Content;
+                        ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(testResource, relativeUrlsBaseUri);
+
+                        using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                        {
+                            var bytes = Encoding.UTF8.GetBytes(testResource.Content);
+                            stream.Write(bytes, 0, bytes.Length);
+                        }
+
+                        resource.IsRemoteStorageResource = true;
+                        fileRecord.Settings = _combinatorResourceManager.SerializeResourceSettings(resource);
+                    } 
                 }
             }
 
             _combinatorEventHandler.BundleChanged(fingerprint);
         }
 
-        public IList<CombinatorResource> GetCombinedResources(string fingerprint, bool useResourceShare)
+        public IList<CombinatorResource> GetCombinedResources(string fingerprint, ICombinatorSettings settings)
         {
             IList<CombinatorResource> sharedResources = new List<CombinatorResource>();
-            if (useResourceShare)
+            if (settings.EnableResourceSharing)
             {
-                CallOnDefaultShell(cacheFileService => sharedResources = cacheFileService.GetCombinedResources(fingerprint, false));
+                CallOnDefaultShell(cacheFileService => sharedResources = cacheFileService.GetCombinedResources(fingerprint, new CombinatorSettings(settings) { EnableResourceSharing = false }));
             }
 
             var cacheKey = MakeCacheKey("GetCombinedResources." + fingerprint);
@@ -165,10 +179,10 @@ namespace Piedone.Combinator.Services
             });
         }
 
-        public bool Exists(string fingerprint, bool useResourceShare)
+        public bool Exists(string fingerprint, ICombinatorSettings settings)
         {
             var exists = false;
-            if (useResourceShare && CallOnDefaultShell(cacheFileService => exists = cacheFileService.Exists(fingerprint, false)))
+            if (settings.EnableResourceSharing && CallOnDefaultShell(cacheFileService => exists = cacheFileService.Exists(fingerprint, new CombinatorSettings(settings) { EnableResourceSharing = false })))
             {
                 // Because resources were excluded from resource sharing in this set this set could be stored locally, not shared.
                 // Thus we fall back to local storage.

@@ -36,6 +36,7 @@ namespace Piedone.Combinator.Services
                 new SerializableSettings()
                 {
                     Url = resource.IsOriginal ? !resource.IsCdnResource && !resource.IsRemoteStorageResource ? resource.RelativeUrl : resource.AbsoluteUrl : null,
+                    IsRemoteStorageResource = resource.IsRemoteStorageResource,
                     Culture = settings.Culture,
                     Condition = settings.Condition,
                     Attributes = settings.Attributes,
@@ -55,6 +56,8 @@ namespace Piedone.Combinator.Services
                 resource.IsOriginal = true;
             }
 
+            resource.IsRemoteStorageResource = settings.IsRemoteStorageResource;
+
             if (resource.RequiredContext.Settings == null) resource.RequiredContext.Settings = new RequireSettings();
             var resourceSettings = resource.RequiredContext.Settings;
             resourceSettings.Culture = settings.Culture;
@@ -68,6 +71,7 @@ namespace Piedone.Combinator.Services
         public class SerializableSettings
         {
             public Uri Url { get; set; }
+            public bool IsRemoteStorageResource { get; set; }
             public string Culture { get; set; }
             public string Condition { get; set; }
             public Dictionary<string, string> Attributes { get; set; }

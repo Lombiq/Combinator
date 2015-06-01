@@ -41,7 +41,7 @@ namespace Piedone.Combinator.Services
 
         public void ProcessResource(CombinatorResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
         {
-            if (resource.IsCdnResource && !settings.CombineCDNResources)
+            if (resource.IsCdnResource && !settings.CombineCdnResources)
             {
                 resource.IsOriginal = true;
                 return;

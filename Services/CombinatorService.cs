@@ -52,12 +52,12 @@ namespace Piedone.Combinator.Services
         {
             var fingerprint = resources.GetResourceListFingerprint(settings);
 
-            if (!_cacheFileService.Exists(fingerprint, settings.EnableResourceSharing))
+            if (!_cacheFileService.Exists(fingerprint, settings))
             {
                 Combine(resources, fingerprint, ResourceType.Style, settings);
             }
 
-            return ProcessCombinedResources(_cacheFileService.GetCombinedResources(fingerprint, settings.EnableResourceSharing), settings.ResourceBaseUri);
+            return ProcessCombinedResources(_cacheFileService.GetCombinedResources(fingerprint, settings), settings.ResourceBaseUri);
         }
 
         public IList<ResourceRequiredContext> CombineScripts(
@@ -93,12 +93,12 @@ namespace Piedone.Combinator.Services
                     if (!scripts.Any()) combinedResourcesAtLocation = new List<ResourceRequiredContext>();
                     else
                     {
-                        if (!_cacheFileService.Exists(fingerprint, settings.EnableResourceSharing))
+                        if (!_cacheFileService.Exists(fingerprint, settings))
                         {
                             Combine(scripts, fingerprint, ResourceType.JavaScript, settings);
                         }
 
-                        combinedResourcesAtLocation = ProcessCombinedResources(_cacheFileService.GetCombinedResources(fingerprint, settings.EnableResourceSharing), settings.ResourceBaseUri);
+                        combinedResourcesAtLocation = ProcessCombinedResources(_cacheFileService.GetCombinedResources(fingerprint, settings), settings.ResourceBaseUri);
                         combinedResourcesAtLocation.SetLocation(location);
                     }
 
@@ -139,6 +139,8 @@ namespace Piedone.Combinator.Services
                     resource.Settings.Attributes,
                     resource.Resource.TagBuilder.Attributes);
 
+                combinatorResource.IsRemoteStorageResource = settings.RemoteStorageUrlPattern != null && settings.RemoteStorageUrlPattern.IsMatch(combinatorResource.AbsoluteUrl.ToString());
+
                 combinatorResources.Add(combinatorResource);
             }
 
@@ -157,14 +159,15 @@ namespace Piedone.Combinator.Services
 
                     var bundleFingerprint = containedResources.GetCombinatorResourceListFingerprint(settings);
 
-                    var useResourceSharing = settings.EnableResourceSharing;
-                    if (useResourceSharing && settings.ResourceSharingExcludeFilter != null)
+                    var localSettings = new CombinatorSettings(settings);
+                    //var useResourceSharing = settings.EnableResourceSharing;
+                    if (localSettings.EnableResourceSharing && settings.ResourceSharingExcludeFilter != null)
                     {
                         foreach (var resource in containedResources)
                         {
-                            if (useResourceSharing)
+                            if (localSettings.EnableResourceSharing)
                             {
-                                useResourceSharing = !settings.ResourceSharingExcludeFilter.IsMatch(resource.AbsoluteUrl.ToString());
+                                localSettings.EnableResourceSharing = !settings.ResourceSharingExcludeFilter.IsMatch(resource.AbsoluteUrl.ToString());
                             }
                         }
                     }
@@ -185,7 +188,7 @@ namespace Piedone.Combinator.Services
                             + string.Join(Environment.NewLine, containedResources.Select(resource =>
                                 {
                                     var url = resource.AbsoluteUrl.ToString();
-                                    if (useResourceSharing && !resource.IsCdnResource && !resource.IsRemoteStorageResource)
+                                    if (localSettings.EnableResourceSharing && !resource.IsCdnResource && !resource.IsRemoteStorageResource)
                                     {
                                         var uriBuilder = new UriBuilder(url);
                                         uriBuilder.Host = "DefaultTenant";
@@ -201,9 +204,9 @@ namespace Piedone.Combinator.Services
                     // We save a bundle now. First the bundle should be saved separately under its unique name, then for this resource list.
                     if (bundleFingerprint != fingerprint && containedResources.Count > 1)
                     {
-                        if (!_cacheFileService.Exists(bundleFingerprint, useResourceSharing))
+                        if (!_cacheFileService.Exists(bundleFingerprint, localSettings))
                         {
-                            _cacheFileService.Save(bundleFingerprint, combinedResource, resourceBaseUri, useResourceSharing);
+                            _cacheFileService.Save(bundleFingerprint, combinedResource, localSettings);
                         }
 
                         // Overriding the url for the resource in this resource list with the url of the set.
@@ -211,7 +214,7 @@ namespace Piedone.Combinator.Services
 
                         // The following should fetch one result theoretically but can more if the above Exists()-Save() happens
                         // in multiple requests at the same time.
-                        var set = _cacheFileService.GetCombinedResources(bundleFingerprint, useResourceSharing).First();
+                        var set = _cacheFileService.GetCombinedResources(bundleFingerprint, localSettings).First();
 
                         combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;
 
@@ -223,6 +226,7 @@ namespace Piedone.Combinator.Services
                             }
                             else if (set.IsRemoteStorageResource)
                             {
+                                combinedResource.IsRemoteStorageResource = true;
                                 combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
                             }
                             else
@@ -238,7 +242,7 @@ namespace Piedone.Combinator.Services
                         }
                     }
 
-                    _cacheFileService.Save(fingerprint, combinedResource, resourceBaseUri, useResourceSharing);
+                    _cacheFileService.Save(fingerprint, combinedResource, localSettings);
 
                     combinedContent.Clear();
                     containedResources.Clear();
@@ -263,7 +267,7 @@ namespace Piedone.Combinator.Services
                     {
                         // If this resource differs from the previous one in terms of settings or CDN they can't be combined
                         if (previousResource != null
-                            && (!previousResource.SettingsEqual(resource) || (previousResource.IsCdnResource != resource.IsCdnResource && !settings.CombineCDNResources)))
+                            && (!previousResource.SettingsEqual(resource) || (previousResource.IsCdnResource != resource.IsCdnResource && !settings.CombineCdnResources)))
                         {
                             saveCombination(previousResource, resourcesInCombination);
                             previousResource = null; // So it doesn't get combined again in if (saveOriginalResource) below.
@@ -346,9 +350,16 @@ namespace Piedone.Combinator.Services
                 if (IsOwnedResource(resource))
                 {
                     AddTimestampToUrl(resource);
-                    if (resourceBaseUri != null && !resource.IsRemoteStorageResource)
+                    if (resourceBaseUri != null)
                     {
-                        resource.RequiredContext.Resource.SetUrl(UriHelper.Combine(resourceBaseUri.ToStringWithoutScheme(), resource.RequiredContext.Resource.Url));
+                        if (!resource.IsRemoteStorageResource)
+                        {
+                            resource.RequiredContext.Resource.SetUrl(UriHelper.Combine(resourceBaseUri.ToStringWithoutScheme(), resource.RequiredContext.Resource.Url)); 
+                        }
+                        else
+                        {
+                            resource.RequiredContext.Resource.SetUrl(UriHelper.Combine(resourceBaseUri.ToStringWithoutScheme(), resource.AbsoluteUrl.PathAndQuery));
+                        }
                     }
                 }
 
@@ -362,7 +373,7 @@ namespace Piedone.Combinator.Services
         {
             var uriBuilder = new UriBuilder(resource.AbsoluteUrl);
             uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
-            var urlString = resource.IsCdnResource ? uriBuilder.Uri.ToStringWithoutScheme() : uriBuilder.Uri.PathAndQuery.ToString();
+            var urlString = resource.IsCdnResource || resource.IsRemoteStorageResource ? uriBuilder.Uri.ToStringWithoutScheme() : uriBuilder.Uri.PathAndQuery.ToString();
             resource.RequiredContext.Resource.SetUrl(urlString);
         }
 

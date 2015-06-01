@@ -76,7 +76,7 @@ namespace Piedone.Combinator
 
                 var settings = new CombinatorSettings
                 {
-                    CombineCDNResources = settingsPart.CombineCdnResources,
+                    CombineCdnResources = settingsPart.CombineCdnResources,
                     ResourceBaseUri = resourceBaseUri,
                     EmbedCssImages = settingsPart.EmbedCssImages,
                     EmbeddedImagesMaxSizeKB = settingsPart.EmbeddedImagesMaxSizeKB,
@@ -86,6 +86,7 @@ namespace Piedone.Combinator
                 };
 
                 if (!string.IsNullOrEmpty(settingsPart.CombinationExcludeRegex)) settings.CombinationExcludeFilter = new Regex(settingsPart.CombinationExcludeRegex);
+                if (!string.IsNullOrEmpty(settingsPart.RemoteStorageUrlRegex)) settings.RemoteStorageUrlPattern = new Regex(settingsPart.RemoteStorageUrlRegex);
                 if (!string.IsNullOrEmpty(settingsPart.EmbedCssImagesStylesheetExcludeRegex)) settings.EmbedCssImagesStylesheetExcludeFilter = new Regex(settingsPart.EmbedCssImagesStylesheetExcludeRegex);
                 if (!string.IsNullOrEmpty(settingsPart.MinificationExcludeRegex)) settings.MinificationExcludeFilter = new Regex(settingsPart.MinificationExcludeRegex);
                 if (!string.IsNullOrEmpty(settingsPart.ResourceSharingExcludeRegex)) settings.ResourceSharingExcludeFilter = new Regex(settingsPart.ResourceSharingExcludeRegex);

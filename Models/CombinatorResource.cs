@@ -92,21 +92,17 @@ namespace Piedone.Combinator.Models
             {
                 var fullPath = NormalizedFullPath;
 
-                return Uri.IsWellFormedUriString(fullPath, UriKind.Absolute)
+                return 
+                    !IsRemoteStorageResource &&
+                    Uri.IsWellFormedUriString(fullPath, UriKind.Absolute)
                     && new Uri(fullPath).Authority != _httpContext.Request.Url.Authority;
             }
         }
 
         /// <summary>
-        /// True if the resource comes from a non-local storage like Azure Blob Storage
+        /// <c>true</c> if the resource comes from a non-local storage like Azure Blob Storage.
         /// </summary>
-        public bool IsRemoteStorageResource
-        {
-            get
-            {
-                return !IsOriginal && IsCdnResource;
-            }
-        }
+        public bool IsRemoteStorageResource { get; set; }
 
         public bool IsConditional
         {
@@ -121,7 +117,7 @@ namespace Piedone.Combinator.Models
         public string Content { get; set; }
 
         /// <summary>
-        /// Indicates that the resource was not touched and was kept in its original state
+        /// Indicates that the resource was not touched and was kept in its original state.
         /// </summary>
         public bool IsOriginal { get; set; }
 

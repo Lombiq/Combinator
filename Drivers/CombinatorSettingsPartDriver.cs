@@ -59,6 +59,7 @@ namespace Piedone.Combinator.Drivers
                         dynamic formerSettings = new ExpandoObject();
                         formerSettings.CombinationExcludeRegex = part.CombinationExcludeRegex;
                         formerSettings.CombineCdnResources = part.CombineCdnResources;
+                        formerSettings.RemoteStorageUrlRegex = part.RemoteStorageUrlRegex;
                         formerSettings.ResourceBaseUrl = part.ResourceBaseUrl;
                         formerSettings.MinifyResources = part.MinifyResources;
                         formerSettings.MinificationExcludeRegex = part.MinificationExcludeRegex;
@@ -75,6 +76,7 @@ namespace Piedone.Combinator.Drivers
 
                         if (part.CombinationExcludeRegex != formerSettings.CombinationExcludeRegex
                             || part.CombineCdnResources != formerSettings.CombineCdnResources
+                            || part.RemoteStorageUrlRegex != formerSettings.RemoteStorageUrlRegex
                             || part.ResourceBaseUrl != formerSettings.ResourceBaseUrl
                             || part.MinifyResources != formerSettings.MinifyResources
                             || (part.MinifyResources && part.MinificationExcludeRegex != formerSettings.MinificationExcludeRegex)
@@ -104,6 +106,10 @@ namespace Piedone.Combinator.Drivers
                             if (!string.IsNullOrEmpty(part.CombinationExcludeRegex))
                             {
                                 if (!TestRegex(part.CombinationExcludeRegex, T("combination exclude regex"), updater)) valuesAreValid = false;
+                            }
+                            if (!string.IsNullOrEmpty(part.RemoteStorageUrlRegex))
+                            {
+                                if (!TestRegex(part.RemoteStorageUrlRegex, T("remote storage pattern regex"), updater)) valuesAreValid = false;
                             }
                             if (!string.IsNullOrEmpty(part.MinificationExcludeRegex))
                             {

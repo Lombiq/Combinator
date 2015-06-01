@@ -82,14 +82,14 @@ namespace Piedone.Combinator.Tests.Services
             var storageProvider = _container.Resolve<IStorageProvider>();
             Assert.That(storageProvider.GetFile(storageProvider.Combine("_PiedoneModules", storageProvider.Combine("Combinator", storageProvider.Combine("Styles", _cssResourcesFingerprint + "-1.css")))), Is.Not.Null);
 
-            var resources = _cacheFileService.GetCombinedResources(_jsResourceFingerprint, false);
+            var resources = _cacheFileService.GetCombinedResources(_jsResourceFingerprint, new CombinatorSettings());
 
             Assert.That(resources, Is.Not.Null);
             Assert.That(resources.Count, Is.EqualTo(2));
 
             Assert.That(_cacheFileService.GetCount(), Is.EqualTo(3));
 
-            Assert.That(_cacheFileService.Exists(_cssResourcesFingerprint, false), Is.True);
+            Assert.That(_cacheFileService.Exists(_cssResourcesFingerprint, new CombinatorSettings()), Is.True);
         }
 
         [Test]
@@ -98,8 +98,8 @@ namespace Piedone.Combinator.Tests.Services
             _cacheFileService.Empty();
             ClearSession();
 
-            Assert.That(_cacheFileService.GetCombinedResources(_cssResourcesFingerprint, false).Count, Is.EqualTo(0));
-            Assert.That(_cacheFileService.GetCombinedResources(_jsResourceFingerprint, false).Count, Is.EqualTo(0));
+            Assert.That(_cacheFileService.GetCombinedResources(_cssResourcesFingerprint, new CombinatorSettings()).Count, Is.EqualTo(0));
+            Assert.That(_cacheFileService.GetCombinedResources(_jsResourceFingerprint, new CombinatorSettings()).Count, Is.EqualTo(0));
             Assert.That(_cacheFileService.GetCount(), Is.EqualTo(0));
         }
 
@@ -108,10 +108,10 @@ namespace Piedone.Combinator.Tests.Services
         {
             var resource1 = _resourceRepository.NewResource(ResourceType.Style);
             resource1.Content = "test";
-            _cacheFileService.Save(_cssResourcesFingerprint, resource1, null, false);
+            _cacheFileService.Save(_cssResourcesFingerprint, resource1, new CombinatorSettings());
 
-            _cacheFileService.Save(_jsResourceFingerprint, _resourceRepository.NewResource(ResourceType.JavaScript), null, false);
-            _cacheFileService.Save(_jsResourceFingerprint, _resourceRepository.NewResource(ResourceType.JavaScript), null, false);
+            _cacheFileService.Save(_jsResourceFingerprint, _resourceRepository.NewResource(ResourceType.JavaScript), new CombinatorSettings());
+            _cacheFileService.Save(_jsResourceFingerprint, _resourceRepository.NewResource(ResourceType.JavaScript), new CombinatorSettings());
 
             ClearSession();
         }

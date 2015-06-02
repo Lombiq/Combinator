@@ -100,7 +100,8 @@ namespace Piedone.Combinator.Models
         }
 
         /// <summary>
-        /// <c>true</c> if the resource comes from a non-local storage like Azure Blob Storage.
+        /// <c>true</c> if the resource comes from a non-local storage like Azure Blob Storage. This shows a valid value only after the resource
+        /// was saved (as before that there is no way to tell if it will be stored in a remote storage or not).
         /// </summary>
         public bool IsRemoteStorageResource { get; set; }
 

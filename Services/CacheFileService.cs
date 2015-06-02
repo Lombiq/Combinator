@@ -31,6 +31,7 @@ namespace Piedone.Combinator.Services
         private readonly ICombinatorResourceManager _combinatorResourceManager;
         private readonly UrlHelper _urlHelper;
         private readonly IClock _clock;
+        private readonly ISessionLocator _sessionLocator;
         private readonly ICombinatorEventHandler _combinatorEventHandler;
 
         #region In-memory caching fields
@@ -53,6 +54,7 @@ namespace Piedone.Combinator.Services
             ICombinatorResourceManager combinatorResourceManager,
             UrlHelper urlHelper,
             IClock clock,
+            ISessionLocator sessionLocator,
             ICombinatorEventHandler combinatorEventHandler,
             ICacheService cacheService,
             ICombinatorEventMonitor combinatorEventMonitor)
@@ -63,6 +65,7 @@ namespace Piedone.Combinator.Services
             _combinatorResourceManager = combinatorResourceManager;
             _urlHelper = urlHelper;
             _clock = clock;
+            _sessionLocator = sessionLocator;
             _combinatorEventHandler = combinatorEventHandler;
 
             _cacheService = cacheService;
@@ -96,7 +99,7 @@ namespace Piedone.Combinator.Services
 
                 if (_storageProvider.FileExists(path)) _storageProvider.DeleteFile(path);
 
-                var relativeUrlsBaseUri = settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_urlHelper.RequestContext.HttpContext.Request.Url, _urlHelper.Content("~/")); 
+                var relativeUrlsBaseUri = settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_urlHelper.RequestContext.HttpContext.Request.Url, _urlHelper.Content("~/"));
                 if (resource.IsRemoteStorageResource)
                 {
                     ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(resource, relativeUrlsBaseUri);
@@ -132,7 +135,7 @@ namespace Piedone.Combinator.Services
 
                         resource.IsRemoteStorageResource = true;
                         fileRecord.Settings = _combinatorResourceManager.SerializeResourceSettings(resource);
-                    } 
+                    }
                 }
             }
 
@@ -206,12 +209,7 @@ namespace Piedone.Combinator.Services
 
         public void Empty()
         {
-            var files = _fileRepository.Table.ToList();
-
-            foreach (var file in files)
-            {
-                _fileRepository.Delete(file);
-            }
+            _sessionLocator.For(typeof(CombinedFileRecord)).CreateQuery("DELETE FROM " + typeof(CombinedFileRecord).FullName).ExecuteUpdate();
 
             if (_storageProvider.FolderExists(RootPath))
             {

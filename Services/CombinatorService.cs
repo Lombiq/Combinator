@@ -382,7 +382,6 @@ namespace Piedone.Combinator.Services
 
             uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
             var urlString = resource.IsCdnResource || resource.IsRemoteStorageResource ? uriBuilder.Uri.ToStringWithoutScheme() : uriBuilder.Uri.PathAndQuery.ToString();
-            var z = resource.AbsoluteUrl.ToString().Contains(".js");
             resource.RequiredContext.Resource.SetUrl(urlString);
         }
 

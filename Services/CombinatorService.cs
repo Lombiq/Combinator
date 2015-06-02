@@ -234,7 +234,7 @@ namespace Piedone.Combinator.Services
                                 combinedResource.RequiredContext.Resource.SetUrl(set.RelativeUrl.ToString());
                             }
 
-                            AddTimestampToUrl(combinedResource);
+                            AddTimestampToUrlIfNecessary(combinedResource);
                         }
                         else
                         {
@@ -345,12 +345,17 @@ namespace Piedone.Combinator.Services
 
             IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count());
 
+            var baseUrlWithoutScheme = resourceBaseUri != null ? resourceBaseUri.ToStringWithoutScheme() : string.Empty;
+
             foreach (var resource in combinedResources)
             {
                 if (IsOwnedResource(resource))
                 {
-                    AddTimestampToUrl(resource);
-                    if (resourceBaseUri != null)
+                    AddTimestampToUrlIfNecessary(resource);
+
+                    // We need the second clause since the cached resouce objects' URLs will be changed. This is not so nice; alternatively
+                    // all the resources should be copied and the copies modified.
+                    if (!string.IsNullOrEmpty(baseUrlWithoutScheme) && !resource.AbsoluteUrl.ToStringWithoutScheme().StartsWith(baseUrlWithoutScheme))
                     {
                         if (!resource.IsRemoteStorageResource)
                         {
@@ -369,11 +374,15 @@ namespace Piedone.Combinator.Services
             return resources;
         }
 
-        private static void AddTimestampToUrl(CombinatorResource resource)
+        private static void AddTimestampToUrlIfNecessary(CombinatorResource resource)
         {
             var uriBuilder = new UriBuilder(resource.AbsoluteUrl);
+
+            if (uriBuilder.Query.Contains("timestamp=")) return;
+
             uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
             var urlString = resource.IsCdnResource || resource.IsRemoteStorageResource ? uriBuilder.Uri.ToStringWithoutScheme() : uriBuilder.Uri.PathAndQuery.ToString();
+            var z = resource.AbsoluteUrl.ToString().Contains(".js");
             resource.RequiredContext.Resource.SetUrl(urlString);
         }
 

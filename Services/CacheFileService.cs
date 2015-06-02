@@ -271,14 +271,14 @@ namespace Piedone.Combinator.Services
         }
 
 
+        public static string ConvertFingerprintToStorageFormat(string fingerprint)
+        {
+            return fingerprint.GetHashCode().ToString();
+        }
+
         private static string MakeCacheKey(string name)
         {
             return CachePrefix + name;
-        }
-
-        private static string ConvertFingerprintToStorageFormat(string fingerprint)
-        {
-            return fingerprint.GetHashCode().ToString();
         }
     }
 }

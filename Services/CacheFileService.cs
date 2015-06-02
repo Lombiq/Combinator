@@ -108,12 +108,6 @@ namespace Piedone.Combinator.Services
 
                 if (_storageProvider.FileExists(path)) _storageProvider.DeleteFile(path);
 
-                var relativeUrlsBaseUri = settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_urlHelper.RequestContext.HttpContext.Request.Url, _urlHelper.Content("~/"));
-                if (resource.IsRemoteStorageResource)
-                {
-                    ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(resource, relativeUrlsBaseUri);
-                }
-
                 using (var stream = _storageProvider.CreateFile(path).OpenWrite())
                 {
                     var bytes = Encoding.UTF8.GetBytes(resource.Content);
@@ -134,6 +128,7 @@ namespace Piedone.Combinator.Services
                         _storageProvider.DeleteFile(path);
 
                         testResource.Content = resource.Content;
+                        var relativeUrlsBaseUri = settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_urlHelper.RequestContext.HttpContext.Request.Url, _urlHelper.Content("~/"));
                         ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(testResource, relativeUrlsBaseUri);
 
                         using (var stream = _storageProvider.CreateFile(path).OpenWrite())

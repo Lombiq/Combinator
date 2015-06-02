@@ -82,12 +82,21 @@ namespace Piedone.Combinator.Services
 
             var sliceCount = _fileRepository.Count(file => file.Fingerprint == ConvertFingerprintToStorageFormat(fingerprint));
 
+            if (resource.LastUpdatedUtc == DateTime.MinValue)
+            {
+                resource.LastUpdatedUtc = _clock.UtcNow;
+            }
+
+            // Ceil-ing timestamp to the second, because sub-second precision is not stored in the DB. This would cause a discrepancy between saved
+            // and fetched vs freshly created date times, causing unwanted cache busting for the same resource.
+            resource.LastUpdatedUtc = new DateTime(resource.LastUpdatedUtc.Year, resource.LastUpdatedUtc.Month, resource.LastUpdatedUtc.Day, resource.LastUpdatedUtc.Hour, resource.LastUpdatedUtc.Minute, resource.LastUpdatedUtc.Second);
+
             var fileRecord = new CombinedFileRecord()
             {
                 Fingerprint = ConvertFingerprintToStorageFormat(fingerprint),
                 Slice = ++sliceCount,
                 Type = resource.Type,
-                LastUpdatedUtc = _clock.UtcNow,
+                LastUpdatedUtc = resource.LastUpdatedUtc,
                 Settings = _combinatorResourceManager.SerializeResourceSettings(resource)
             };
 
@@ -172,7 +181,7 @@ namespace Piedone.Combinator.Services
                         resource.RequiredContext.Resource.SetUrl(_storageProvider.GetPublicUrl(MakePath(file)));
                     }
 
-                    resource.LastUpdatedUtc = file.LastUpdatedUtc ?? _clock.UtcNow;
+                    resource.LastUpdatedUtc = file.LastUpdatedUtc.HasValue ? file.LastUpdatedUtc.Value : _clock.UtcNow;
                     resources.Add(resource);
                 }
 

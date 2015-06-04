@@ -114,13 +114,13 @@ namespace Piedone.Combinator.Services
 
 
         /// <summary>
-        /// Combines (and minifies) the content of resources and saves the combinations
+        /// Combines (and minifies) the content of resources and saves the combinations.
         /// </summary>
-        /// <param name="resources">Resources to combine</param>
-        /// <param name="fingerprint">Just so it shouldn't be recalculated</param>
-        /// <param name="resourceType">Type of the resources</param>
-        /// <param name="settings">Combination settings</param>
-        /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened)</exception>
+        /// <param name="resources">Resources to combine.</param>
+        /// <param name="fingerprint">Just so it shouldn't be recalculated.</param>
+        /// <param name="resourceType">Type of the resources.</param>
+        /// <param name="settings">Combination setting.s</param>
+        /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened).</exception>
         private void Combine(IList<ResourceRequiredContext> resources, string fingerprint, ResourceType resourceType, ICombinatorSettings settings)
         {
             if (resources.Count == 0) return;
@@ -130,7 +130,7 @@ namespace Piedone.Combinator.Services
             {
                 var combinatorResource = _combinatorResourceManager.ResourceFactory(resourceType);
 
-                // Copying the context so the original one won't be touched
+                // Copying the context so the original one won't be touched.
                 combinatorResource.FillRequiredContext(
                     resource.Resource.Name,
                     resource.Resource.GetFullPath(),
@@ -152,7 +152,7 @@ namespace Piedone.Combinator.Services
                 {
                     if (combinedResource == null) return;
 
-                    // Don't save emtpy resources
+                    // Don't save emtpy resources.
                     if (combinedContent.Length == 0 && !combinedResource.IsOriginal) return;
 
                     if (!containedResources.Any()) containedResources = new List<CombinatorResource> { combinedResource };
@@ -160,7 +160,6 @@ namespace Piedone.Combinator.Services
                     var bundleFingerprint = containedResources.GetCombinatorResourceListFingerprint(settings);
 
                     var localSettings = new CombinatorSettings(settings);
-                    //var useResourceSharing = settings.EnableResourceSharing;
                     if (localSettings.EnableResourceSharing && settings.ResourceSharingExcludeFilter != null)
                     {
                         foreach (var resource in containedResources)
@@ -359,7 +358,7 @@ namespace Piedone.Combinator.Services
                     {
                         if (!resource.IsRemoteStorageResource)
                         {
-                            resource.RequiredContext.Resource.SetUrl(UriHelper.Combine(resourceBaseUri.ToStringWithoutScheme(), resource.RequiredContext.Resource.Url)); 
+                            resource.RequiredContext.Resource.SetUrl(UriHelper.Combine(resourceBaseUri.ToStringWithoutScheme(), resource.RequiredContext.Resource.Url));
                         }
                         else
                         {

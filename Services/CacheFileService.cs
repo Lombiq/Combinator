@@ -18,6 +18,7 @@ using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using Autofac;
+using System.Web.Mvc;
 
 namespace Piedone.Combinator.Services
 {
@@ -28,8 +29,9 @@ namespace Piedone.Combinator.Services
         private readonly IStorageProvider _storageProvider;
         private readonly IRepository<CombinedFileRecord> _fileRepository;
         private readonly ICombinatorResourceManager _combinatorResourceManager;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly UrlHelper _urlHelper;
         private readonly IClock _clock;
+        private readonly ISessionLocator _sessionLocator;
         private readonly ICombinatorEventHandler _combinatorEventHandler;
 
         #region In-memory caching fields
@@ -50,8 +52,9 @@ namespace Piedone.Combinator.Services
             IStorageProvider storageProvider,
             IRepository<CombinedFileRecord> fileRepository,
             ICombinatorResourceManager combinatorResourceManager,
-            IHttpContextAccessor httpContextAccessor,
+            UrlHelper urlHelper,
             IClock clock,
+            ISessionLocator sessionLocator,
             ICombinatorEventHandler combinatorEventHandler,
             ICacheService cacheService,
             ICombinatorEventMonitor combinatorEventMonitor)
@@ -60,8 +63,9 @@ namespace Piedone.Combinator.Services
             _storageProvider = storageProvider;
             _fileRepository = fileRepository;
             _combinatorResourceManager = combinatorResourceManager;
-            _httpContextAccessor = httpContextAccessor;
+            _urlHelper = urlHelper;
             _clock = clock;
+            _sessionLocator = sessionLocator;
             _combinatorEventHandler = combinatorEventHandler;
 
             _cacheService = cacheService;
@@ -69,27 +73,36 @@ namespace Piedone.Combinator.Services
         }
 
 
-        public void Save(string fingerprint, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare)
+        public void Save(string fingerprint, CombinatorResource resource, ICombinatorSettings settings)
         {
-            if (useResourceShare && CallOnDefaultShell(cacheFileService => cacheFileService.Save(fingerprint, resource, resourceBaseUri, false)))
+            if (settings.EnableResourceSharing && CallOnDefaultShell(cacheFileService => cacheFileService.Save(fingerprint, resource, new CombinatorSettings(settings) { EnableResourceSharing = false })))
             {
                 return;
             }
 
             var sliceCount = _fileRepository.Count(file => file.Fingerprint == ConvertFingerprintToStorageFormat(fingerprint));
 
+            if (resource.LastUpdatedUtc == DateTime.MinValue)
+            {
+                resource.LastUpdatedUtc = _clock.UtcNow;
+            }
+
+            // Ceil-ing timestamp to the second, because sub-second precision is not stored in the DB. This would cause a discrepancy between saved
+            // and fetched vs freshly created date times, causing unwanted cache busting for the same resource.
+            resource.LastUpdatedUtc = new DateTime(resource.LastUpdatedUtc.Year, resource.LastUpdatedUtc.Month, resource.LastUpdatedUtc.Day, resource.LastUpdatedUtc.Hour, resource.LastUpdatedUtc.Minute, resource.LastUpdatedUtc.Second);
+
             var fileRecord = new CombinedFileRecord()
             {
                 Fingerprint = ConvertFingerprintToStorageFormat(fingerprint),
                 Slice = ++sliceCount,
                 Type = resource.Type,
-                LastUpdatedUtc = _clock.UtcNow,
+                LastUpdatedUtc = resource.LastUpdatedUtc,
                 Settings = _combinatorResourceManager.SerializeResourceSettings(resource)
             };
 
             _fileRepository.Create(fileRecord);
 
-            if (!String.IsNullOrEmpty(resource.Content))
+            if (!string.IsNullOrEmpty(resource.Content))
             {
                 var path = MakePath(fileRecord);
 
@@ -101,23 +114,31 @@ namespace Piedone.Combinator.Services
                     stream.Write(bytes, 0, bytes.Length);
                 }
 
-                // This is needed to adjust relative paths if the resource is stored in a remote storage provider.
-                // Why the double-saving? Before saving the file there is no reliable way to tell whether the storage public url will be a
-                // remote one or not...
-                var testResource = _combinatorResourceManager.ResourceFactory(resource.Type);
-                testResource.FillRequiredContext("TestCombinedResource", _storageProvider.GetPublicUrl(path));
-                _combinatorResourceManager.DeserializeSettings(fileRecord.Settings, testResource);
-                if (testResource.IsRemoteStorageResource)
+                if (!resource.IsRemoteStorageResource)
                 {
-                    _storageProvider.DeleteFile(path);
-
-                    testResource.Content = resource.Content;
-                    ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(testResource, resourceBaseUri);
-
-                    using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                    // This is needed to adjust relative paths if the resource is stored in a remote storage provider.
+                    // Why the double-saving? Before saving the file there is no reliable way to tell whether the storage public url will be a
+                    // remote one or not...
+                    var testResource = _combinatorResourceManager.ResourceFactory(resource.Type);
+                    testResource.FillRequiredContext("TestCombinedResource", _storageProvider.GetPublicUrl(path));
+                    _combinatorResourceManager.DeserializeSettings(fileRecord.Settings, testResource);
+                    testResource.IsRemoteStorageResource = settings.RemoteStorageUrlPattern != null && settings.RemoteStorageUrlPattern.IsMatch(testResource.AbsoluteUrl.ToString());
+                    if (testResource.IsRemoteStorageResource)
                     {
-                        var bytes = Encoding.UTF8.GetBytes(testResource.Content);
-                        stream.Write(bytes, 0, bytes.Length);
+                        _storageProvider.DeleteFile(path);
+
+                        testResource.Content = resource.Content;
+                        var relativeUrlsBaseUri = settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_urlHelper.RequestContext.HttpContext.Request.Url, _urlHelper.Content("~/"));
+                        ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(testResource, relativeUrlsBaseUri);
+
+                        using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                        {
+                            var bytes = Encoding.UTF8.GetBytes(testResource.Content);
+                            stream.Write(bytes, 0, bytes.Length);
+                        }
+
+                        resource.IsRemoteStorageResource = true;
+                        fileRecord.Settings = _combinatorResourceManager.SerializeResourceSettings(resource);
                     }
                 }
             }
@@ -125,12 +146,12 @@ namespace Piedone.Combinator.Services
             _combinatorEventHandler.BundleChanged(fingerprint);
         }
 
-        public IList<CombinatorResource> GetCombinedResources(string fingerprint, bool useResourceShare)
+        public IList<CombinatorResource> GetCombinedResources(string fingerprint, ICombinatorSettings settings)
         {
             IList<CombinatorResource> sharedResources = new List<CombinatorResource>();
-            if (useResourceShare)
+            if (settings.EnableResourceSharing)
             {
-                CallOnDefaultShell(cacheFileService => sharedResources = cacheFileService.GetCombinedResources(fingerprint, false));
+                CallOnDefaultShell(cacheFileService => sharedResources = cacheFileService.GetCombinedResources(fingerprint, new CombinatorSettings(settings) { EnableResourceSharing = false }));
             }
 
             var cacheKey = MakeCacheKey("GetCombinedResources." + fingerprint);
@@ -155,7 +176,7 @@ namespace Piedone.Combinator.Services
                         resource.RequiredContext.Resource.SetUrl(_storageProvider.GetPublicUrl(MakePath(file)));
                     }
 
-                    resource.LastUpdatedUtc = file.LastUpdatedUtc ?? _clock.UtcNow;
+                    resource.LastUpdatedUtc = file.LastUpdatedUtc.HasValue ? file.LastUpdatedUtc.Value : _clock.UtcNow;
                     resources.Add(resource);
                 }
 
@@ -165,10 +186,10 @@ namespace Piedone.Combinator.Services
             });
         }
 
-        public bool Exists(string fingerprint, bool useResourceShare)
+        public bool Exists(string fingerprint, ICombinatorSettings settings)
         {
             var exists = false;
-            if (useResourceShare && CallOnDefaultShell(cacheFileService => exists = cacheFileService.Exists(fingerprint, false)))
+            if (settings.EnableResourceSharing && CallOnDefaultShell(cacheFileService => exists = cacheFileService.Exists(fingerprint, new CombinatorSettings(settings) { EnableResourceSharing = false })))
             {
                 // Because resources were excluded from resource sharing in this set this set could be stored locally, not shared.
                 // Thus we fall back to local storage.
@@ -192,12 +213,7 @@ namespace Piedone.Combinator.Services
 
         public void Empty()
         {
-            var files = _fileRepository.Table.ToList();
-
-            foreach (var file in files)
-            {
-                _fileRepository.Delete(file);
-            }
+            _sessionLocator.For(typeof(CombinedFileRecord)).CreateQuery("DELETE FROM " + typeof(CombinedFileRecord).FullName).ExecuteUpdate();
 
             if (_storageProvider.FolderExists(RootPath))
             {
@@ -257,14 +273,14 @@ namespace Piedone.Combinator.Services
         }
 
 
+        public static string ConvertFingerprintToStorageFormat(string fingerprint)
+        {
+            return fingerprint.GetHashCode().ToString();
+        }
+
         private static string MakeCacheKey(string name)
         {
             return CachePrefix + name;
-        }
-
-        private static string ConvertFingerprintToStorageFormat(string fingerprint)
-        {
-            return fingerprint.GetHashCode().ToString();
         }
     }
 }

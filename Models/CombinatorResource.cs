@@ -17,7 +17,7 @@ namespace Piedone.Combinator.Models
             get
             {
                 var fullPath = RequiredContext.Resource.GetFullPath();
-                if (String.IsNullOrEmpty(fullPath)) return "";
+                if (string.IsNullOrEmpty(fullPath)) return "";
 
                 if (fullPath.StartsWith("//"))
                 {
@@ -58,7 +58,7 @@ namespace Piedone.Combinator.Models
         {
             get
             {
-                if (String.IsNullOrEmpty(NormalizedFullPath)) return "~/";
+                if (string.IsNullOrEmpty(NormalizedFullPath)) return "~/";
                 return VirtualPathUtility.ToAppRelative(NormalizedFullPath, ApplicationPath);
             }
         }
@@ -92,25 +92,22 @@ namespace Piedone.Combinator.Models
             {
                 var fullPath = NormalizedFullPath;
 
-                return Uri.IsWellFormedUriString(fullPath, UriKind.Absolute)
+                return 
+                    !IsRemoteStorageResource &&
+                    Uri.IsWellFormedUriString(fullPath, UriKind.Absolute)
                     && new Uri(fullPath).Authority != _httpContext.Request.Url.Authority;
             }
         }
 
         /// <summary>
-        /// True if the resource comes from a non-local storage like Azure Blob Storage
+        /// <c>true</c> if the resource comes from a non-local storage like Azure Blob Storage. This shows a valid value only after the resource
+        /// was saved (as before that there is no way to tell if it will be stored in a remote storage or not).
         /// </summary>
-        public bool IsRemoteStorageResource
-        {
-            get
-            {
-                return !IsOriginal && IsCdnResource;
-            }
-        }
+        public bool IsRemoteStorageResource { get; set; }
 
         public bool IsConditional
         {
-            get { return !String.IsNullOrEmpty(RequiredContext.Settings.Condition); }
+            get { return !string.IsNullOrEmpty(RequiredContext.Settings.Condition); }
         }
 
         private readonly ResourceType _type;
@@ -121,7 +118,7 @@ namespace Piedone.Combinator.Models
         public string Content { get; set; }
 
         /// <summary>
-        /// Indicates that the resource was not touched and was kept in its original state
+        /// Indicates that the resource was not touched and was kept in its original state.
         /// </summary>
         public bool IsOriginal { get; set; }
 
@@ -141,7 +138,7 @@ namespace Piedone.Combinator.Models
             var requiredContext = new ResourceRequiredContext();
             var resourceManifest = new ResourceManifest();
             requiredContext.Resource = resourceManifest.DefineResource(Type.ToStringType(), name);
-            if (!String.IsNullOrEmpty(url)) requiredContext.Resource.SetUrl(url);
+            if (!string.IsNullOrEmpty(url)) requiredContext.Resource.SetUrl(url);
             requiredContext.Settings = new RequireSettings
             {
                 Name = name,

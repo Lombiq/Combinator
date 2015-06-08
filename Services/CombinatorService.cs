@@ -52,12 +52,12 @@ namespace Piedone.Combinator.Services
         {
             var fingerprint = resources.GetResourceListFingerprint(settings);
 
-            if (!_cacheFileService.Exists(fingerprint, settings.EnableResourceSharing))
+            if (!_cacheFileService.Exists(fingerprint, settings))
             {
                 Combine(resources, fingerprint, ResourceType.Style, settings);
             }
 
-            return ProcessCombinedResources(_cacheFileService.GetCombinedResources(fingerprint, settings.EnableResourceSharing), settings.ResourceBaseUri);
+            return ProcessCombinedResources(_cacheFileService.GetCombinedResources(fingerprint, settings), settings.ResourceBaseUri);
         }
 
         public IList<ResourceRequiredContext> CombineScripts(
@@ -93,12 +93,12 @@ namespace Piedone.Combinator.Services
                     if (!scripts.Any()) combinedResourcesAtLocation = new List<ResourceRequiredContext>();
                     else
                     {
-                        if (!_cacheFileService.Exists(fingerprint, settings.EnableResourceSharing))
+                        if (!_cacheFileService.Exists(fingerprint, settings))
                         {
                             Combine(scripts, fingerprint, ResourceType.JavaScript, settings);
                         }
 
-                        combinedResourcesAtLocation = ProcessCombinedResources(_cacheFileService.GetCombinedResources(fingerprint, settings.EnableResourceSharing), settings.ResourceBaseUri);
+                        combinedResourcesAtLocation = ProcessCombinedResources(_cacheFileService.GetCombinedResources(fingerprint, settings), settings.ResourceBaseUri);
                         combinedResourcesAtLocation.SetLocation(location);
                     }
 
@@ -114,13 +114,13 @@ namespace Piedone.Combinator.Services
 
 
         /// <summary>
-        /// Combines (and minifies) the content of resources and saves the combinations
+        /// Combines (and minifies) the content of resources and saves the combinations.
         /// </summary>
-        /// <param name="resources">Resources to combine</param>
-        /// <param name="fingerprint">Just so it shouldn't be recalculated</param>
-        /// <param name="resourceType">Type of the resources</param>
-        /// <param name="settings">Combination settings</param>
-        /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened)</exception>
+        /// <param name="resources">Resources to combine.</param>
+        /// <param name="fingerprint">Just so it shouldn't be recalculated.</param>
+        /// <param name="resourceType">Type of the resources.</param>
+        /// <param name="settings">Combination setting.s</param>
+        /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened).</exception>
         private void Combine(IList<ResourceRequiredContext> resources, string fingerprint, ResourceType resourceType, ICombinatorSettings settings)
         {
             if (resources.Count == 0) return;
@@ -130,7 +130,7 @@ namespace Piedone.Combinator.Services
             {
                 var combinatorResource = _combinatorResourceManager.ResourceFactory(resourceType);
 
-                // Copying the context so the original one won't be touched
+                // Copying the context so the original one won't be touched.
                 combinatorResource.FillRequiredContext(
                     resource.Resource.Name,
                     resource.Resource.GetFullPath(),
@@ -138,6 +138,8 @@ namespace Piedone.Combinator.Services
                     resource.Settings.Condition,
                     resource.Settings.Attributes,
                     resource.Resource.TagBuilder.Attributes);
+
+                combinatorResource.IsRemoteStorageResource = settings.RemoteStorageUrlPattern != null && settings.RemoteStorageUrlPattern.IsMatch(combinatorResource.AbsoluteUrl.ToString());
 
                 combinatorResources.Add(combinatorResource);
             }
@@ -150,21 +152,21 @@ namespace Piedone.Combinator.Services
                 {
                     if (combinedResource == null) return;
 
-                    // Don't save emtpy resources
+                    // Don't save emtpy resources.
                     if (combinedContent.Length == 0 && !combinedResource.IsOriginal) return;
 
                     if (!containedResources.Any()) containedResources = new List<CombinatorResource> { combinedResource };
 
                     var bundleFingerprint = containedResources.GetCombinatorResourceListFingerprint(settings);
 
-                    var useResourceSharing = settings.EnableResourceSharing;
-                    if (useResourceSharing && settings.ResourceSharingExcludeFilter != null)
+                    var localSettings = new CombinatorSettings(settings);
+                    if (localSettings.EnableResourceSharing && settings.ResourceSharingExcludeFilter != null)
                     {
                         foreach (var resource in containedResources)
                         {
-                            if (useResourceSharing)
+                            if (localSettings.EnableResourceSharing)
                             {
-                                useResourceSharing = !settings.ResourceSharingExcludeFilter.IsMatch(resource.AbsoluteUrl.ToString());
+                                localSettings.EnableResourceSharing = !settings.ResourceSharingExcludeFilter.IsMatch(resource.AbsoluteUrl.ToString());
                             }
                         }
                     }
@@ -173,7 +175,7 @@ namespace Piedone.Combinator.Services
                     {
                         combinedResource.Content = combinedContent.ToString();
 
-                        if (combinedResource.Type == ResourceType.Style && !String.IsNullOrEmpty(combinedResource.Content) && settings.GenerateImageSprites)
+                        if (combinedResource.Type == ResourceType.Style && !string.IsNullOrEmpty(combinedResource.Content) && settings.GenerateImageSprites)
                         {
                             _resourceProcessingService.ReplaceCssImagesWithSprite(combinedResource);
                         }
@@ -182,10 +184,10 @@ namespace Piedone.Combinator.Services
                             "/*" + Environment.NewLine
                             + "Resource bundle created by Combinator (http://combinator.codeplex.com/)" + Environment.NewLine + Environment.NewLine
                             + "Resources in this bundle:" + Environment.NewLine
-                            + String.Join(Environment.NewLine, containedResources.Select(resource =>
+                            + string.Join(Environment.NewLine, containedResources.Select(resource =>
                                 {
                                     var url = resource.AbsoluteUrl.ToString();
-                                    if (useResourceSharing && !resource.IsCdnResource && !resource.IsRemoteStorageResource)
+                                    if (localSettings.EnableResourceSharing && !resource.IsCdnResource && !resource.IsRemoteStorageResource)
                                     {
                                         var uriBuilder = new UriBuilder(url);
                                         uriBuilder.Host = "DefaultTenant";
@@ -201,9 +203,9 @@ namespace Piedone.Combinator.Services
                     // We save a bundle now. First the bundle should be saved separately under its unique name, then for this resource list.
                     if (bundleFingerprint != fingerprint && containedResources.Count > 1)
                     {
-                        if (!_cacheFileService.Exists(bundleFingerprint, useResourceSharing))
+                        if (!_cacheFileService.Exists(bundleFingerprint, localSettings))
                         {
-                            _cacheFileService.Save(bundleFingerprint, combinedResource, resourceBaseUri, useResourceSharing);
+                            _cacheFileService.Save(bundleFingerprint, combinedResource, localSettings);
                         }
 
                         // Overriding the url for the resource in this resource list with the url of the set.
@@ -211,7 +213,7 @@ namespace Piedone.Combinator.Services
 
                         // The following should fetch one result theoretically but can more if the above Exists()-Save() happens
                         // in multiple requests at the same time.
-                        var set = _cacheFileService.GetCombinedResources(bundleFingerprint, useResourceSharing).First();
+                        var set = _cacheFileService.GetCombinedResources(bundleFingerprint, localSettings).First();
 
                         combinedResource.LastUpdatedUtc = set.LastUpdatedUtc;
 
@@ -223,6 +225,7 @@ namespace Piedone.Combinator.Services
                             }
                             else if (set.IsRemoteStorageResource)
                             {
+                                combinedResource.IsRemoteStorageResource = true;
                                 combinedResource.RequiredContext.Resource.SetUrl(set.AbsoluteUrl.ToStringWithoutScheme());
                             }
                             else
@@ -230,7 +233,7 @@ namespace Piedone.Combinator.Services
                                 combinedResource.RequiredContext.Resource.SetUrl(set.RelativeUrl.ToString());
                             }
 
-                            AddTimestampToUrl(combinedResource);
+                            AddTimestampToUrlIfNecessary(combinedResource);
                         }
                         else
                         {
@@ -238,7 +241,7 @@ namespace Piedone.Combinator.Services
                         }
                     }
 
-                    _cacheFileService.Save(fingerprint, combinedResource, resourceBaseUri, useResourceSharing);
+                    _cacheFileService.Save(fingerprint, combinedResource, localSettings);
 
                     combinedContent.Clear();
                     containedResources.Clear();
@@ -263,7 +266,7 @@ namespace Piedone.Combinator.Services
                     {
                         // If this resource differs from the previous one in terms of settings or CDN they can't be combined
                         if (previousResource != null
-                            && (!previousResource.SettingsEqual(resource) || (previousResource.IsCdnResource != resource.IsCdnResource && !settings.CombineCDNResources)))
+                            && (!previousResource.SettingsEqual(resource) || (previousResource.IsCdnResource != resource.IsCdnResource && !settings.CombineCdnResources)))
                         {
                             saveCombination(previousResource, resourcesInCombination);
                             previousResource = null; // So it doesn't get combined again in if (saveOriginalResource) below.
@@ -341,14 +344,26 @@ namespace Piedone.Combinator.Services
 
             IList<ResourceRequiredContext> resources = new List<ResourceRequiredContext>(combinedResources.Count());
 
+            var baseUrlWithoutScheme = resourceBaseUri != null ? resourceBaseUri.ToStringWithoutScheme() : string.Empty;
+
             foreach (var resource in combinedResources)
             {
                 if (IsOwnedResource(resource))
                 {
-                    AddTimestampToUrl(resource);
-                    if (resourceBaseUri != null && !resource.IsRemoteStorageResource)
+                    AddTimestampToUrlIfNecessary(resource);
+
+                    // We need the second clause since the cached resouce objects' URLs will be changed. This is not so nice; alternatively
+                    // all the resources should be copied and the copies modified.
+                    if (!string.IsNullOrEmpty(baseUrlWithoutScheme) && !resource.AbsoluteUrl.ToStringWithoutScheme().StartsWith(baseUrlWithoutScheme))
                     {
-                        resource.RequiredContext.Resource.SetUrl(UriHelper.Combine(resourceBaseUri.ToStringWithoutScheme(), resource.RequiredContext.Resource.Url));
+                        if (!resource.IsRemoteStorageResource)
+                        {
+                            resource.RequiredContext.Resource.SetUrl(UriHelper.Combine(resourceBaseUri.ToStringWithoutScheme(), resource.RequiredContext.Resource.Url));
+                        }
+                        else
+                        {
+                            resource.RequiredContext.Resource.SetUrl(UriHelper.Combine(resourceBaseUri.ToStringWithoutScheme(), resource.AbsoluteUrl.PathAndQuery));
+                        }
                     }
                 }
 
@@ -358,11 +373,14 @@ namespace Piedone.Combinator.Services
             return resources;
         }
 
-        private static void AddTimestampToUrl(CombinatorResource resource)
+        private static void AddTimestampToUrlIfNecessary(CombinatorResource resource)
         {
             var uriBuilder = new UriBuilder(resource.AbsoluteUrl);
+
+            if (uriBuilder.Query.Contains("timestamp=")) return;
+
             uriBuilder.Query = "timestamp=" + resource.LastUpdatedUtc.ToFileTimeUtc(); // Using UriBuilder for this is maybe an overkill
-            var urlString = resource.IsCdnResource ? uriBuilder.Uri.ToStringWithoutScheme() : uriBuilder.Uri.PathAndQuery.ToString();
+            var urlString = resource.IsCdnResource || resource.IsRemoteStorageResource ? uriBuilder.Uri.ToStringWithoutScheme() : uriBuilder.Uri.PathAndQuery.ToString();
             resource.RequiredContext.Resource.SetUrl(urlString);
         }
 

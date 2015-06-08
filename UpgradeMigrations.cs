@@ -24,8 +24,8 @@ namespace Piedone.Combinator
             _upgradeService = upgradeService;
             _siteService = siteService;
         }
-	
-			
+    
+            
         public int Create()
         {
             _upgradeService.ExecuteReader("SELECT * FROM " + _upgradeService.GetPrefixedTableName("Piedone_Combinator_CombinatorSettingsPartRecord"),

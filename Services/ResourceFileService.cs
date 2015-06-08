@@ -27,13 +27,13 @@ namespace Piedone.Combinator.Services
 
         public void LoadResourceContent(CombinatorResource resource)
         {
-            if (!resource.IsCdnResource)
+            if (resource.IsCdnResource || resource.IsRemoteStorageResource)
             {
-                resource.Content = FetchLocalResourceContent(resource);
+                resource.Content = FetchRemoteResourceContent(resource);
             }
             else
             {
-                resource.Content = FetchRemoteResourceContent(resource);
+                resource.Content = FetchLocalResourceContent(resource);
             }
         }
 

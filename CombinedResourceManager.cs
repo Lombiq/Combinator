@@ -76,7 +76,7 @@ namespace Piedone.Combinator
 
                 var settings = new CombinatorSettings
                 {
-                    CombineCDNResources = settingsPart.CombineCdnResources,
+                    CombineCdnResources = settingsPart.CombineCdnResources,
                     ResourceBaseUri = resourceBaseUri,
                     EmbedCssImages = settingsPart.EmbedCssImages,
                     EmbeddedImagesMaxSizeKB = settingsPart.EmbeddedImagesMaxSizeKB,
@@ -85,17 +85,18 @@ namespace Piedone.Combinator
                     EnableResourceSharing = settingsPart.EnableResourceSharing
                 };
 
-                if (!String.IsNullOrEmpty(settingsPart.CombinationExcludeRegex)) settings.CombinationExcludeFilter = new Regex(settingsPart.CombinationExcludeRegex);
-                if (!String.IsNullOrEmpty(settingsPart.EmbedCssImagesStylesheetExcludeRegex)) settings.EmbedCssImagesStylesheetExcludeFilter = new Regex(settingsPart.EmbedCssImagesStylesheetExcludeRegex);
-                if (!String.IsNullOrEmpty(settingsPart.MinificationExcludeRegex)) settings.MinificationExcludeFilter = new Regex(settingsPart.MinificationExcludeRegex);
-                if (!String.IsNullOrEmpty(settingsPart.ResourceSharingExcludeRegex)) settings.ResourceSharingExcludeFilter = new Regex(settingsPart.ResourceSharingExcludeRegex);
+                if (!string.IsNullOrEmpty(settingsPart.CombinationExcludeRegex)) settings.CombinationExcludeFilter = new Regex(settingsPart.CombinationExcludeRegex);
+                if (!string.IsNullOrEmpty(settingsPart.RemoteStorageUrlRegex)) settings.RemoteStorageUrlPattern = new Regex(settingsPart.RemoteStorageUrlRegex);
+                if (!string.IsNullOrEmpty(settingsPart.EmbedCssImagesStylesheetExcludeRegex)) settings.EmbedCssImagesStylesheetExcludeFilter = new Regex(settingsPart.EmbedCssImagesStylesheetExcludeRegex);
+                if (!string.IsNullOrEmpty(settingsPart.MinificationExcludeRegex)) settings.MinificationExcludeFilter = new Regex(settingsPart.MinificationExcludeRegex);
+                if (!string.IsNullOrEmpty(settingsPart.ResourceSharingExcludeRegex)) settings.ResourceSharingExcludeFilter = new Regex(settingsPart.ResourceSharingExcludeRegex);
 
-                if (!String.IsNullOrEmpty(settingsPart.ResourceSetRegexes))
+                if (!string.IsNullOrEmpty(settingsPart.ResourceSetRegexes))
                 {
                     var setRegexes = new List<Regex>();
                     foreach (var regex in settingsPart.ResourceSetRegexesEnumerable)
                     {
-                        if (!String.IsNullOrEmpty(regex)) setRegexes.Add(new Regex(regex));
+                        if (!string.IsNullOrEmpty(regex)) setRegexes.Add(new Regex(regex));
                     }
                     settings.ResourceSetFilters = setRegexes.ToArray();
                 }
@@ -168,7 +169,7 @@ namespace Piedone.Combinator
             foreach (var resource in resources)
             {
                 var fullPath = resource.Resource.GetFullPath();
-                if (!String.IsNullOrEmpty(fullPath))
+                if (!string.IsNullOrEmpty(fullPath))
                 {
                     var shapeName = StaticFileBindingStrategy.GetAlternateShapeNameFromFileName(fullPath);
                     var shapeKey = shapeKeyPrefix + shapeName;

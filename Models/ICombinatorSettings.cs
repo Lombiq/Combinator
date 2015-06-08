@@ -6,7 +6,8 @@ namespace Piedone.Combinator.Models
     public interface ICombinatorSettings
     {
         Regex CombinationExcludeFilter { get; }
-        bool CombineCDNResources { get; }
+        bool CombineCdnResources { get; }
+        Regex RemoteStorageUrlPattern { get; }
         Uri ResourceBaseUri { get; }
         bool MinifyResources { get; }
         Regex MinificationExcludeFilter { get; }

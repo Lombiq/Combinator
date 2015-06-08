@@ -8,7 +8,7 @@ namespace Piedone.Combinator.Extensions
     {
         public static bool IsConditional(this RequireSettings settings)
         {
-            return !String.IsNullOrEmpty(settings.Condition);
+            return !string.IsNullOrEmpty(settings.Condition);
         }
 
         public static bool AttributesEqual(this RequireSettings settings, RequireSettings other)

@@ -18,8 +18,8 @@ namespace Piedone.Combinator.Commands
         {
             _cacheFileService = cacheFileService;
         }
-	
-			
+    
+            
         [CommandName("combinator empty")]
         [CommandHelp("combinator empty\r\n\t" + "Empties the Combinator cache.")]
         public void EmptyCache()

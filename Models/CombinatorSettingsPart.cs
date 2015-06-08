@@ -21,6 +21,12 @@ namespace Piedone.Combinator.Models
             set { this.Store(x => x.CombineCdnResources, value); }
         }
 
+        public string RemoteStorageUrlRegex
+        {
+            get { return this.Retrieve(x => x.RemoteStorageUrlRegex, @"\/devstoreaccount|blob.core.windows.net"); }
+            set { this.Store(x => x.RemoteStorageUrlRegex, value); }
+        }
+
         public string ResourceBaseUrl
         {
             get { return this.Retrieve(x => x.ResourceBaseUrl); }

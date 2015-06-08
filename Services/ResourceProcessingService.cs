@@ -41,7 +41,7 @@ namespace Piedone.Combinator.Services
 
         public void ProcessResource(CombinatorResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
         {
-            if (resource.IsCdnResource && !settings.CombineCDNResources)
+            if (resource.IsCdnResource && !settings.CombineCdnResources)
             {
                 resource.IsOriginal = true;
                 return;
@@ -80,7 +80,7 @@ namespace Piedone.Combinator.Services
             if (settings.MinifyResources && (settings.MinificationExcludeFilter == null || !settings.MinificationExcludeFilter.IsMatch(absoluteUrlString)))
             {
                 MinifyResourceContent(resource);
-                if (String.IsNullOrEmpty(resource.Content)) return;
+                if (string.IsNullOrEmpty(resource.Content)) return;
             }
 
             _eventHandler.OnContentProcessed(resource);

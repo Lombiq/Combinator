@@ -115,7 +115,7 @@ namespace Piedone.Combinator.Tests.Services
         {
             _resourceRepository.FillWithTestStyles();
 
-            var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings() { CombineCDNResources = true });
+            var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings() { CombineCdnResources = true });
 
             Assert.That(combinedResources.Count, Is.EqualTo(1));
         }
@@ -125,7 +125,7 @@ namespace Piedone.Combinator.Tests.Services
         {
             _resourceRepository.FillWithTestStyles();
 
-            var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings() { CombineCDNResources = false });
+            var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings() { CombineCdnResources = false });
 
             Assert.That(combinedResources.Count, Is.EqualTo(4));
             Assert.That(combinedResources[0].Resource.Url, Is.EqualTo("//google.com/style.css"));
@@ -193,7 +193,7 @@ namespace Piedone.Combinator.Tests.Services
         {
             public void ProcessResource(CombinatorResource resource, StringBuilder combinedContent, ICombinatorSettings settings)
             {
-                if (resource.IsCdnResource && !settings.CombineCDNResources)
+                if (resource.IsCdnResource && !settings.CombineCdnResources)
                 {
                     resource.IsOriginal = true;
                     return;
@@ -221,7 +221,7 @@ namespace Piedone.Combinator.Tests.Services
                 _resourceRepository = resourceRepository;
             }
 
-            public void Save(string fingerprint, CombinatorResource resource, Uri resourceBaseUri, bool useResourceShare)
+            public void Save(string fingerprint, CombinatorResource resource, ICombinatorSettings settings)
             {
                 int count;
                 sliceCounts.TryGetValue(fingerprint, out count);
@@ -257,14 +257,14 @@ namespace Piedone.Combinator.Tests.Services
                 _resourceRepository.SaveResource(sliceName, savedResource);
             }
 
-            public IList<CombinatorResource> GetCombinedResources(string fingerprint, bool useResourceShare)
+            public IList<CombinatorResource> GetCombinedResources(string fingerprint, ICombinatorSettings settings)
             {
                 return (from r in _resourceRepository.Resources
                         where r.Key.Contains(fingerprint + "-")
                         select r.Value).ToList();
             }
 
-            public bool Exists(string fingerprint, bool useResourceShare)
+            public bool Exists(string fingerprint, ICombinatorSettings settings)
             {
                 return false;
             }

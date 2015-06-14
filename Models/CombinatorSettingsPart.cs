@@ -11,7 +11,7 @@ namespace Piedone.Combinator.Models
     {
         public string CombinationExcludeRegex
         {
-            get { return this.Retrieve(x => x.CombinationExcludeRegex); }
+            get { return this.Retrieve(x => x.CombinationExcludeRegex, "TinyMce|font-awesome|workflows-activity-logging|workflows-activity-user-access-denied|fonts.googleapis.com"); }
             set { this.Store(x => x.CombinationExcludeRegex, value); }
         }
 

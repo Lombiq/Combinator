@@ -224,11 +224,15 @@ namespace Piedone.Combinator.Tests.Services
             {
                 return CreatedFiles.Any(p => p.StartsWith(path));
             }
-
-
+            
             public string GetStoragePath(string url)
             {
-                throw new NotImplementedException();
+                return FileSystemStorageProvider.GetStoragePath(url);
+            }
+            
+            public void CopyFile(string originalPath, string duplicatePath)
+            {
+                FileSystemStorageProvider.CopyFile(originalPath, duplicatePath);
             }
         }
 

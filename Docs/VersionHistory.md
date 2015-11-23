@@ -14,11 +14,11 @@
   - Migrating settings to infoset storage
   - Refactorings and many smaller improvements and bugfixes
 
-		**Warning:** the module has new dependencies: the feature Piedone.HelpfulLibraries.Utilities in the existing dependency Piedone.HelpfulLibraries and the whole Orchard.Caching module. BEFORE UPGRADING to this version you should enable the "Utilities - Helpful Libraries" feature and install and enable the Orchard.Caching module.
+**Warning:** the module has new dependencies: the feature Piedone.HelpfulLibraries.Utilities in the existing dependency Piedone.HelpfulLibraries and the whole Orchard.Caching module. BEFORE UPGRADING to this version you should enable the "Utilities - Helpful Libraries" feature and install and enable the Orchard.Caching module.
 
-		Also, since this version now stores settings in the infoset instead of a separate record (what is more efficient) after upgrading your configuration will be re-set. To restore your original settings just enable the Combinator Upgrade feature. After the feature is enabled you can disable it immediately as the migration will run while the feature is being enabled.
+Also, since this version now stores settings in the infoset instead of a separate record (what is more efficient) after upgrading your configuration will be re-set. To restore your original settings just enable the Combinator Upgrade feature. After the feature is enabled you can disable it immediately as the migration will run while the feature is being enabled.
 
-		The resource domain configuration option was changed to resource base URL. Since this is not just a name change the content of the resource domain config won't be copied over, you have to re-set is as a base URL.
+The resource domain configuration option was changed to resource base URL. Since this is not just a name change the content of the resource domain config won't be copied over, you have to re-set is as a base URL.
 
 - v2.0 (17.07.2013):
   - Image sprite generation support (work item #15) with exclude features and partially automatic detection whether an image is suitable for sprite generation (backgrounds with a size, position other than top-left, and repetition other than no-repeat are excluded)

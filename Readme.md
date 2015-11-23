@@ -27,15 +27,15 @@ An Orchard CMS module that combines and minifies external stylesheets and javasc
 - With custom IStorageProvider can work in cloud hosting too (if there is no write access to the Media folder anyway)
 - Import/export settings
 - Administration page:
-  - Adjust combination exclusion filter
-  - Enable/disable combination of CDN resources
-  - Set up resource domain
-  - Enable/disable minification and adjust exclusion filter
-  - Enable/disable image embedding and adjust exclusion filter
-  - Enable/disable image sprite generation
-  - Define resource sets
-  - Enable/disable for admin site
-  - Empty cache
+	- Adjust combination exclusion filter
+	- Enable/disable combination of CDN resources
+	- Set up resource domain
+	- Enable/disable minification and adjust exclusion filter
+	- Enable/disable image embedding and adjust exclusion filter
+	- Enable/disable image sprite generation
+	- Define resource sets
+	- Enable/disable for admin site
+	- Empty cache
 
 The module is also available for [DotNest](http://dotnest.com/) sites.  
 

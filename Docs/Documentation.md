@@ -87,4 +87,4 @@ Among others Combinator speeds up the [Orchard Gallery](http://gallery.orchardpr
 
 To randompete, Sebastien Ros (for the incredible overridden stylesheet discovery) and Znowman for their valuable contributions!
 
-## See the [Version history](VersionHistory.md)
+**See the [Version history](VersionHistory.md).**

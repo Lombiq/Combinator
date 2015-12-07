@@ -1,0 +1,126 @@
+# Combinator Orchard module Version history
+
+
+
+- v2.1 (Prerelease)
+	- Resource sharing for multi-tenant sites
+	- Fixing remote storage (like Azure blob storage) support
+	- Fixing resource sets
+	- Better cache events
+	- Cache files are stored in a hidden media folder
+	- New extension point: 3rd party modules can manipulate the Combinator cache through an event handler
+	- Updating YUI Compressor
+	- Ochard 1.8 and .NET 4.5 compatibility
+	- Migrating settings to infoset storage
+	- Refactorings and many smaller improvements and bugfixes
+
+**Warning:** the module has new dependencies: the feature Piedone.HelpfulLibraries.Utilities in the existing dependency Piedone.HelpfulLibraries and the whole Orchard.Caching module. BEFORE UPGRADING to this version you should enable the "Utilities - Helpful Libraries" feature and install and enable the Orchard.Caching module.
+
+Also, since this version now stores settings in the infoset instead of a separate record (what is more efficient) after upgrading your configuration will be re-set. To restore your original settings just enable the Combinator Upgrade feature. After the feature is enabled you can disable it immediately as the migration will run while the feature is being enabled.
+
+The resource domain configuration option was changed to resource base URL. Since this is not just a name change the content of the resource domain config won't be copied over, you have to re-set is as a base URL.
+
+- v2.0 (17.07.2013):
+	- Image sprite generation support (work item #15) with exclude features and partially automatic detection whether an image is suitable for sprite generation (backgrounds with a size, position other than top-left, and repetition other than no-repeat are excluded)
+	- Ability to set custom resource domain (work item #37)
+	- Exposing resource processing events: this way e.g. a LESS compiler can be plugged into Combinator, so compiled stylesheets are still processed (combined and minified)
+	- LESS and SASS preprocessors, contribution of Onestop Internet, Inc.
+	- Better CSS processing with a real CSS parser (ExCSS)
+	- Adding info comment to bundled resources (#49)
+	- Displaying notification after cache clearing (work item #45)
+	- Fixing problems introduced with Orchard 1.6 where the order of excluded scripts was wrong. Now scripts are handled as overridable resources like stylesheets.
+	- Command line command for emptying cache
+	- Validation for regexes configurable from the admin UI (no more erroneous regexes saved)
+	- Working on Azure blob compatibility (#46 and #47)
+	- Static cache files are now stored under Modules/Piedone/... instead of Media root
+	- Refactoring and plenty of minor fixes
+	- Updated YUI Compressor
+	- Updating to VS 2012 project file
+- v2.0a7 (22.11.2012):
+	- Fixing problems introduced with Orchard 1.6 where the order of excluded scripts was wrong. Now scripts are handled as overridable resources like stylesheets.
+	- Adding info comment to bundled resources (#49)
+	- Working on Azure blob compatibility (#46 and #47)
+	- Updated YUI Compressor
+	- Refactoring and plenty of simple fixes
+	- Updating to VS 2012 project file
+- v2.0a6 (16.10.2012):
+	- Image sprite generation gets partially automatic detection whether an image is suitable for sprite generation (backgrounds with a size, position other than top-left, and repetition other than no-repeat are excluded)
+	- LESS and SASS preprocessors, contribution of Onestop Internet, Inc.
+	- Displaying notification after cache clearing (work item #45)
+	- Many minor improvements
+- v2.0a5 (20.09.2012):
+	- Ability to set custom resource domain (work item #37)
+	- Ability to exclude images from sprite generation also with adding the .no-sprite css class to the selectors
+- v2.0a4 (18.09.2012):
+	- Exposing resource processing events: this way e.g. a LESS compiler can be plugged into Combinator, so compiled stylesheets are still processed (combined and minified)
+	- Better CSS processing with a real CSS parser (ExCSS)
+- v2.0a3 (28.07.2012):
+	- Fixing that images in the result could be mixed up
+	- Refactoring
+- v2.0a2 (26.07.2012): 
+	- Fixing exceptions when there were no images to generate a sprite from
+- v2.0a (26.07.2012):
+	- Partial image sprite generation support on the base of Sprite Generator: http://spritegenerator.codeplex.com/
+- v1.4 (26.07.2012):
+	- Safer exception handling
+	- Updated Yui Compressor library
+	- Big refactoring of inner resource handling; now all the local urls are displayed as relative urls and all the remote ones are displayed as protocol-relative urls
+	- Regex config fields now can be unlimitedly long
+- v1.3.3 (17.05.2012): 
+	- Fixing migrations
+- v1.3.2 (17.05.2012):
+	- Maintenance release
+- v1.3.1 (23.03.2012):
+	- Fixing exception when excluded resource was the last one
+	- Robust cache clearing
+	- New names for combined resource entries
+- v1.3 (02.03.2012):
+	- Option to enable also for the admin site
+	- Locking caching (so cache no race conditions can occur even in multi-server environments)
+	- Refactoring and event handlers
+- v1.2 (11.02.2012):
+	- Resource sets feature
+	- Relative urls for local resources (http/https no longer a problem)
+	- Browser cache busting when resources are updated
+	- Settings import/export
+	- Updated YUI compressor
+	- Uninstall migration
+	- Smaller fixes
+- v1.1.1 (16.12.2011): 
+	- Combination exclusion works how it makes sense (exclusion means the file is not processed in any way), smaller improvements
+- v1.1 (14.12.2011):
+	- Images can be embedded as data urls
+	- Resources excluded from combination can still be minified
+	- Smarter path handling and relative url adjustment
+	- Better structured settings form
+	- Smarter detection of CDN resources
+	- Improved codebase, refactoring and smaller bugfixes
+	- Tested with new unit test suite
+- v1.0 (05.12.2011):
+	- Seamless combination of overridden stylesheets (thanks to Sebastien Ros for his contribution!)
+	- Improved relative (image) path processing
+	- Improved handling of CDN resources (now their url is stored, together with their settings)
+	- Conditional resources can be also minified (and combined if multiple with the same condition follow each other)
+	- Improved caching: after the first page view with a set of resources the module practically has no impact on performance
+	- Reverting combined file storage back to IStorageProvider, so with a custom provider the module works in a cloud hosting environment too
+	- Exclusion regex for combination too
+	- Vastly refactored, improved code
+- v0.8.1 (26.11.2011): 
+	- Fixing bug with relative image paths
+- v0.8 (11.11.2011):
+	- Minification of resources
+	- Big refactoring
+	- Several bugfixes
+- v0.7 (30.10.2011):
+	- Fixing bug with only converting relative image urls to absolute ones
+	- Added in-memory caching so after initialization the DB is not touched
+- v0.6.7 (27.10.2011): 
+	- Bugfix (visiting admin area with lowercase url bypasses admin page check)
+- v0.6.6 (23.10.2011): 
+	- Quick bugfix of relative image paths.
+- v0.6.5 (23.10.2011):
+	- Combined resources now stored in module folder
+	- Faster retrieving of local resources
+	- Bugfixes
+- v0.6 (19.10.2011): Bugfixes and partial support for overridden resources.
+- v0.5 (10.10.2011): First public release

@@ -34,7 +34,7 @@ You can set exclusion filters (regular expressions) on combination, minification
 - Always empty the cache in the live environment when you push resource changes to it.
 - Unless you adjust the urls to be the same, you can't push combined resources to the live environment (since Combinator adjusts relative paths, these will include the url of your development environment; however if you don't have AppPath set you should be able to publish to live, but if you have one, like the default "OrchardLocal", resources should be recompiled in live). Therefore, it's best to publish changes with the cache emptied and let combination happen on the live site (which will only cause a performance impact on the first views of pages with unique set of resources).
 - If you're using resource sharing check whether tenants can have different resources with the same paths because that would cause inconsistencies. E.g. if you have a module that provides a dynamic (e.g. user-configurable) stylesheet under the fixed path /dynamicstylesheet, where the path does not contain anything unique to the tenant (what would be e.g. /tenantname/dynamicstylesheet) then this stylesheet will be shared among all the tenants. Resource sharing only works if the resources with the same path also contain the same data.
-- Until [this issue](http://combinator.codeplex.com/workitem/68) is fixed, place font-face CSS declarations into separate CSS files and exclude them from combination.
+- Until [this issue](https://github.com/Lombiq/Combinator/issues/8) is fixed, place font-face CSS declarations into separate CSS files and exclude them from combination.
 
 
 ## Important notes on sprite generation

@@ -1,4 +1,5 @@
-﻿using Yahoo.Yui.Compressor;
+﻿using System.Text;
+using Yahoo.Yui.Compressor;
 
 namespace Piedone.Combinator.Services
 {
@@ -18,7 +19,10 @@ namespace Piedone.Combinator.Services
         {
             if (string.IsNullOrEmpty(javaScript)) return string.Empty;
 
-            return new JavaScriptCompressor().Compress(javaScript);
+            return new JavaScriptCompressor
+            {
+                Encoding = Encoding.UTF8
+            }.Compress(javaScript);
         }
     }
 }

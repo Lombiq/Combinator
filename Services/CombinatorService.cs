@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Orchard;
-using Orchard.Caching.Services;
 using Orchard.Environment.Extensions;
 using Orchard.Exceptions;
 using Orchard.Localization;

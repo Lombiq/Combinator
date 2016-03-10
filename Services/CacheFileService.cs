@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading;
 using Orchard;
 using Orchard.Caching;
-using Orchard.Caching.Services;
 using Orchard.Data;
 using Orchard.Environment;
 using Orchard.Environment.Configuration;
@@ -35,7 +34,7 @@ namespace Piedone.Combinator.Services
         private readonly ICombinatorEventHandler _combinatorEventHandler;
 
         #region In-memory caching fields
-        private readonly ICacheService _cacheService;
+        private readonly ICacheManager _cacheManager;
         private readonly ICombinatorEventMonitor _combinatorEventMonitor;
         private const string CachePrefix = "Piedone.Combinator.";
         #endregion
@@ -56,7 +55,7 @@ namespace Piedone.Combinator.Services
             IClock clock,
             ISessionLocator sessionLocator,
             ICombinatorEventHandler combinatorEventHandler,
-            ICacheService cacheService,
+            ICacheManager cacheManager,
             ICombinatorEventMonitor combinatorEventMonitor)
         {
             _orchardHost = orchardHost;
@@ -68,7 +67,7 @@ namespace Piedone.Combinator.Services
             _sessionLocator = sessionLocator;
             _combinatorEventHandler = combinatorEventHandler;
 
-            _cacheService = cacheService;
+            _cacheManager = cacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
         }
 
@@ -155,10 +154,10 @@ namespace Piedone.Combinator.Services
             }
 
             var cacheKey = MakeCacheKey("GetCombinedResources." + fingerprint);
-            return _cacheService.Get(cacheKey, () =>
+            return _cacheManager.Get(cacheKey, acquireContext =>
             {
-                _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
-                _combinatorEventMonitor.MonitorBundleChanged(cacheKey, fingerprint);
+                _combinatorEventMonitor.MonitorCacheEmptied(acquireContext);
+                _combinatorEventMonitor.MonitorBundleChanged(acquireContext, fingerprint);
 
                 var files = _fileRepository.Fetch(file => file.Fingerprint == ConvertFingerprintToStorageFormat(fingerprint)).ToList();
                 var fileCount = files.Count;
@@ -197,10 +196,10 @@ namespace Piedone.Combinator.Services
             }
 
             var cacheKey = MakeCacheKey("Exists." + fingerprint);
-            return _cacheService.Get(cacheKey, () =>
+            return _cacheManager.Get(cacheKey, acquireContext =>
             {
-                _combinatorEventMonitor.MonitorCacheEmptied(cacheKey);
-                _combinatorEventMonitor.MonitorBundleChanged(cacheKey, fingerprint);
+                _combinatorEventMonitor.MonitorCacheEmptied(acquireContext);
+                _combinatorEventMonitor.MonitorBundleChanged(acquireContext, fingerprint);
                 // Maybe also check if the file exists?
                 return _fileRepository.Count(file => file.Fingerprint == ConvertFingerprintToStorageFormat(fingerprint)) != 0;
             });

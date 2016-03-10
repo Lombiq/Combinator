@@ -203,10 +203,6 @@
       <Project>{9916839C-39FC-4CEB-A5AF-89CA7E87119F}</Project>
       <Name>Orchard.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Orchard.Caching\Orchard.Caching.csproj">
-      <Project>{7528bf74-25c7-4abe-883a-443b4eec4776}</Project>
-      <Name>Orchard.Caching</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Piedone.HelpfulLibraries\Piedone.HelpfulLibraries.csproj">
       <Project>{ea61ad10-39d6-41a9-b12b-227f50c54158}</Project>
       <Name>Piedone.HelpfulLibraries</Name>
@@ -215,6 +211,12 @@
       <Project>{8a9fdb57-342d-49c2-bafc-d885aae5cc7c}</Project>
       <Name>Upgrade</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Docs\Documentation.md" />
+    <Content Include="Docs\VersionHistory.md" />
+    <Content Include="Licence.md" />
+    <Content Include="Readme.md" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

@@ -5,7 +5,7 @@
 ## Installation
 
 **The module is dependent on the [Helpful Libraries module](https://gallery.orchardproject.net/List/Modules/Orchard.Module.Piedone.HelpfulLibraries), so make sure to install it first!**  
-**Combinator needs at least Orchard 1.8!**
+**Combinator needs at least Orchard 1.9!**
 
 The module is also available for [DotNest](http://dotnest.com/) sites.
 
@@ -37,6 +37,11 @@ You can set exclusion filters (regular expressions) on combination, minification
 - Until [this issue](https://github.com/Lombiq/Combinator/issues/8) is fixed, place font-face CSS declarations into separate CSS files and exclude them from combination.
 
 
+## If you run a web farm
+
+If you use Combinator in a setup with multiple web servers running Orchard then you need to have the Distributed Signals feature of the built-in Message Bus module enabled. If you don't do this then Combinator's cache will get stale on some server nodes.
+
+
 ## Important notes on sprite generation
 
 Image sprite generation features a partially automatic detection whether an image is suitable for sprite generation or not: backgrounds with a size, position other than top-left, and repetition other than no-repeat
@@ -56,7 +61,7 @@ can fail on some CSS files and produce incorrect results, thus rendering the CSS
 
 ## Notes on using with Azure Blob storage
 
-If your site runs on Azure Cloud Services or Azure Web Sites (probably this also affects Azure VMs) and uses Blob storage to store media files then you have to take the below actions to ensure that resources
+If your site runs on Azure Cloud Services or Azure App Services (probably this also affects Azure VMs) and uses Blob storage to store media files then you have to take the below actions to ensure that resources
 processed by Combinator are properly served.  
   
 When Orchard stores files in Blob storage it also sets their mime types; this is then also used when serving the files. For JavaScript files the mime type should be "application/javascript". However on Azure

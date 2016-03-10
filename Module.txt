@@ -7,22 +7,22 @@ OrchardVersion: 1.9.0
 Description: Combines and minifies external stylesheets and javascript files. Minifications uses the YUI Compressor (http://yuicompressor.codeplex.com/), the original code for sprite generation is from Sprite Generator (http://spritegenerator.codeplex.com/) and stylesheets are parsed with ExCSS (https://github.com/TylerBrinks/ExCSS).
 Features:
     Piedone.Combinator:
-		Name: Combinator
+        Name: Combinator
         Description: Combines and minifies external stylesheets and javascript files. Minifications uses the YUI Compressor (http://yuicompressor.codeplex.com/), the original code for sprite generation is from Sprite Generator (http://spritegenerator.codeplex.com/) and stylesheets are parsed with ExCSS (https://github.com/TylerBrinks/ExCSS).
-		Category: Performance
-		Dependencies: Piedone.HelpfulLibraries.Utilities, Orchard.jQuery, Orchard.Caching
-	Piedone.Combinator.Less:
-		Name: Combinator LESS Preprocessor
+        Category: Performance
+        Dependencies: Piedone.HelpfulLibraries.Utilities, Orchard.jQuery, Orchard.Caching
+    Piedone.Combinator.Less:
+        Name: Combinator LESS Preprocessor
         Description: Automatically compiles .less files with dotless (http://www.dotlesscss.org/) so they can be used with Combinator. Contribution of Onestop Internet, Inc. (http://www.onestop.com/).
-		Category: Performance
-		Dependencies: Piedone.Combinator
-	Piedone.Combinator.Sass:
-		Name: Combinator SASS Preprocessor
+        Category: Performance
+        Dependencies: Piedone.Combinator
+    Piedone.Combinator.Sass:
+        Name: Combinator SASS Preprocessor
         Description: Automatically compiles .scss and .sass files with SassAndCoffee.Ruby (http://nuget.org/packages/SassAndCoffee.Ruby) so they can be used with Combinator. At the time only local SASS files are supported. Contribution of Onestop Internet, Inc. (http://www.onestop.com/).
-		Category: Performance
-		Dependencies: Piedone.Combinator
+        Category: Performance
+        Dependencies: Piedone.Combinator
     Piedone.Combinator.Upgrade:
-		Name: Combinator Upgrade
+        Name: Combinator Upgrade
         Description: Migrates Combinator settings to a new and more efficient storage mechanism (dubbed The Shift). WARNING: when enabling your current settings will be overwritten with the old ones. Enabling this feature will migrate all settings, so after enabling it it can be disabled again.
-		Category: Developer
-		Dependencies: Piedone.Combinator, Upgrade
+        Category: Developer
+        Dependencies: Piedone.Combinator, Upgrade

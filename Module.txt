@@ -3,14 +3,14 @@ AntiForgery: enabled
 Author: Piedone
 Website: https://github.com/Lombiq/Combinator
 Version: 2.0
-OrchardVersion: 1.9.3
+OrchardVersion: 1.10
 Description: Combines and minifies external stylesheets and javascript files. Minifications uses the YUI Compressor (http://yuicompressor.codeplex.com/), the original code for sprite generation is from Sprite Generator (http://spritegenerator.codeplex.com/) and stylesheets are parsed with ExCSS (https://github.com/TylerBrinks/ExCSS).
 Features:
     Piedone.Combinator:
         Name: Combinator
         Description: Combines and minifies external stylesheets and javascript files. Minifications uses the YUI Compressor (http://yuicompressor.codeplex.com/), the original code for sprite generation is from Sprite Generator (http://spritegenerator.codeplex.com/) and stylesheets are parsed with ExCSS (https://github.com/TylerBrinks/ExCSS).
         Category: Performance
-        Dependencies: Piedone.HelpfulLibraries.Utilities, Orchard.jQuery
+        Dependencies: Piedone.HelpfulLibraries.Utilities, Orchard.Resources
     Piedone.Combinator.Less:
         Name: Combinator LESS Preprocessor
         Description: Automatically compiles .less files with dotless (http://www.dotlesscss.org/) so they can be used with Combinator. Contribution of Onestop Internet, Inc. (http://www.onestop.com/).

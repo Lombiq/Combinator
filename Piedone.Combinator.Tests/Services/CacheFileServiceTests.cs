@@ -50,7 +50,7 @@ namespace Piedone.Combinator.Tests.Services
             builder.RegisterGeneric(typeof(Repository<>)).As(typeof(IRepository<>));
             builder.RegisterInstance(_clock).As<IClock>();
             builder.RegisterInstance(new Mock<UrlHelper>().Object).As<UrlHelper>();
-            builder.RegisterType<StubCacheService>().As<ICacheService>();
+            builder.RegisterType<StubCacheManager>().As<ICacheManager>();
 
             builder.Register(c =>
                 {

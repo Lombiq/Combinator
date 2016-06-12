@@ -74,13 +74,16 @@ namespace Piedone.Combinator.Tests.Services
             SaveTestResources();
         }
 
-        
+
+        /// <summary>
+        /// This test fails with FileLoadException because of this issue: https://github.com/OrchardCMS/Orchard/issues/6933
+        /// </summary>
         [Test]
         public void SaveShouldBePersistent()
         {
             // Todo: adjust mocking that CombinatorResource's context can be filled and so the GetCombinedResources() method tested
             // if it returns the correct data
-            
+
             var storageProvider = _container.Resolve<IStorageProvider>();
             Assert.That(storageProvider.GetFile(storageProvider.Combine("_PiedoneModules", storageProvider.Combine("Combinator", storageProvider.Combine("Styles", CacheFileService.ConvertFingerprintToStorageFormat(_cssResourcesFingerprint) + "-1.css")))), Is.Not.Null);
 
@@ -94,6 +97,9 @@ namespace Piedone.Combinator.Tests.Services
             Assert.That(_cacheFileService.Exists(_cssResourcesFingerprint, new CombinatorSettings()), Is.True);
         }
 
+        /// <summary>
+        /// This test fails with FileLoadException because of this issue: https://github.com/OrchardCMS/Orchard/issues/6933
+        /// </summary>
         [Test]
         public void EmtpyShouldDeleteAll()
         {
@@ -224,12 +230,12 @@ namespace Piedone.Combinator.Tests.Services
             {
                 return CreatedFiles.Any(p => p.StartsWith(path));
             }
-            
+
             public string GetStoragePath(string url)
             {
                 return FileSystemStorageProvider.GetStoragePath(url);
             }
-            
+
             public void CopyFile(string originalPath, string duplicatePath)
             {
                 FileSystemStorageProvider.CopyFile(originalPath, duplicatePath);

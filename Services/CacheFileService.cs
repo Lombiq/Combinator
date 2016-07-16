@@ -30,7 +30,7 @@ namespace Piedone.Combinator.Services
         private readonly ICombinatorResourceManager _combinatorResourceManager;
         private readonly UrlHelper _urlHelper;
         private readonly IClock _clock;
-        private readonly ISessionLocator _sessionLocator;
+        private readonly ITransactionManager _transactionManager;
         private readonly ICombinatorEventHandler _combinatorEventHandler;
 
         #region In-memory caching fields
@@ -53,7 +53,7 @@ namespace Piedone.Combinator.Services
             ICombinatorResourceManager combinatorResourceManager,
             UrlHelper urlHelper,
             IClock clock,
-            ISessionLocator sessionLocator,
+            ITransactionManager transactionManager,
             ICombinatorEventHandler combinatorEventHandler,
             ICacheManager cacheManager,
             ICombinatorEventMonitor combinatorEventMonitor)
@@ -64,7 +64,7 @@ namespace Piedone.Combinator.Services
             _combinatorResourceManager = combinatorResourceManager;
             _urlHelper = urlHelper;
             _clock = clock;
-            _sessionLocator = sessionLocator;
+            _transactionManager = transactionManager;
             _combinatorEventHandler = combinatorEventHandler;
 
             _cacheManager = cacheManager;
@@ -212,7 +212,7 @@ namespace Piedone.Combinator.Services
 
         public void Empty()
         {
-            _sessionLocator.For(typeof(CombinedFileRecord)).CreateQuery("DELETE FROM " + typeof(CombinedFileRecord).FullName).ExecuteUpdate();
+            _transactionManager.GetSession().CreateQuery("DELETE FROM " + typeof(CombinedFileRecord).FullName).ExecuteUpdate();
 
             if (_storageProvider.FolderExists(RootPath))
             {

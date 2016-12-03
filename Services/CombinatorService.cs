@@ -181,7 +181,7 @@ namespace Piedone.Combinator.Services
 
                         combinedResource.Content =
                             "/*" + Environment.NewLine
-                            + "Resource bundle created by Combinator (http://combinator.codeplex.com/)" + Environment.NewLine + Environment.NewLine
+                            + "Resource bundle created by Combinator (https://github.com/Lombiq/Combinator)" + Environment.NewLine + Environment.NewLine
                             + "Resources in this bundle:" + Environment.NewLine
                             + string.Join(Environment.NewLine, containedResources.Select(resource =>
                                 {

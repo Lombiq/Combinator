@@ -246,7 +246,7 @@ namespace Piedone.Combinator.Services
             using (var wc = shellContext.LifetimeScope.Resolve<IWorkContextAccessor>().CreateWorkContextScope())
             {
                 ICacheFileService cacheFileService;
-                if (!wc.TryResolve<ICacheFileService>(out cacheFileService)) return false;
+                if (!wc.TryResolve(out cacheFileService)) return false;
                 cacheFileServiceCall(cacheFileService);
                 return true;
             }

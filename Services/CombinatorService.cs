@@ -119,8 +119,14 @@ namespace Piedone.Combinator.Services
         /// <param name="fingerprint">Just so it shouldn't be recalculated.</param>
         /// <param name="resourceType">Type of the resources.</param>
         /// <param name="settings">Combination setting.s</param>
-        /// <exception cref="ApplicationException">Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened).</exception>
-        private void Combine(IList<ResourceRequiredContext> resources, string fingerprint, ResourceType resourceType, ICombinatorSettings settings)
+        /// <exception cref="ApplicationException">
+        /// Thrown if there was a problem with a resource file (e.g. it was missing or could not be opened).
+        /// </exception>
+        private void Combine(
+            IList<ResourceRequiredContext> resources, 
+            string fingerprint, 
+            ResourceType resourceType, 
+            ICombinatorSettings settings)
         {
             if (resources.Count == 0) return;
 

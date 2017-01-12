@@ -151,7 +151,7 @@ namespace Piedone.Combinator.Services
                 {
                     if (combinedResource == null) return;
 
-                    // Don't save emtpy resources.
+                    // Don't save empty resources.
                     if (combinedContent.Length == 0 && !combinedResource.IsOriginal) return;
 
                     if (!containedResources.Any()) containedResources = new List<CombinatorResource> { combinedResource };

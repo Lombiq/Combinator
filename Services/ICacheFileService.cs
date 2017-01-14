@@ -10,7 +10,7 @@ namespace Piedone.Combinator.Services
 
 
     /// <summary>
-    /// Service for managing static cache files, i.e. processed static resoruces.
+    /// Service for managing static cache files, i.e. processed static resources.
     /// </summary>
     public interface ICacheFileService : IDependency
     {

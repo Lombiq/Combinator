@@ -118,6 +118,12 @@ namespace Piedone.Combinator.Models
         public string Content { get; set; }
 
         /// <summary>
+        /// Indicates whether the resource is just an unusable placeholder only to have at least one resource in case
+        /// that's needed.
+        /// </summary>
+        public bool IsPlaceholder { get; set; }
+
+        /// <summary>
         /// Indicates that the resource was not touched and was kept in its original state.
         /// </summary>
         public bool IsOriginal { get; set; }

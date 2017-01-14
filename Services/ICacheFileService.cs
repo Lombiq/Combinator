@@ -16,7 +16,7 @@ namespace Piedone.Combinator.Services
     {
         void Save(string fingerprint, CombinatorResource resource, ICombinatorSettings settings);
         IList<CombinatorResource> GetCombinedResources(string fingerprint, ICombinatorSettings settings);
-        bool Exists(string fingerprint, ICombinatorSettings settings);
+        bool Exists(string fingerprint, bool checkSharedResource);
         int GetCount();
         void Empty();
         void WriteSpriteStream(string fileName, SpriteStreamWriter streamWriter);

@@ -30,10 +30,20 @@ namespace Piedone.Combinator.Services
         public string SerializeResourceSettings(CombinatorResource resource)
         {
             var settings = resource.RequiredContext.Settings;
-            if (settings == null) return "";
+            if (settings == null)
+            {
+                if (resource.IsPlaceholder)
+                {
+                    return _jsonConverter.Serialize(new SerializableSettings { IsPlaceholder = true });
+                }
+                else
+                {
+                    return "";
+                }
+            }
 
             return _jsonConverter.Serialize(
-                new SerializableSettings()
+                new SerializableSettings
                 {
                     Url = resource.IsOriginal ? !resource.IsCdnResource && !resource.IsRemoteStorageResource ? resource.RelativeUrl : resource.AbsoluteUrl : null,
                     IsRemoteStorageResource = resource.IsRemoteStorageResource,
@@ -49,6 +59,13 @@ namespace Piedone.Combinator.Services
             if (string.IsNullOrEmpty(serialization)) return;
 
             var settings = _jsonConverter.Deserialize<SerializableSettings>(serialization);
+
+            if (settings.IsPlaceholder)
+            {
+                resource.IsPlaceholder = true;
+
+                return;
+            }
 
             if (settings.Url != null)
             {
@@ -72,6 +89,7 @@ namespace Piedone.Combinator.Services
         {
             public Uri Url { get; set; }
             public bool IsRemoteStorageResource { get; set; }
+            public bool IsPlaceholder { get; set; }
             public string Culture { get; set; }
             public string Condition { get; set; }
             public Dictionary<string, string> Attributes { get; set; }

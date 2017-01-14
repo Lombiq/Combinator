@@ -32,6 +32,7 @@ namespace Piedone.Combinator.Services
         private readonly IClock _clock;
         private readonly ITransactionManager _transactionManager;
         private readonly ICombinatorEventHandler _combinatorEventHandler;
+        private readonly ShellSettings _shellSettings;
 
         #region In-memory caching fields
         private readonly ICacheManager _cacheManager;
@@ -56,7 +57,8 @@ namespace Piedone.Combinator.Services
             ITransactionManager transactionManager,
             ICombinatorEventHandler combinatorEventHandler,
             ICacheManager cacheManager,
-            ICombinatorEventMonitor combinatorEventMonitor)
+            ICombinatorEventMonitor combinatorEventMonitor,
+            ShellSettings shellSettings)
         {
             _orchardHost = orchardHost;
             _storageProvider = storageProvider;
@@ -66,6 +68,7 @@ namespace Piedone.Combinator.Services
             _clock = clock;
             _transactionManager = transactionManager;
             _combinatorEventHandler = combinatorEventHandler;
+            _shellSettings = shellSettings;
 
             _cacheManager = cacheManager;
             _combinatorEventMonitor = combinatorEventMonitor;
@@ -185,14 +188,15 @@ namespace Piedone.Combinator.Services
             });
         }
 
-        public bool Exists(string fingerprint, ICombinatorSettings settings)
+        public bool Exists(string fingerprint, bool checkSharedResource)
         {
-            var exists = false;
-            if (settings.EnableResourceSharing && CallOnDefaultShell(cacheFileService => exists = cacheFileService.Exists(fingerprint, new CombinatorSettings(settings) { EnableResourceSharing = false })))
+            if (_shellSettings.Name != ShellSettings.DefaultName)
             {
-                // Because resources were excluded from resource sharing in this set this set could be stored locally, not shared.
-                // Thus we fall back to local storage.
-                if (exists) return true;
+                var sharedResourceExists = false;
+                if (checkSharedResource && CallOnDefaultShell(cacheFileService => sharedResourceExists = cacheFileService.Exists(fingerprint, false)))
+                {
+                    return sharedResourceExists;
+                } 
             }
 
             var cacheKey = MakeCacheKey("Exists." + fingerprint);

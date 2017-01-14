@@ -115,7 +115,7 @@ namespace Piedone.Combinator.Tests.Services
         {
             _resourceRepository.FillWithTestStyles();
 
-            var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings() { CombineCdnResources = true });
+            var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings { CombineCdnResources = true });
 
             Assert.That(combinedResources.Count, Is.EqualTo(1));
         }
@@ -125,7 +125,7 @@ namespace Piedone.Combinator.Tests.Services
         {
             _resourceRepository.FillWithTestStyles();
 
-            var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings() { CombineCdnResources = false });
+            var combinedResources = _combinatorService.CombineStylesheets(_resourceRepository.GetResources(ResourceType.Style), new CombinatorSettings { CombineCdnResources = false });
 
             Assert.That(combinedResources.Count, Is.EqualTo(4));
             Assert.That(combinedResources[0].Resource.Url, Is.EqualTo("//google.com/style.css"));
@@ -235,12 +235,15 @@ namespace Piedone.Combinator.Tests.Services
 
                 savedResource.IsOriginal = resource.IsOriginal;
                 savedResource.LastUpdatedUtc = DateTime.UtcNow;
-                savedResource.FillRequiredContext(
-                    requiredContext.Resource.Name,
-                    requiredContext.Resource.Url,
-                    requiredContext.Settings.Culture,
-                    requiredContext.Settings.Condition,
-                    requiredContext.Settings.Attributes);
+                if (requiredContext.Resource != null)
+                {
+                    savedResource.FillRequiredContext(
+                        requiredContext.Resource.Name,
+                        requiredContext.Resource.Url,
+                        requiredContext.Settings.Culture,
+                        requiredContext.Settings.Condition,
+                        requiredContext.Settings.Attributes); 
+                }
                 savedResource.Content = resource.Content;
 
 
@@ -250,7 +253,7 @@ namespace Piedone.Combinator.Tests.Services
                     if (resource.Type == ResourceType.Style) url += "Styles/" + sliceName + ".css";
                     else if (resource.Type == ResourceType.JavaScript) url += "Scripts/" + sliceName + ".js";
 
-                    savedResource.RequiredContext.Resource.SetUrl(url);
+                    if (requiredContext.Resource != null) savedResource.RequiredContext.Resource.SetUrl(url);
                 }
 
 
@@ -264,7 +267,7 @@ namespace Piedone.Combinator.Tests.Services
                         select r.Value).ToList();
             }
 
-            public bool Exists(string fingerprint, ICombinatorSettings settings)
+            public bool Exists(string fingerprint, bool checkSharedResource)
             {
                 return false;
             }

@@ -94,7 +94,7 @@ namespace Piedone.Combinator.Tests.Services
 
             Assert.That(_cacheFileService.GetCount(), Is.EqualTo(3));
 
-            Assert.That(_cacheFileService.Exists(_cssResourcesFingerprint, new CombinatorSettings()), Is.True);
+            Assert.That(_cacheFileService.Exists(_cssResourcesFingerprint, false), Is.True);
         }
 
         /// <summary>

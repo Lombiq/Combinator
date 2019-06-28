@@ -89,8 +89,9 @@ namespace Piedone.Combinator.Services
                 resource.LastUpdatedUtc = _clock.UtcNow;
             }
 
-            // Ceil-ing timestamp to the second, because sub-second precision is not stored in the DB. This would cause a discrepancy between saved
-            // and fetched vs freshly created date times, causing unwanted cache busting for the same resource.
+            // Ceil-ing timestamp to the second, because sub-second precision is not stored in the DB. This would cause
+            // a discrepancy between saved and fetched vs freshly created date times, causing unwanted cache busting
+            // for the same resource.
             resource.LastUpdatedUtc = new DateTime(resource.LastUpdatedUtc.Year, resource.LastUpdatedUtc.Month, resource.LastUpdatedUtc.Day, resource.LastUpdatedUtc.Hour, resource.LastUpdatedUtc.Minute, resource.LastUpdatedUtc.Second);
 
             var fileRecord = new CombinedFileRecord()
@@ -119,8 +120,8 @@ namespace Piedone.Combinator.Services
                 if (!resource.IsRemoteStorageResource)
                 {
                     // This is needed to adjust relative paths if the resource is stored in a remote storage provider.
-                    // Why the double-saving? Before saving the file there is no reliable way to tell whether the storage public url will be a
-                    // remote one or not...
+                    // Why the double-saving? Before saving the file there is no reliable way to tell whether the
+                    // storage public url will be a remote one or not...
                     var testResource = _combinatorResourceManager.ResourceFactory(resource.Type);
                     testResource.FillRequiredContext("TestCombinedResource", _storageProvider.GetPublicUrl(path));
                     _combinatorResourceManager.DeserializeSettings(fileRecord.Settings, testResource);

@@ -1,24 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
+﻿using Autofac;
 using Orchard;
 using Orchard.Caching;
 using Orchard.Data;
 using Orchard.Environment;
 using Orchard.Environment.Configuration;
 using Orchard.Environment.Extensions;
-using Orchard.Exceptions;
 using Orchard.FileSystems.Media;
-using Orchard.Mvc;
 using Orchard.Services;
 using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
-using Autofac;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Web.Mvc;
-using System.Resources;
 
 namespace Piedone.Combinator.Services
 {

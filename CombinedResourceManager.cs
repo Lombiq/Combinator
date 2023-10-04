@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using Autofac.Features.Metadata;
-using Orchard.Caching;
+﻿using Autofac.Features.Metadata;
 using Orchard.ContentManagement; // For generic ContentManager methods
 using Orchard.DisplayManagement.Descriptors;
 using Orchard.DisplayManagement.Descriptors.ResourceBindingStrategy;
@@ -13,13 +9,14 @@ using Orchard.Mvc;
 using Orchard.Settings;
 using Orchard.Themes;
 using Orchard.UI.Resources;
-using Piedone.Combinator.EventHandlers;
 using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
-using System.Linq;
 using Piedone.HelpfulLibraries.Utilities;
-using System.IO;
+using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace Piedone.Combinator
 {
@@ -120,7 +117,7 @@ namespace Piedone.Combinator
                     {
                         if (retry < 2)
                         {
-                            System.Threading.Thread.Sleep(100);
+                            Thread.Sleep(100);
                         }
                         else
                         {

@@ -18,6 +18,7 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using Autofac;
 using System.Web.Mvc;
+using System.Resources;
 
 namespace Piedone.Combinator.Services
 {
@@ -111,10 +112,26 @@ namespace Piedone.Combinator.Services
 
                 if (_storageProvider.FileExists(path)) _storageProvider.DeleteFile(path);
 
-                using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+
+                for (int retry = 0; retry < 3; retry++)
                 {
-                    var bytes = Encoding.UTF8.GetBytes(resource.Content);
-                    stream.Write(bytes, 0, bytes.Length);
+                    try
+                    {
+                        using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                        {
+                            var bytes = Encoding.UTF8.GetBytes(resource.Content);
+                            stream.Write(bytes, 0, bytes.Length);
+                        }
+
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (retry < 2)
+                            Thread.Sleep(100);
+                        else
+                            throw ex;
+                    }
                 }
 
                 if (!resource.IsRemoteStorageResource)

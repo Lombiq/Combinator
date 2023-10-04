@@ -19,6 +19,7 @@ using Piedone.Combinator.Models;
 using Piedone.Combinator.Services;
 using System.Linq;
 using Piedone.HelpfulLibraries.Utilities;
+using System.IO;
 
 namespace Piedone.Combinator
 {
@@ -103,11 +104,30 @@ namespace Piedone.Combinator
 
                 DiscoverResourceOverrides(resources, resourceType);
 
-                IList<ResourceRequiredContext> result;
+                IList<ResourceRequiredContext> result = null;
 
-                if (resourceType == ResourceType.Style) result = _combinatorService.CombineStylesheets(resources, settings);
-                else if (resourceType == ResourceType.JavaScript) result = _combinatorService.CombineScripts(resources, settings);
-                else return base.BuildRequiredResources(stringResourceType);
+                for (int retry = 0; retry < 3; retry++)
+                {
+                    try
+                    {
+                        if (resourceType == ResourceType.Style) result = _combinatorService.CombineStylesheets(resources, settings);
+                        else if (resourceType == ResourceType.JavaScript) result = _combinatorService.CombineScripts(resources, settings);
+                        else return base.BuildRequiredResources(stringResourceType);
+
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (retry < 2)
+                        {
+                            System.Threading.Thread.Sleep(100);
+                        }
+                        else
+                        {
+                            throw ex;
+                        }
+                    }
+                }
 
                 RemoveOriginalResourceShapes(result, resourceType);
 

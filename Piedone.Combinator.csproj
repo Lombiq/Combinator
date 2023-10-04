@@ -293,7 +293,4 @@
   <ItemGroup>
     <Content Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include=".github\workflows\validate-pull-request.yml" />
-  </ItemGroup>
 </Project>

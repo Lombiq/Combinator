@@ -8,33 +8,33 @@ using Piedone.Combinator.Services;
 namespace Piedone.Combinator.EventHandlers
 {
     [OrchardFeature("Piedone.Combinator")]
-    public class CacheFileEventHandler : IOrchardShellEvents
+    public class CombinatorCacheClearingShellEventHandler : IOrchardShellEvents
     {
-        private const string ClearCacheFileName = FileNames.ClearCache + ".txt";
-
         private readonly ICacheFileService _cacheFileService;
         private readonly IAppDataFolder _appDataFolder;
-
-        private readonly string _basePath;
+        private readonly ShellSettings _shellSettings;
 
         /// <summary>
         /// Gets or sets a value indicating whether emptying Combinator cache is disabled, primarily through HostComponents.config.
         /// </summary>
-        public bool IsEmptyingCacheDisabled { get; set; }
+        public bool IsDisabled { get; set; } = true;
 
-        public CacheFileEventHandler(ICacheFileService cacheFileService, IAppDataFolder appDataFolder, ShellSettings shellSettings)
+        public CombinatorCacheClearingShellEventHandler(
+            ICacheFileService cacheFileService,
+            IAppDataFolder appDataFolder,
+            ShellSettings shellSettings)
         {
             _cacheFileService = cacheFileService;
             _appDataFolder = appDataFolder;
-
-            _basePath = _appDataFolder.Combine(FolderNames.Sites, shellSettings.Name, FolderNames.PiedoneModules, FolderNames.Combinator);
+            _shellSettings = shellSettings;
         }
 
         public void Activated()
         {
-            if (IsEmptyingCacheDisabled) return;
+            if (IsDisabled) return;
 
-            var pathToClearCacheFile = _appDataFolder.Combine(_basePath, ClearCacheFileName);
+            var pathToClearCacheFile = _appDataFolder.Combine(
+                FolderNames.Sites, _shellSettings.Name, FolderNames.PiedoneModules, FolderNames.Combinator, FileNames.ClearCache);
 
             if (!_appDataFolder.FileExists(pathToClearCacheFile)) return;
 

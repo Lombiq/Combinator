@@ -172,7 +172,7 @@
     <Compile Include="EventHandlers\ICombinatorEventMonitor.cs" />
     <Compile Include="EventHandlers\ICombinatorResourceEventHandler.cs" />
     <Compile Include="EventHandlers\LessPreprocessor.cs" />
-    <Compile Include="EventHandlers\CacheFileEventHandler.cs" />
+    <Compile Include="EventHandlers\CombinatorCacheClearingShellEventHandler.cs" />
     <Compile Include="EventHandlers\SassPreprocessor.cs" />
     <Compile Include="Extensions\CombinedFileRecordExtensions.cs" />
     <Compile Include="Extensions\RequireSettingsExtensions.cs" />

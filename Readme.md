@@ -28,15 +28,25 @@ An Orchard CMS module that combines and minifies external stylesheets and javasc
 - With custom IStorageProvider can work in cloud hosting too (if there is no write access to the Media folder anyway)
 - Import/export settings
 - Administration page:
-	- Adjust combination exclusion filter
-	- Enable/disable combination of CDN resources
-	- Set up resource domain
-	- Enable/disable minification and adjust exclusion filter
-	- Enable/disable image embedding and adjust exclusion filter
-	- Enable/disable image sprite generation
-	- Define resource sets
-	- Enable/disable for admin site
-	- Empty cache
+    - Adjust combination exclusion filter
+    - Enable/disable combination of CDN resources
+    - Set up resource domain
+    - Enable/disable minification and adjust exclusion filter
+    - Enable/disable image embedding and adjust exclusion filter
+    - Enable/disable image sprite generation
+    - Define resource sets
+    - Enable/disable for admin site
+    - Empty cache
+- The Combinator cache can be emptied on Activated Orchard shell event if:
+    - A marker text file with the name **_ClearCache.txt** is present under the **~\Orchard.Web\App_Data\Sites\\<tenant_name>\\_PiedoneModules\Combinator** folder
+    - The CombinatorCacheClearingShellEventHandler class's IsDisabled property is set to false (default is true). This can be modified from the HostComponents.config file under the **~\Orchard.Web\Config** folder by modifying the property value. For example:
+    ```
+    <Component Type="Piedone.Combinator.EventHandlers.CombinatorCacheClearingShellEventHandler" xdt:Transform="Insert">
+      <Properties>
+        <Property Name="IsDisabled" Value="false" xdt:Transform="Insert" />
+      </Properties>
+    </Component>
+    ```
 
 The module is also available for [DotNest](http://dotnest.com/) sites.  
 

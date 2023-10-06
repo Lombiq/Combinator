@@ -2,6 +2,6 @@
 {
     public static class FileNames
     {
-        public const string ClearCache = "_" + nameof(ClearCache);
+        public const string ClearCache = "_" + nameof(ClearCache) + ".txt";
     }
 }

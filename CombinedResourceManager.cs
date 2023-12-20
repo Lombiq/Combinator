@@ -15,6 +15,7 @@ using Piedone.Combinator.Services;
 using Piedone.HelpfulLibraries.Utilities;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -101,28 +102,21 @@ namespace Piedone.Combinator
 
                 DiscoverResourceOverrides(resources, resourceType);
 
-                IList<ResourceRequiredContext> result = null;
+                IList<ResourceRequiredContext> result;
 
-                for (int retry = 0; retry < 3; retry++)
+                using (var mutex = new Mutex(initiallyOwned: false, "Global\\CombinatorFileAccess"))
                 {
+                    mutex.WaitOne();
+
                     try
                     {
                         if (resourceType == ResourceType.Style) result = _combinatorService.CombineStylesheets(resources, settings);
                         else if (resourceType == ResourceType.JavaScript) result = _combinatorService.CombineScripts(resources, settings);
                         else return base.BuildRequiredResources(stringResourceType);
-
-                        break;
                     }
-                    catch (Exception ex)
+                    finally
                     {
-                        if (retry < 2)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        else
-                        {
-                            throw ex;
-                        }
+                        mutex.ReleaseMutex();
                     }
                 }
 

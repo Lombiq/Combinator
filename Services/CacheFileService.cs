@@ -12,6 +12,7 @@ using Piedone.Combinator.Extensions;
 using Piedone.Combinator.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -109,9 +110,10 @@ namespace Piedone.Combinator.Services
 
                 if (_storageProvider.FileExists(path)) _storageProvider.DeleteFile(path);
 
-
-                for (int retry = 0; retry < 3; retry++)
+                using (var mutex = new Mutex(initiallyOwned: false, "Global\\CombinatorFileAccess"))
                 {
+                    mutex.WaitOne();
+
                     try
                     {
                         using (var stream = _storageProvider.CreateFile(path).OpenWrite())
@@ -119,17 +121,12 @@ namespace Piedone.Combinator.Services
                             var bytes = Encoding.UTF8.GetBytes(resource.Content);
                             stream.Write(bytes, 0, bytes.Length);
                         }
-
-                        break;
                     }
-                    catch (Exception ex)
+                    finally
                     {
-                        if (retry < 2)
-                            Thread.Sleep(100);
-                        else
-                            throw ex;
+                        mutex.ReleaseMutex();
                     }
-                }
+                }                
 
                 if (!resource.IsRemoteStorageResource)
                 {
@@ -148,11 +145,23 @@ namespace Piedone.Combinator.Services
                         var relativeUrlsBaseUri = settings.ResourceBaseUri != null ? settings.ResourceBaseUri : new Uri(_urlHelper.RequestContext.HttpContext.Request.Url, _urlHelper.Content("~/"));
                         ResourceProcessingService.RegexConvertRelativeUrlsToAbsolute(testResource, relativeUrlsBaseUri);
 
-                        using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                        using (var mutex = new Mutex(initiallyOwned: false, "Global\\CombinatorFileAccess"))
                         {
-                            var bytes = Encoding.UTF8.GetBytes(testResource.Content);
-                            stream.Write(bytes, 0, bytes.Length);
-                        }
+                            mutex.WaitOne();
+
+                            try
+                            {
+                                using (var stream = _storageProvider.CreateFile(path).OpenWrite())
+                                {
+                                    var bytes = Encoding.UTF8.GetBytes(testResource.Content);
+                                    stream.Write(bytes, 0, bytes.Length);
+                                }
+                            }
+                            finally
+                            {
+                                mutex.ReleaseMutex();
+                            }
+                        }                        
 
                         resource.IsRemoteStorageResource = true;
                         fileRecord.Settings = _combinatorResourceManager.SerializeResourceSettings(resource);
@@ -252,9 +261,22 @@ namespace Piedone.Combinator.Services
             if (_storageProvider.FileExists(path)) _storageProvider.DeleteFile(path);
             var spriteFile = _storageProvider.CreateFile(path);
             var publicUrl = _storageProvider.GetPublicUrl(path);
-            using (var stream = spriteFile.OpenWrite())
+
+            using (var mutex = new Mutex(initiallyOwned: false, "Global\\CombinatorFileAccess"))
             {
-                streamWriter(stream, publicUrl);
+                mutex.WaitOne();
+
+                try
+                { 
+                    using (var stream = spriteFile.OpenWrite())
+                    {
+                        streamWriter(stream, publicUrl);
+                    }
+                }
+                finally
+                {
+                    mutex.ReleaseMutex();
+                }
             }
         }
 
